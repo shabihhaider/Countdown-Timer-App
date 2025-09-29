@@ -31,6 +31,6 @@ redirect_urls = ["https://countdown-timer-app-sage.vercel.app/auth/callback", "h
 embedded = false
 
 [app_proxy]
-url = "https://countdown-timer-app-sage.vercel.app/apps/countdown"
+url = "https://countdown-timer-app-sage.vercel.app"
 subpath = "countdown"
 prefix = "apps"
