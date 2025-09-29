@@ -1,0 +1,36 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "5a41d17e675994c5d323c4b0b8223c6d"
+name = "Countdown-Timer-App"
+application_url = "https://unlock-nutrition-virtual-guide.trycloudflare.com"
+embedded = true
+handle = "countdown-timer-app-20"
+
+[build]
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2025-07"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_products, write_themes"
+
+[auth]
+redirect_urls = ["https://unlock-nutrition-virtual-guide.trycloudflare.com/auth/callback", "https://unlock-nutrition-virtual-guide.trycloudflare.com/auth/shopify/callback", "https://unlock-nutrition-virtual-guide.trycloudflare.com/api/auth/callback"]
+
+[pos]
+embedded = false
+
+[app_proxy]
+url = "https://mineral-accomplished-herself-comparative.trycloudflare.com/apps/countdown"
+subpath = "countdown"
+prefix = "apps"

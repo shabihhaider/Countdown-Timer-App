@@ -1,0 +1,53 @@
+<div id="countdown-cta-bar" 
+     class="countdown-bar countdown-bar--top"
+     data-shop="{{ shop.permanent_domain }}"
+     style="display: none;">
+  
+  <div class="countdown-bar__container">
+    <div class="countdown-bar__content">
+      <span class="countdown-bar__message">Loading...</span>
+      
+      <div class="countdown-bar__timer" id="countdown-timer">
+        <span class="countdown-bar__time-unit">
+          <span class="countdown-bar__time-value" id="days">00</span>
+          <span class="countdown-bar__time-label">Days</span>
+        </span>
+        <span class="countdown-bar__separator">:</span>
+        <span class="countdown-bar__time-unit">
+          <span class="countdown-bar__time-value" id="hours">00</span>
+          <span class="countdown-bar__time-label">Hours</span>
+        </span>
+        <span class="countdown-bar__separator">:</span>
+        <span class="countdown-bar__time-unit">
+          <span class="countdown-bar__time-value" id="minutes">00</span>
+          <span class="countdown-bar__time-label">Mins</span>
+        </span>
+        <span class="countdown-bar__separator">:</span>
+        <span class="countdown-bar__time-unit">
+          <span class="countdown-bar__time-value" id="seconds">00</span>
+          <span class="countdown-bar__time-label">Secs</span>
+        </span>
+      </div>
+      
+      <a href="#" class="countdown-bar__button" id="cta-button" style="display: none;">
+        Shop Now
+      </a>
+    </div>
+    
+    <button class="countdown-bar__close" id="close-bar" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Countdown & CTA Bar",
+  "target": "body",
+  "stylesheet": "countdown-bar.css",
+  "javascript": "countdown-bar.js",
+  "settings": []
+}
+{% endschema %}
