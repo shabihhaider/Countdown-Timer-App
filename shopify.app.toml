@@ -2,7 +2,7 @@
 
 client_id = "5a41d17e675994c5d323c4b0b8223c6d"
 name = "Countdown-Timer-App"
-application_url = "https://unlock-nutrition-virtual-guide.trycloudflare.com"
+application_url = "https://countdown-timer-app-sage.vercel.app"
 embedded = true
 handle = "countdown-timer-app-20"
 
@@ -25,12 +25,12 @@ api_version = "2025-07"
 scopes = "write_products, write_themes"
 
 [auth]
-redirect_urls = ["https://unlock-nutrition-virtual-guide.trycloudflare.com/auth/callback", "https://unlock-nutrition-virtual-guide.trycloudflare.com/auth/shopify/callback", "https://unlock-nutrition-virtual-guide.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://countdown-timer-app-sage.vercel.app/auth/callback", "https://countdown-timer-app-sage.vercel.app/auth/shopify/callback", "https://countdown-timer-app-sage.vercel.app/api/auth/callback"]
 
 [pos]
 embedded = false
 
 [app_proxy]
-url = "https://mineral-accomplished-herself-comparative.trycloudflare.com/apps/countdown"
+url = "https://countdown-timer-app-sage.vercel.app/apps/countdown"
 subpath = "countdown"
 prefix = "apps"
