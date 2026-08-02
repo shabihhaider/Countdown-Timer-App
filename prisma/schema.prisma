@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -26,10 +26,80 @@ model Session {
   emailVerified Boolean?  @default(false)
 }
 
+// Legacy table — kept for backwards compatibility during migration.
+// New installs use Campaign model. Remove after full data migration.
 model Setting {
   id        Int      @id @default(autoincrement())
   shop      String   @unique
   value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// A countdown campaign configured by a merchant.
+model Campaign {
+  id               Int                @id @default(autoincrement())
+  shop             String
+  name             String             @default("My Sale")
+  isActive         Boolean            @default(true)
+
+  // Display content
+  barMessage       String             @default("Flash Sale Ends In...")
+  buttonText       String             @default("Shop Now")
+  buttonUrl        String             @default("/collections/all")
+
+  // Scheduling (stored in UTC)
+  startDate        DateTime?
+  endDate          DateTime?
+  timezone         String             @default("UTC")
+
+  // Design
+  backgroundColor  String             @default("#288d40")
+  position         String             @default("top")   // "top" | "bottom"
+
+  // Behaviour after expiry
+  endAction        String             @default("hide")  // "hide" | "show_ended" | "show_custom"
+  customEndMessage String             @default("")
+
+  // Optional page-level targeting (JSON array of URL patterns)
+  pageTargeting    String             @default("[]")
+
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  analytics        CampaignAnalytics[]
+
+  @@index([shop])
+  @@index([shop, isActive])
+}
+
+// Daily aggregated analytics per campaign.
+model CampaignAnalytics {
+  id          Int      @id @default(autoincrement())
+  campaignId  Int
+  date        DateTime @db.Date   // day bucket (UTC date only)
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  closes      Int      @default(0)
+
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([campaignId, date])
+  @@index([campaignId])
+}
+
+// Tracks onboarding wizard progress per shop.
+model OnboardingState {
+  id              Int      @id @default(autoincrement())
+  shop            String   @unique
+  step1Complete   Boolean  @default(false)   // Campaign configured
+  step2Complete   Boolean  @default(false)   // Design chosen
+  step3Complete   Boolean  @default(false)   // Extension installed in theme
+  completedAt     DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

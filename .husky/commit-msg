@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+# Commit-msg hook: enforces Conventional Commits format via commitlint.
+# Valid types: feat, fix, refactor, docs, test, chore, perf, ci, revert, style
+# Example:     feat: add live preview panel to settings form
+npx --no -- commitlint --edit "$1"

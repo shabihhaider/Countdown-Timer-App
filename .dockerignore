@@ -1,3 +1,52 @@
-.cache
-build
+# ─── Dependencies ─────────────────────────────────────────────────────────────
 node_modules
+extensions/*/node_modules
+.npm
+
+# ─── Build outputs ────────────────────────────────────────────────────────────
+build
+.cache
+dist
+
+# ─── Shopify CLI artifacts ────────────────────────────────────────────────────
+.shopify
+.shopify-cli-tmp
+
+# ─── Environment / secrets — never bake into an image ────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─── Git ──────────────────────────────────────────────────────────────────────
+.git
+.gitignore
+.gitattributes
+
+# ─── Editor ───────────────────────────────────────────────────────────────────
+.vscode
+.idea
+*.swp
+*.swo
+*.suo
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+
+# ─── Docker (prevent recursive context) ──────────────────────────────────────
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+nginx/
+
+# ─── Test / coverage artifacts ────────────────────────────────────────────────
+coverage
+.nyc_output
+
+# ─── Docs / misc ──────────────────────────────────────────────────────────────
+CHANGELOG.md

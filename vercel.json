@@ -8,6 +8,10 @@
     {
       "src": "/apps/countdown/settings",
       "dest": "/apps/countdown/settings"
+    },
+    {
+      "src": "/apps/countdown/track",
+      "dest": "/apps/countdown/track"
     }
   ]
 }

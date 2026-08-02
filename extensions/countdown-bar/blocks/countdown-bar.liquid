@@ -1,0 +1,66 @@
+<div id="cdb-bar"
+     class="cdb cdb--top"
+     data-shop="{{ shop.permanent_domain }}"
+     style="display: none;"
+     role="region"
+     aria-label="Countdown timer announcement">
+
+  <div class="cdb__container">
+    <div class="cdb__content">
+      <span class="cdb__message" aria-live="polite" aria-atomic="true">Loading...</span>
+
+      <div class="cdb__timer"
+           id="cdb-timer"
+           role="timer"
+           aria-live="off"
+           aria-label="Time remaining">
+        <span class="cdb__unit">
+          <span class="cdb__value" id="cdb-days" aria-hidden="true">00</span>
+          <span class="cdb__label" aria-hidden="true">Days</span>
+        </span>
+        <span class="cdb__sep" aria-hidden="true">:</span>
+        <span class="cdb__unit">
+          <span class="cdb__value" id="cdb-hours" aria-hidden="true">00</span>
+          <span class="cdb__label" aria-hidden="true">Hours</span>
+        </span>
+        <span class="cdb__sep" aria-hidden="true">:</span>
+        <span class="cdb__unit">
+          <span class="cdb__value" id="cdb-mins" aria-hidden="true">00</span>
+          <span class="cdb__label" aria-hidden="true">Mins</span>
+        </span>
+        <span class="cdb__sep" aria-hidden="true">:</span>
+        <span class="cdb__unit">
+          <span class="cdb__value" id="cdb-secs" aria-hidden="true">00</span>
+          <span class="cdb__label" aria-hidden="true">Secs</span>
+        </span>
+      </div>
+
+      <!-- Screen-reader-only live region: announces remaining time every minute -->
+      <span class="cdb__sr-timer" aria-live="polite" aria-atomic="true"></span>
+
+      <a href="#"
+         class="cdb__btn"
+         id="cdb-btn"
+         style="display: none;"
+         rel="noopener">
+        Shop Now
+      </a>
+    </div>
+
+    <button class="cdb__close" id="cdb-close" aria-label="Close countdown bar" type="button">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+        <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Countdown & CTA Bar",
+  "target": "body",
+  "stylesheet": "countdown-bar.css",
+  "javascript": "countdown-bar.js",
+  "settings": []
+}
+{% endschema %}
