@@ -92,6 +92,9 @@ ENV NODE_ENV=production
 # Non-root user for security
 RUN addgroup -g 1001 -S nodejs && adduser -S remix -u 1001
 
+# Tini: proper init process for signal handling and zombie reaping
+RUN apk add --no-cache tini
+
 # Production node_modules (pre-built, no dev deps, no Shopify CLI)
 COPY --from=prod-deps --chown=remix:nodejs /app/node_modules ./node_modules
 
@@ -108,5 +111,6 @@ COPY --chown=remix:nodejs package.json ./
 USER remix
 EXPOSE 3000
 
+ENTRYPOINT ["/sbin/tini", "--"]
 # npm run docker-start = prisma migrate deploy + remix-serve
 CMD ["npm", "run", "docker-start"]

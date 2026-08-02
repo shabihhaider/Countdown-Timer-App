@@ -1,6 +1,7 @@
-.PHONY: help setup-env dev dev-d dev-tools dev-tunnel stop stop-clean \
+.PHONY: help setup setup-env dev dev-d dev-tools dev-tunnel stop stop-clean \
         prod prod-d stop-prod logs logs-app logs-db shell db-shell redis-cli \
-        migrate migrate-dev prisma-studio db-reset tunnel-url build clean \
+        migrate migrate-dev prisma-studio db-reset db-seed tunnel-url build clean \
+        dev-fresh \
         test test-unit test-e2e test-coverage test-all test-a11y \
         lint lint-fix format format-check typecheck audit audit-fix \
         security ci ci-local health-check
@@ -21,6 +22,24 @@ help: ## Show this help
 	@printf "\n"
 
 # ─── First-time setup ─────────────────────────────────────────────────────────
+
+setup: ## Full first-time setup: env → build → start → migrate → seed
+	@printf "\n\033[1m=== Countdown Timer App — Setup ===\033[0m\n\n"
+	@$(MAKE) setup-env
+	@printf "\033[33m[1/5] Building Docker images...\033[0m\n"
+	docker compose build
+	@printf "\033[33m[2/5] Starting services...\033[0m\n"
+	docker compose up -d
+	@printf "\033[33m[3/5] Waiting for services...\033[0m\n"
+	@until docker compose ps db --format json 2>/dev/null | grep -q '"Health":"healthy"'; do sleep 2; printf "."; done; printf "\n"
+	@printf "\033[33m[4/5] Running migrations...\033[0m\n"
+	docker compose exec app npx prisma migrate deploy
+	@printf "\033[33m[5/5] Seeding database...\033[0m\n"
+	docker compose exec app npx prisma db seed
+	@printf "\n\033[32m✓ Setup complete!\033[0m\n"
+	@printf "\n  App:     http://localhost:3000"
+	@printf "\n  Health:  http://localhost:3000/health"
+	@printf "\n  Adminer: http://localhost:8888 (run: docker compose --profile tools up -d adminer)\n\n"
 
 setup-env: ## Copy .env.example → .env (run once before starting)
 	@if [ ! -f .env ]; then \
@@ -104,6 +123,9 @@ migrate-dev: ## Create and apply a new Prisma migration (dev only)
 prisma-studio: ## Open Prisma Studio (browser DB explorer on port 5555)
 	docker compose exec app npx prisma studio --browser none
 
+db-seed: ## Seed the database with demo data
+	docker compose exec app npx prisma db seed
+
 db-reset: ## Reset database and re-apply all migrations (DESTRUCTIVE)
 	docker compose exec app npx prisma migrate reset --force
 
@@ -117,6 +139,10 @@ build: ## Build the production Docker image
 clean: ## Remove all containers, volumes, and local build artefacts (DESTRUCTIVE)
 	docker compose down -v --remove-orphans
 	rm -rf build .cache test-results playwright-report coverage
+
+dev-fresh: ## Full reset: stop → delete volumes → setup (DESTRUCTIVE)
+	$(MAKE) stop-clean
+	$(MAKE) setup
 
 # ─── Testing ──────────────────────────────────────────────────────────────────
 

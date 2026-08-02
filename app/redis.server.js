@@ -1,4 +1,6 @@
 import Redis from "ioredis";
+import { env } from "./env.server";
+import { RATE_LIMIT } from "./config.server";
 
 // Singleton Redis client for server-side use only.
 // Falls back gracefully when REDIS_URL is not set (e.g. local dev without Docker).
@@ -8,7 +10,7 @@ let redis = null;
 function getRedis() {
   if (redis) return redis;
 
-  const url = process.env.REDIS_URL;
+  const url = env.REDIS_URL;
   if (!url) return null;
 
   redis = new Redis(url, {
@@ -30,8 +32,8 @@ function getRedis() {
   return redis;
 }
 
-const RATE_LIMIT_WINDOW_SEC = 60;
-const RATE_LIMIT_MAX = 60;
+const RATE_LIMIT_WINDOW_SEC = RATE_LIMIT.WINDOW_SECONDS;
+const RATE_LIMIT_MAX = RATE_LIMIT.MAX_REQUESTS;
 
 /**
  * Redis-backed rate limiter. Falls back to a simple in-memory Map when Redis
