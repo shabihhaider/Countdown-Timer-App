@@ -8,16 +8,24 @@ export const meta = () => [{ title: "Countdown Timer Bar" }];
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
 
-  // Redirect to the app if any Shopify-related parameter is present.
-  // With unstable_newEmbeddedAuthStrategy, Shopify may pass `host`
-  // and `id_token` instead of `shop` when loading in the admin iframe.
-  if (
-    url.searchParams.get("shop") ||
-    url.searchParams.get("host") ||
-    url.searchParams.get("id_token") ||
-    url.searchParams.get("hmac")
-  ) {
+  // With unstable_newEmbeddedAuthStrategy, Shopify loads the app iframe
+  // without query parameters. App Bridge (which handles the session token
+  // exchange) only initializes on /app routes via AppProvider. The root /
+  // route has no AppProvider, so we must always redirect to /app and let
+  // authenticate.admin() handle the OAuth flow properly.
+  //
+  // For direct browser access (non-embedded), /app will bounce through
+  // Shopify OAuth and return to the app authenticated.
+  if (url.searchParams.toString()) {
     throw redirect(`/app?${url.searchParams.toString()}`);
+  }
+
+  // Detect embedded context: when loaded in the Shopify admin iframe,
+  // the Sec-Fetch-Dest header is "iframe". Redirect to /app so App
+  // Bridge can initialize and handle authentication.
+  const fetchDest = request.headers.get("sec-fetch-dest");
+  if (fetchDest === "iframe") {
+    throw redirect("/app");
   }
 
   return { showForm: Boolean(login) };
