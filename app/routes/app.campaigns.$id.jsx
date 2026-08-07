@@ -10,7 +10,6 @@ import {
   Button,
   Toast,
   Frame,
-  ColorPicker,
   Select,
   Banner,
 } from "@shopify/polaris";
@@ -26,9 +25,9 @@ import {
   formValuesToCampaignData,
   validateCampaignForm,
   isValidHex,
-  hexToHsb,
-  hsbToHex,
 } from "../utils/campaign";
+import { ColorPickerField } from "../components/ColorPickerField";
+import { TimerPreview } from "../components/TimerPreview";
 
 export const loader = async ({ request, params }) => {
   const { session } = await authenticate.admin(request);
@@ -48,11 +47,7 @@ export const loader = async ({ request, params }) => {
   }
 
   return json({
-    campaign: {
-      id: campaign.id,
-      name: campaign.name,
-      isActive: campaign.isActive,
-    },
+    campaign: { id: campaign.id, name: campaign.name, isActive: campaign.isActive },
     settings: campaignToFormValues(campaign),
   });
 };
@@ -66,11 +61,7 @@ export const action = async ({ request, params }) => {
     return json({ success: false, errors: { _form: "Invalid campaign ID" } }, { status: 400 });
   }
 
-  // Verify ownership
-  const existing = await db.campaign.findFirst({
-    where: { id: campaignId, shop },
-  });
-
+  const existing = await db.campaign.findFirst({ where: { id: campaignId, shop } });
   if (!existing) {
     return json({ success: false, errors: { _form: "Campaign not found" } }, { status: 404 });
   }
@@ -83,16 +74,23 @@ export const action = async ({ request, params }) => {
     buttonLink: String(formData.get("buttonLink") || "").trim(),
     endDate: String(formData.get("endDate") || "").trim(),
     barColor: String(formData.get("barColor") || DEFAULT_CAMPAIGN_FORM.barColor).trim(),
+    textColor: String(formData.get("textColor") || DEFAULT_CAMPAIGN_FORM.textColor).trim(),
+    buttonTextColor: String(
+      formData.get("buttonTextColor") || DEFAULT_CAMPAIGN_FORM.buttonTextColor
+    ).trim(),
+    buttonBgColor: String(
+      formData.get("buttonBgColor") || DEFAULT_CAMPAIGN_FORM.buttonBgColor
+    ).trim(),
     barPosition: String(formData.get("barPosition") || "top"),
     endAction: String(formData.get("endAction") || "hide"),
     customEndMessage: String(formData.get("customEndMessage") || "").trim(),
   };
 
   const errors = validateCampaignForm(raw);
-
-  if (!isValidHex(raw.barColor)) {
-    raw.barColor = DEFAULT_CAMPAIGN_FORM.barColor;
-  }
+  if (!isValidHex(raw.barColor)) raw.barColor = DEFAULT_CAMPAIGN_FORM.barColor;
+  if (!isValidHex(raw.textColor)) raw.textColor = DEFAULT_CAMPAIGN_FORM.textColor;
+  if (!isValidHex(raw.buttonTextColor)) raw.buttonTextColor = DEFAULT_CAMPAIGN_FORM.buttonTextColor;
+  if (!isValidHex(raw.buttonBgColor)) raw.buttonBgColor = DEFAULT_CAMPAIGN_FORM.buttonBgColor;
 
   if (Object.keys(errors).length > 0) {
     return json({ success: false, errors, values: raw }, { status: 422 });
@@ -112,7 +110,6 @@ export default function CampaignEditPage() {
   const navigation = useNavigation();
 
   const [formState, setFormState] = useState({ ...settings, name: campaign.name });
-  const [hexInput, setHexInput] = useState(settings.barColor || DEFAULT_CAMPAIGN_FORM.barColor);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastIsError, setToastIsError] = useState(false);
@@ -123,34 +120,23 @@ export default function CampaignEditPage() {
   useEffect(() => {
     if (actionData?.errors && actionData.values) {
       setFormState({ ...actionData.values });
-      setHexInput(actionData.values.barColor || DEFAULT_CAMPAIGN_FORM.barColor);
     }
   }, [actionData]);
 
   useEffect(() => {
     if (actionData?.success) {
-      setToastMessage("Campaign saved successfully!");
+      setToastMessage("Campaign saved!");
       setToastIsError(false);
       setShowToast(true);
     } else if (actionData?.success === false && !actionData?.errors) {
-      setToastMessage("Failed to save campaign. Please try again.");
+      setToastMessage("Failed to save. Please try again.");
       setToastIsError(true);
       setShowToast(true);
     }
   }, [actionData]);
 
-  const handleColorPickerChange = useCallback((hsb) => {
-    const hex = hsbToHex(hsb);
-    setFormState((s) => ({ ...s, barColor: hex }));
-    setHexInput(hex);
-  }, []);
-
-  const handleHexInputChange = useCallback((value) => {
-    setHexInput(value);
-    const normalized = value.startsWith("#") ? value : `#${value}`;
-    if (isValidHex(normalized)) {
-      setFormState((s) => ({ ...s, barColor: normalized }));
-    }
+  const handleChange = useCallback((field, value) => {
+    setFormState((s) => ({ ...s, [field]: value }));
   }, []);
 
   const nowIso = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
@@ -163,6 +149,7 @@ export default function CampaignEditPage() {
         <TitleBar title={`Edit: ${campaign.name}`} />
 
         <Layout>
+          {/* Editor — Primary */}
           <Layout.Section>
             <Form method="post">
               <BlockStack gap="400">
@@ -193,7 +180,7 @@ export default function CampaignEditPage() {
                       <TextField
                         label="Campaign Name"
                         value={formState.name}
-                        onChange={(value) => setFormState((s) => ({ ...s, name: value }))}
+                        onChange={(v) => handleChange("name", v)}
                         name="name"
                         placeholder="My Sale"
                         helpText="Internal name to identify this campaign."
@@ -202,7 +189,7 @@ export default function CampaignEditPage() {
                       <TextField
                         label="Bar Message Text"
                         value={formState.barMessage}
-                        onChange={(value) => setFormState((s) => ({ ...s, barMessage: value }))}
+                        onChange={(v) => handleChange("barMessage", v)}
                         name="barMessage"
                         placeholder="Flash Sale Ends In..."
                         helpText="The main message displayed in the countdown bar (max 200 characters)."
@@ -214,7 +201,7 @@ export default function CampaignEditPage() {
                       <TextField
                         label="Countdown End Date & Time"
                         value={formState.endDate}
-                        onChange={(value) => setFormState((s) => ({ ...s, endDate: value }))}
+                        onChange={(v) => handleChange("endDate", v)}
                         type="datetime-local"
                         name="endDate"
                         helpText="When your sale ends. Must be in the future."
@@ -234,7 +221,7 @@ export default function CampaignEditPage() {
                       <TextField
                         label="Button Text"
                         value={formState.buttonText}
-                        onChange={(value) => setFormState((s) => ({ ...s, buttonText: value }))}
+                        onChange={(v) => handleChange("buttonText", v)}
                         name="buttonText"
                         placeholder="Shop Now"
                         helpText="Leave blank to hide the button."
@@ -243,10 +230,10 @@ export default function CampaignEditPage() {
                       <TextField
                         label="Button Link"
                         value={formState.buttonLink}
-                        onChange={(value) => setFormState((s) => ({ ...s, buttonLink: value }))}
+                        onChange={(v) => handleChange("buttonLink", v)}
                         name="buttonLink"
                         placeholder="/collections/all"
-                        helpText="Relative path (e.g. /collections/sale) or full URL (https://...)."
+                        helpText="Relative path (e.g. /collections/sale) or full URL."
                         autoComplete="off"
                         error={fieldErrors.buttonLink}
                       />
@@ -259,42 +246,30 @@ export default function CampaignEditPage() {
                     <Text variant="headingMd" as="h2">
                       Design
                     </Text>
-                    <BlockStack gap="200">
-                      <Text variant="bodyMd" fontWeight="semibold" as="p">
-                        Bar Background Color
-                      </Text>
-                      <InlineStack gap="300" blockAlign="center">
-                        <ColorPicker
-                          onChange={handleColorPickerChange}
-                          color={hexToHsb(formState.barColor || DEFAULT_CAMPAIGN_FORM.barColor)}
-                        />
-                        <BlockStack gap="100">
-                          <TextField
-                            label="Hex code"
-                            labelHidden
-                            value={hexInput}
-                            onChange={handleHexInputChange}
-                            autoComplete="off"
-                            prefix="#"
-                            placeholder="288d40"
-                            monospaced
-                            maxLength={7}
-                          />
-                          <div
-                            style={{
-                              width: "80px",
-                              height: "36px",
-                              backgroundColor: formState.barColor,
-                              borderRadius: "6px",
-                              border: "1px solid var(--p-color-border)",
-                            }}
-                            aria-label={`Current color: ${formState.barColor}`}
-                          />
-                        </BlockStack>
-                      </InlineStack>
-                      <input type="hidden" name="barColor" value={formState.barColor} />
-                    </BlockStack>
-
+                    <ColorPickerField
+                      label="Bar Background Color"
+                      value={formState.barColor}
+                      onChange={(v) => handleChange("barColor", v)}
+                      name="barColor"
+                    />
+                    <ColorPickerField
+                      label="Text Color"
+                      value={formState.textColor}
+                      onChange={(v) => handleChange("textColor", v)}
+                      name="textColor"
+                    />
+                    <ColorPickerField
+                      label="Button Background Color"
+                      value={formState.buttonBgColor}
+                      onChange={(v) => handleChange("buttonBgColor", v)}
+                      name="buttonBgColor"
+                    />
+                    <ColorPickerField
+                      label="Button Text Color"
+                      value={formState.buttonTextColor}
+                      onChange={(v) => handleChange("buttonTextColor", v)}
+                      name="buttonTextColor"
+                    />
                     <Select
                       label="Bar Position"
                       options={[
@@ -302,7 +277,7 @@ export default function CampaignEditPage() {
                         { label: "Bottom of page", value: "bottom" },
                       ]}
                       value={formState.barPosition}
-                      onChange={(value) => setFormState((s) => ({ ...s, barPosition: value }))}
+                      onChange={(v) => handleChange("barPosition", v)}
                       name="barPosition"
                     />
                   </BlockStack>
@@ -322,18 +297,15 @@ export default function CampaignEditPage() {
                           { label: "Show custom message", value: "show_custom" },
                         ]}
                         value={formState.endAction}
-                        onChange={(value) => setFormState((s) => ({ ...s, endAction: value }))}
+                        onChange={(v) => handleChange("endAction", v)}
                         helpText="What should happen when the countdown reaches zero?"
                       />
                       <input type="hidden" name="endAction" value={formState.endAction} />
-
                       {formState.endAction === "show_custom" && (
                         <TextField
                           label="Custom End Message"
                           value={formState.customEndMessage || ""}
-                          onChange={(value) =>
-                            setFormState((s) => ({ ...s, customEndMessage: value }))
-                          }
+                          onChange={(v) => handleChange("customEndMessage", v)}
                           name="customEndMessage"
                           placeholder="Thanks for shopping with us!"
                           helpText="This message will replace the countdown when it ends."
@@ -358,6 +330,13 @@ export default function CampaignEditPage() {
                 </InlineStack>
               </BlockStack>
             </Form>
+          </Layout.Section>
+
+          {/* Live Preview — Secondary */}
+          <Layout.Section variant="oneThird">
+            <div style={{ position: "sticky", top: "20px" }}>
+              <TimerPreview formState={formState} />
+            </div>
           </Layout.Section>
         </Layout>
 

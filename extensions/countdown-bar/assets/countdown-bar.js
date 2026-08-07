@@ -41,8 +41,9 @@
 
   // --- Apply settings and start countdown ---
   function applySettings(s) {
-    // Background color
+    // Colors
     bar.style.backgroundColor = s.barColor || "#288d40";
+    bar.style.color = s.textColor || "#ffffff";
 
     // Position (top / bottom)
     const pos = Array.isArray(s.barPosition) ? s.barPosition[0] : s.barPosition || "top";
@@ -55,18 +56,13 @@
     // CTA button
     const btnEl = document.getElementById("cdb-btn");
     if (btnEl) {
-      if (s.buttonText && s.buttonUrl) {
+      const btnUrl = s.buttonUrl || s.buttonLink; // buttonLink is legacy fallback
+      if (s.buttonText && btnUrl) {
         btnEl.textContent = s.buttonText;
-        btnEl.href = s.buttonUrl;
+        btnEl.href = btnUrl;
         btnEl.style.display = "";
-        btnEl.addEventListener("click", function () {
-          fireTrack("click");
-        });
-      } else if (s.buttonText && s.buttonLink) {
-        // Legacy field name fallback
-        btnEl.textContent = s.buttonText;
-        btnEl.href = s.buttonLink;
-        btnEl.style.display = "";
+        if (s.buttonTextColor) btnEl.style.color = s.buttonTextColor;
+        if (s.buttonBgColor) btnEl.style.backgroundColor = s.buttonBgColor;
         btnEl.addEventListener("click", function () {
           fireTrack("click");
         });
