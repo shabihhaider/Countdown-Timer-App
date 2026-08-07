@@ -188,7 +188,7 @@ export default function DashboardPage() {
                       content: "Create your first campaign",
                       url: "/app/campaigns/new",
                     }}
-                    image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+                    image=""
                   >
                     <p>Create a countdown timer to start driving conversions on your store.</p>
                   </EmptyState>
