@@ -4,6 +4,8 @@
   "scripts": {
     "build": "prisma generate && remix vite:build",
     "dev": "shopify app dev",
+    "dev:services": "docker compose up db redis -d && echo 'DB + Redis started on localhost'",
+    "dev:services:stop": "docker compose down",
     "config:link": "shopify app config link",
     "generate": "shopify app generate",
     "deploy": "shopify app deploy",
