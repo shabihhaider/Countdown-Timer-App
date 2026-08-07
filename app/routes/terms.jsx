@@ -1,5 +1,9 @@
 import { useRouteError } from "@remix-run/react";
 
+export const headers = () => ({
+  "X-Frame-Options": "DENY",
+});
+
 const SUPPORT_EMAIL = "support@countdown-timer-app.com";
 
 const styles = {

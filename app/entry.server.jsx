@@ -7,30 +7,16 @@ import { addDocumentResponseHeaders } from "./shopify.server";
 
 export const streamTimeout = 5000;
 
-/**
- * Public pages that must NOT receive Shopify App Bridge document headers.
- * These pages lack a Polaris AppProvider — injecting App Bridge scripts
- * causes MissingAppProviderError on client-side hydration.
- *
- * All other routes (/, /app/*, /auth/*, /webhooks/*) need the headers
- * for embedded auth token exchange and App Bridge initialization.
- */
-const PUBLIC_ROUTES_NO_SHOPIFY = ["/privacy", "/terms", "/health"];
-
-function shouldAddShopifyHeaders(url) {
-  const { pathname } = new URL(url);
-  return !PUBLIC_ROUTES_NO_SHOPIFY.some((route) => pathname.startsWith(route));
-}
-
 export default async function handleRequest(
   request,
   responseStatusCode,
   responseHeaders,
   remixContext
 ) {
-  if (shouldAddShopifyHeaders(request.url)) {
-    addDocumentResponseHeaders(request, responseHeaders);
-  }
+  // Must be called unconditionally on ALL requests. The Shopify embedded auth
+  // strategy relies on these headers for session token exchange and iframe
+  // CSP. Removing them from any route breaks authenticate.admin() flow.
+  addDocumentResponseHeaders(request, responseHeaders);
   const userAgent = request.headers.get("user-agent");
   const callbackName = isbot(userAgent ?? "") ? "onAllReady" : "onShellReady";
 
