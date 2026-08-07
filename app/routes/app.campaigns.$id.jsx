@@ -5,15 +5,14 @@ import {
   FormLayout,
   TextField,
   Text,
-  InlineStack,
   BlockStack,
-  Button,
   Toast,
   Frame,
   Select,
   Banner,
+  ContextualSaveBar,
 } from "@shopify/polaris";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { json } from "@remix-run/node";
 import { useLoaderData, Form, useActionData, useNavigation } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
@@ -108,14 +107,18 @@ export default function CampaignEditPage() {
   const { campaign, settings } = useLoaderData();
   const actionData = useActionData();
   const navigation = useNavigation();
+  const formRef = useRef(null);
 
-  const [formState, setFormState] = useState({ ...settings, name: campaign.name });
+  const initialState = { ...settings, name: campaign.name };
+  const [formState, setFormState] = useState(initialState);
+  const [savedState, setSavedState] = useState(initialState);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastIsError, setToastIsError] = useState(false);
 
   const isSubmitting = navigation.state === "submitting";
   const fieldErrors = actionData?.errors || {};
+  const isDirty = JSON.stringify(formState) !== JSON.stringify(savedState);
 
   useEffect(() => {
     if (actionData?.errors && actionData.values) {
@@ -125,6 +128,7 @@ export default function CampaignEditPage() {
 
   useEffect(() => {
     if (actionData?.success) {
+      setSavedState({ ...formState });
       setToastMessage("Campaign saved!");
       setToastIsError(false);
       setShowToast(true);
@@ -139,19 +143,36 @@ export default function CampaignEditPage() {
     setFormState((s) => ({ ...s, [field]: value }));
   }, []);
 
+  const handleDiscard = useCallback(() => {
+    setFormState({ ...savedState });
+  }, [savedState]);
+
   const nowIso = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
     .toISOString()
     .slice(0, 16);
 
   return (
     <Frame>
+      {isDirty && (
+        <ContextualSaveBar
+          message="Unsaved changes"
+          saveAction={{
+            onAction: () => formRef.current?.requestSubmit(),
+            loading: isSubmitting,
+            disabled: isSubmitting,
+          }}
+          discardAction={{
+            onAction: handleDiscard,
+          }}
+        />
+      )}
       <Page backAction={{ content: "Campaigns", url: "/app/campaigns" }} title={campaign.name}>
         <TitleBar title={`Edit: ${campaign.name}`} />
 
         <Layout>
           {/* Editor — Primary */}
           <Layout.Section>
-            <Form method="post">
+            <Form method="post" ref={formRef}>
               <BlockStack gap="400">
                 {fieldErrors._form && (
                   <Banner tone="critical">
@@ -316,18 +337,6 @@ export default function CampaignEditPage() {
                     </FormLayout>
                   </BlockStack>
                 </Card>
-
-                <InlineStack align="end">
-                  <Button
-                    variant="primary"
-                    loading={isSubmitting}
-                    disabled={isSubmitting}
-                    submit
-                    size="large"
-                  >
-                    {isSubmitting ? "Saving..." : "Save Campaign"}
-                  </Button>
-                </InlineStack>
               </BlockStack>
             </Form>
           </Layout.Section>
