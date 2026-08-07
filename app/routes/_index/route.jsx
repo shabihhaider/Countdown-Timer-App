@@ -8,7 +8,15 @@ export const meta = () => [{ title: "Countdown Timer Bar" }];
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
 
-  if (url.searchParams.get("shop")) {
+  // Redirect to the app if any Shopify-related parameter is present.
+  // With unstable_newEmbeddedAuthStrategy, Shopify may pass `host`
+  // and `id_token` instead of `shop` when loading in the admin iframe.
+  if (
+    url.searchParams.get("shop") ||
+    url.searchParams.get("host") ||
+    url.searchParams.get("id_token") ||
+    url.searchParams.get("hmac")
+  ) {
     throw redirect(`/app?${url.searchParams.toString()}`);
   }
 
