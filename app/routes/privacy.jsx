@@ -3,6 +3,8 @@ import { useRouteError } from "@remix-run/react";
 // Prevent Shopify App Bridge from loading on this public page.
 // Without this, App Bridge scripts injected by addDocumentResponseHeaders
 // crash with MissingAppProviderError since there's no Polaris AppProvider.
+export const meta = () => [{ title: "Privacy Policy — Countdown Timer Bar" }];
+
 export const headers = () => ({
   "X-Frame-Options": "DENY",
 });

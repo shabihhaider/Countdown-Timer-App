@@ -1,5 +1,7 @@
 import { useRouteError } from "@remix-run/react";
 
+export const meta = () => [{ title: "Terms of Service — Countdown Timer Bar" }];
+
 export const headers = () => ({
   "X-Frame-Options": "DENY",
 });
