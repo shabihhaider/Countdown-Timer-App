@@ -67,10 +67,21 @@ export default defineConfig({
         },
       },
     },
-    {
-      name: "mobile-chrome",
-      use: { ...devices["Pixel 5"] },
-    },
+    // Mobile Chrome — only for visual/responsive tests, not API tests.
+    // Excluded from CI to avoid rate limit collisions with chromium project.
+    ...(process.env.CI
+      ? []
+      : [
+          {
+            name: "mobile-chrome",
+            use: {
+              ...devices["Pixel 5"],
+              launchOptions: {
+                args: ["--no-sandbox", "--disable-setuid-sandbox"],
+              },
+            },
+          },
+        ]),
   ],
 
   outputDir: "test-results/",
