@@ -28,6 +28,7 @@ export default defineConfig({
         "scripts/**",
         "docs/**",
         ".cache/**",
+        "**/error.server.*",
       ],
     },
     include: [
