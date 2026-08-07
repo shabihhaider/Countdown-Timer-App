@@ -41,6 +41,15 @@ export const loader = async ({ request }) => {
     });
 
     if (campaign) {
+      // Only serve campaigns that have started (or have no start date)
+      const now = new Date();
+      if (campaign.startDate && campaign.startDate > now) {
+        return json(
+          { success: false, message: "No active campaign found" },
+          { headers: CORS_HEADERS }
+        );
+      }
+
       const settings = {
         barMessage: campaign.barMessage,
         buttonText: campaign.buttonText,
@@ -51,13 +60,6 @@ export const loader = async ({ request }) => {
         endAction: campaign.endAction,
         customEndMessage: campaign.customEndMessage,
       };
-      return json({ success: true, settings }, { headers: CORS_HEADERS });
-    }
-
-    // 2. Fallback to legacy Setting model (existing shops before migration)
-    const legacy = await db.setting.findUnique({ where: { shop } });
-    if (legacy?.value) {
-      const settings = JSON.parse(legacy.value);
       return json({ success: true, settings }, { headers: CORS_HEADERS });
     }
 

@@ -12,7 +12,6 @@ import {
   Frame,
   ColorPicker,
   Select,
-  ChoiceList,
   Banner,
 } from "@shopify/polaris";
 
@@ -29,7 +28,7 @@ const DEFAULT_SETTINGS = {
   buttonLink: "/collections/all",
   endDate: "",
   barColor: "#288d40",
-  barPosition: ["top"],
+  barPosition: "top",
   endAction: "hide",
   customEndMessage: "",
 };
@@ -126,26 +125,41 @@ function isValidHex(hex) {
   return /^#[0-9a-fA-F]{6}$/.test(hex);
 }
 
+/**
+ * Maps a Campaign record to the flat form-field shape used by the UI.
+ * Keeps field names consistent across form, state, and validation.
+ */
+function campaignToFormValues(campaign) {
+  return {
+    barMessage: campaign.barMessage,
+    buttonText: campaign.buttonText,
+    buttonLink: campaign.buttonUrl,
+    endDate: campaign.endDate
+      ? new Date(campaign.endDate.getTime() - new Date().getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 16)
+      : "",
+    barColor: campaign.backgroundColor,
+    barPosition: campaign.position,
+    endAction: campaign.endAction,
+    customEndMessage: campaign.customEndMessage,
+  };
+}
+
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
 
-  const savedSetting = await db.setting.findUnique({ where: { shop } });
-  let settings = { ...DEFAULT_SETTINGS };
+  // Load the most recent campaign for this shop (create/edit target)
+  const campaign = await db.campaign.findFirst({
+    where: { shop },
+    orderBy: { updatedAt: "desc" },
+  });
 
-  if (savedSetting?.value) {
-    try {
-      const parsed = JSON.parse(savedSetting.value);
-      const barPosition = Array.isArray(parsed.barPosition)
-        ? parsed.barPosition
-        : [parsed.barPosition || "top"];
-      settings = { ...settings, ...parsed, barPosition };
-    } catch {
-      // corrupted settings — use defaults
-    }
-  }
+  const settings = campaign ? campaignToFormValues(campaign) : { ...DEFAULT_SETTINGS };
+  const campaignId = campaign?.id ?? null;
 
-  return json({ settings });
+  return json({ settings, campaignId });
 };
 
 export const action = async ({ request }) => {
@@ -153,6 +167,8 @@ export const action = async ({ request }) => {
   const shop = session.shop;
 
   const formData = await request.formData();
+  const campaignId = formData.get("campaignId") ? Number(formData.get("campaignId")) : null;
+
   const raw = {
     barMessage: String(formData.get("barMessage") || "").trim(),
     buttonText: String(formData.get("buttonText") || "").trim(),
@@ -201,17 +217,54 @@ export const action = async ({ request }) => {
     return json({ success: false, errors, values: raw }, { status: 422 });
   }
 
-  await db.setting.upsert({
+  // Map form field names → Campaign model column names
+  const campaignData = {
+    barMessage: raw.barMessage,
+    buttonText: raw.buttonText,
+    buttonUrl: raw.buttonLink,
+    endDate: new Date(raw.endDate),
+    backgroundColor: raw.barColor,
+    position: raw.barPosition,
+    endAction: raw.endAction,
+    customEndMessage: raw.customEndMessage,
+  };
+
+  if (campaignId) {
+    // Verify ownership before updating
+    const existing = await db.campaign.findFirst({
+      where: { id: campaignId, shop },
+    });
+
+    if (existing) {
+      await db.campaign.update({
+        where: { id: campaignId },
+        data: campaignData,
+      });
+    } else {
+      // Campaign not found or belongs to different shop — create new
+      await db.campaign.create({
+        data: { ...campaignData, shop, isActive: true },
+      });
+    }
+  } else {
+    // No existing campaign — create one
+    await db.campaign.create({
+      data: { ...campaignData, shop, isActive: true },
+    });
+  }
+
+  // Mark onboarding steps 1 & 2 as complete
+  await db.onboardingState.upsert({
     where: { shop },
-    update: { value: JSON.stringify(raw) },
-    create: { shop, value: JSON.stringify(raw) },
+    create: { shop, step1Complete: true, step2Complete: true },
+    update: { step1Complete: true, step2Complete: true },
   });
 
   return json({ success: true, settings: raw });
 };
 
 export default function Index() {
-  const { settings } = useLoaderData();
+  const { settings, campaignId } = useLoaderData();
   const actionData = useActionData();
   const navigation = useNavigation();
 
@@ -227,10 +280,10 @@ export default function Index() {
   // Sync server validation values back into form on error
   useEffect(() => {
     if (actionData?.errors && actionData.values) {
-      const pos = Array.isArray(actionData.values.barPosition)
-        ? actionData.values.barPosition
-        : [actionData.values.barPosition || "top"];
-      setFormState({ ...actionData.values, barPosition: pos });
+      const barPosition = Array.isArray(actionData.values.barPosition)
+        ? actionData.values.barPosition[0]
+        : actionData.values.barPosition || "top";
+      setFormState({ ...actionData.values, barPosition });
       setHexInput(actionData.values.barColor || DEFAULT_SETTINGS.barColor);
     }
   }, [actionData]);
@@ -273,6 +326,7 @@ export default function Index() {
         <Layout>
           <Layout.Section>
             <Form method="post">
+              {campaignId && <input type="hidden" name="campaignId" value={campaignId} />}
               <BlockStack gap="400">
                 {Object.keys(fieldErrors).length > 0 && (
                   <Banner tone="critical" title="Please fix the following errors before saving:">
@@ -389,16 +443,16 @@ export default function Index() {
                       <input type="hidden" name="barColor" value={formState.barColor} />
                     </BlockStack>
 
-                    <ChoiceList
-                      title="Bar Position"
-                      choices={[
+                    <Select
+                      label="Bar Position"
+                      options={[
                         { label: "Top of page", value: "top" },
                         { label: "Bottom of page", value: "bottom" },
                       ]}
-                      selected={formState.barPosition}
+                      value={formState.barPosition}
                       onChange={(value) => setFormState((s) => ({ ...s, barPosition: value }))}
+                      name="barPosition"
                     />
-                    <input type="hidden" name="barPosition" value={formState.barPosition[0]} />
                   </BlockStack>
                 </Card>
 

@@ -1,3 +1,5 @@
+import { useRouteError } from "@remix-run/react";
+
 const SUPPORT_EMAIL = "support@countdown-timer-app.com";
 
 const styles = {
@@ -131,6 +133,22 @@ export default function Privacy() {
           {SUPPORT_EMAIL}
         </a>
         .
+      </p>
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  useRouteError();
+  return (
+    <div style={{ ...styles.body, padding: "2rem" }}>
+      <h1 style={styles.h1}>Privacy Policy</h1>
+      <p style={styles.p}>
+        Sorry, this page could not be loaded. Please contact us at{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`} style={styles.a}>
+          {SUPPORT_EMAIL}
+        </a>{" "}
+        for a copy of our Privacy Policy.
       </p>
     </div>
   );

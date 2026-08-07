@@ -7,13 +7,28 @@ import { addDocumentResponseHeaders } from "./shopify.server";
 
 export const streamTimeout = 5000;
 
+/**
+ * Routes that require Shopify App Bridge headers (embedded app routes).
+ * Public pages (/privacy, /terms, /health, /) must NOT receive these headers
+ * because they lack a Polaris AppProvider and App Bridge would crash with
+ * MissingAppProviderError on client-side hydration.
+ */
+const SHOPIFY_HEADER_PREFIXES = ["/app", "/auth"];
+
+function shouldAddShopifyHeaders(url) {
+  const { pathname } = new URL(url);
+  return SHOPIFY_HEADER_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
 export default async function handleRequest(
   request,
   responseStatusCode,
   responseHeaders,
   remixContext
 ) {
-  addDocumentResponseHeaders(request, responseHeaders);
+  if (shouldAddShopifyHeaders(request.url)) {
+    addDocumentResponseHeaders(request, responseHeaders);
+  }
   const userAgent = request.headers.get("user-agent");
   const callbackName = isbot(userAgent ?? "") ? "onAllReady" : "onShellReady";
 
