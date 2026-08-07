@@ -1,79 +1,23 @@
 import { redirect } from "@remix-run/node";
-import { Form, useLoaderData, Link } from "@remix-run/react";
-import { login } from "../../shopify.server";
-import styles from "./styles.module.css";
-
-export const meta = () => [{ title: "Countdown Timer Bar" }];
 
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
 
-  // With unstable_newEmbeddedAuthStrategy, Shopify loads the app iframe
-  // without query parameters. App Bridge (which handles the session token
-  // exchange) only initializes on /app routes via AppProvider. The root /
-  // route has no AppProvider, so we must always redirect to /app and let
-  // authenticate.admin() handle the OAuth flow properly.
+  // Always redirect to /app. With unstable_newEmbeddedAuthStrategy, Shopify
+  // loads the app iframe at / without query parameters, and App Bridge
+  // (session token exchange) only initializes on /app routes via AppProvider.
+  // Keeping the landing page at / would show a login form instead of the app.
   //
-  // For direct browser access (non-embedded), /app will bounce through
-  // Shopify OAuth and return to the app authenticated.
-  if (url.searchParams.toString()) {
-    throw redirect(`/app?${url.searchParams.toString()}`);
-  }
-
-  // Detect embedded context: when loaded in the Shopify admin iframe,
-  // the Sec-Fetch-Dest header is "iframe". Redirect to /app so App
-  // Bridge can initialize and handle authentication.
-  const fetchDest = request.headers.get("sec-fetch-dest");
-  if (fetchDest === "iframe") {
-    throw redirect("/app");
-  }
-
-  return { showForm: Boolean(login) };
+  // The /app route handles all auth scenarios:
+  //   - Embedded (admin iframe): App Bridge + session token exchange
+  //   - Direct access: bounces through Shopify OAuth
+  //
+  // The public landing page will be restored when redesigned (#13).
+  const params = url.searchParams.toString();
+  throw redirect(params ? `/app?${params}` : "/app");
 };
 
-export default function App() {
-  const { showForm } = useLoaderData();
-
-  return (
-    <div className={styles.index}>
-      <main className={styles.content}>
-        <h1 className={styles.heading}>Countdown Timer Bar</h1>
-        <p className={styles.text}>
-          Create real urgency and drive more sales with a customizable countdown timer on your
-          Shopify store.
-        </p>
-        {showForm && (
-          <Form className={styles.form} method="post" action="/auth/login">
-            <label className={styles.label}>
-              <span>Shop domain</span>
-              <input className={styles.input} type="text" name="shop" />
-              <span>e.g: my-shop-domain.myshopify.com</span>
-            </label>
-            <button className={styles.button} type="submit">
-              Log in
-            </button>
-          </Form>
-        )}
-        <ul className={styles.list}>
-          <li>
-            <strong>Easy setup in 2 minutes.</strong> No coding required — configure your timer,
-            choose your design, and go live instantly.
-          </li>
-          <li>
-            <strong>Real countdown timers.</strong> End dates are stored server-side in UTC so your
-            deadline is the same for every visitor, every browser, every device.
-          </li>
-          <li>
-            <strong>Conversion analytics.</strong> See how many impressions and clicks your timer
-            generates so you can measure ROI directly in the app.
-          </li>
-        </ul>
-        <p style={{ marginTop: "2rem", fontSize: "0.8rem", color: "#888" }}>
-          <Link to="/privacy">Privacy Policy</Link>
-          {" · "}
-          <Link to="/terms">Terms of Service</Link>
-        </p>
-      </main>
-    </div>
-  );
+// Remix requires a default export even though the loader always redirects
+export default function Index() {
+  return null;
 }
