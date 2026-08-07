@@ -3,6 +3,8 @@ import { Form, useLoaderData, Link } from "@remix-run/react";
 import { login } from "../../shopify.server";
 import styles from "./styles.module.css";
 
+export const meta = () => [{ title: "Countdown Timer Bar" }];
+
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
 
@@ -18,7 +20,7 @@ export default function App() {
 
   return (
     <div className={styles.index}>
-      <div className={styles.content}>
+      <main className={styles.content}>
         <h1 className={styles.heading}>Countdown Timer Bar</h1>
         <p className={styles.text}>
           Create real urgency and drive more sales with a customizable countdown timer on your
@@ -55,7 +57,7 @@ export default function App() {
           {" · "}
           <Link to="/terms">Terms of Service</Link>
         </p>
-      </div>
+      </main>
     </div>
   );
 }

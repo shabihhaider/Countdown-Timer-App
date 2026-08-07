@@ -1,7 +1,7 @@
 .PHONY: help setup setup-env dev dev-d dev-tools dev-tunnel stop stop-clean \
         prod prod-d stop-prod logs logs-app logs-db shell db-shell redis-cli \
         migrate migrate-dev prisma-studio db-reset db-seed tunnel-url build clean \
-        dev-fresh \
+        dev-fresh dev-shopify services services-stop \
         test test-unit test-e2e test-coverage test-all test-a11y \
         lint lint-fix format format-check typecheck audit audit-fix \
         security ci ci-local health-check
@@ -9,9 +9,14 @@
 # ─── Help ─────────────────────────────────────────────────────────────────────
 
 help: ## Show this help
-	@printf "\nCountdown Timer App — Docker Development\n\n"
-	@printf "\033[33mDevelopment:\033[0m\n"
+	@printf "\nCountdown Timer App — Development Commands\n\n"
+	@printf "\033[33m★ Quick Start (recommended):\033[0m\n"
+	@printf "  \033[36mmake dev-shopify\033[0m         Start DB+Redis then shopify app dev (RECOMMENDED)\n"
+	@printf "  \033[36mmake services\033[0m            Start only DB+Redis (then run: npm run dev)\n"
+	@printf "  \033[36mmake services-stop\033[0m       Stop DB+Redis\n"
+	@printf "\n\033[33mDocker Development:\033[0m\n"
 	@grep -E '^(dev|setup|stop|prod|logs|shell|db|redis|migrate|prisma|tunnel|build|clean)[a-zA-Z_-]*:.*?## .*$$' $(MAKEFILE_LIST) | \
+		grep -v 'dev-shopify\|services' | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}'
 	@printf "\n\033[33mTesting:\033[0m\n"
 	@grep -E '^test[a-zA-Z_:-]*:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -49,9 +54,35 @@ setup-env: ## Copy .env.example → .env (run once before starting)
 		printf ".env already exists, skipping\n"; \
 	fi
 
-# ─── Development ──────────────────────────────────────────────────────────────
+# ─── Native Development (recommended) ────────────────────────────────────────
 
-dev: ## Start dev environment in the foreground (Ctrl+C to stop)
+dev-shopify: ## Start DB+Redis then shopify app dev (RECOMMENDED daily workflow)
+	@printf "\n\033[1m=== Starting Shopify Dev Environment ===\033[0m\n\n"
+	docker compose up db redis -d
+	@printf "Waiting for database..."
+	@until docker compose ps db --format json 2>/dev/null | grep -q '"Health":"healthy"'; do sleep 2; printf "."; done; printf " \033[32mready\033[0m\n"
+	@printf "Waiting for Redis..."
+	@until docker compose ps redis --format json 2>/dev/null | grep -q '"Health":"healthy"'; do sleep 2; printf "."; done; printf " \033[32mready\033[0m\n"
+	@printf "\n\033[32m✓ Services ready — launching shopify app dev\033[0m\n"
+	@printf "  Shopify CLI will create a tunnel and open your app in the browser.\n"
+	@printf "  Press Ctrl+C to stop the dev server (DB+Redis keep running).\n\n"
+	npm run dev
+
+services: ## Start only DB + Redis (for manual shopify app dev)
+	docker compose up db redis -d
+	@printf "Waiting for database..."
+	@until docker compose ps db --format json 2>/dev/null | grep -q '"Health":"healthy"'; do sleep 2; printf "."; done; printf " \033[32mready\033[0m\n"
+	@printf "Waiting for Redis..."
+	@until docker compose ps redis --format json 2>/dev/null | grep -q '"Health":"healthy"'; do sleep 2; printf "."; done; printf " \033[32mready\033[0m\n"
+	@printf "\n\033[32m✓ DB (localhost:5432) + Redis (localhost:6379) ready\033[0m\n"
+	@printf "  Now run: npm run dev\n\n"
+
+services-stop: ## Stop DB + Redis background services
+	docker compose down
+
+# ─── Docker Development (full containerized) ─────────────────────────────────
+
+dev: ## Start full Docker dev environment in the foreground (Ctrl+C to stop)
 	docker compose up --build
 
 dev-d: ## Start dev environment in the background
