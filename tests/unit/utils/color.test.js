@@ -1,50 +1,9 @@
 /**
  * Unit tests for HSB/Hex color conversion.
- * Tests hexToHsb function logic extracted from app._index.jsx.
+ * Tests hexToHsb and hsbToHex from app/utils/campaign.js
  */
 
-// Extracted from app._index.jsx
-function hexToHsb(hex) {
-  let h = (hex || "#000000").replace("#", "").trim();
-  if (h.length === 3)
-    h = h
-      .split("")
-      .map((c) => c + c)
-      .join("");
-  const num = parseInt(h, 16);
-  const r = ((num >> 16) & 255) / 255;
-  const g = ((num >> 8) & 255) / 255;
-  const b = (num & 255) / 255;
-
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const d = max - min;
-
-  let hue = 0;
-  if (d !== 0) {
-    switch (max) {
-      case r:
-        hue = ((g - b) / d) % 6;
-        break;
-      case g:
-        hue = (b - r) / d + 2;
-        break;
-      case b:
-        hue = (r - g) / d + 4;
-        break;
-      default:
-        break;
-    }
-    hue *= 60;
-    if (hue < 0) hue += 360;
-  }
-
-  return {
-    hue: Math.round(hue),
-    saturation: max === 0 ? 0 : parseFloat((d / max).toFixed(4)),
-    brightness: parseFloat(max.toFixed(4)),
-  };
-}
+import { hexToHsb, hsbToHex } from "../../../app/utils/campaign";
 
 describe("hexToHsb", () => {
   it("converts pure black (#000000)", () => {
@@ -108,5 +67,30 @@ describe("hexToHsb", () => {
     const result = hexToHsb(null);
     expect(result.hue).toBe(0);
     expect(result.brightness).toBe(0);
+  });
+});
+
+describe("hsbToHex", () => {
+  it("converts black HSB to #000000", () => {
+    expect(hsbToHex({ hue: 0, saturation: 0, brightness: 0 })).toBe("#000000");
+  });
+
+  it("converts white HSB to #ffffff", () => {
+    expect(hsbToHex({ hue: 0, saturation: 0, brightness: 1 })).toBe("#ffffff");
+  });
+
+  it("converts red HSB to #ff0000", () => {
+    expect(hsbToHex({ hue: 0, saturation: 1, brightness: 1 })).toBe("#ff0000");
+  });
+
+  it("roundtrips through hexToHsb → hsbToHex", () => {
+    const original = "#288d40";
+    const hsb = hexToHsb(original);
+    const result = hsbToHex(hsb);
+    expect(result).toBe(original);
+  });
+
+  it("handles missing properties with defaults", () => {
+    expect(hsbToHex({})).toBe("#000000");
   });
 });

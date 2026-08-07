@@ -1,17 +1,13 @@
 /**
  * Unit tests for server-side validation logic.
- * Tests the shop param regex and button link URL validation
- * used in apps.countdown.settings.jsx and apps.countdown.track.jsx.
+ * Tests the shop param regex, button link URL validation,
+ * and campaign form validation.
  */
+
+import { isValidButtonLink, isValidHex, validateCampaignForm } from "../../../app/utils/campaign";
 
 // Mirrors SHOP_PARAM_REGEX in apps.countdown.settings.jsx
 const SHOP_PARAM_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/;
-
-// Mirrors isValidButtonLink in app._index.jsx (uses regex with negative lookahead)
-function isValidButtonLink(url) {
-  if (!url) return false;
-  return /^(\/(?!\/)|https:\/\/)/.test(url.trim());
-}
 
 // Mirrors VALID_EVENTS in apps.countdown.track.jsx
 const VALID_EVENTS = new Set(["impression", "click", "close"]);
@@ -40,16 +36,16 @@ describe("SHOP_PARAM_REGEX", () => {
       "",
       "notashopifystore.com",
       "store.shopify.com",
-      "-store.myshopify.com", // starts with hyphen
-      ".myshopify.com", // starts with dot
-      "store.myshopify.com/path", // has path
-      "store.myshopify.com?q=1", // has query
-      "https://store.myshopify.com", // has protocol
-      "store .myshopify.com", // has space
-      "store\n.myshopify.com", // has newline
-      "../../../../etc/passwd", // path traversal attempt
-      "<script>alert(1)</script>", // XSS attempt
-      "javascript:alert(1)", // JS injection
+      "-store.myshopify.com",
+      ".myshopify.com",
+      "store.myshopify.com/path",
+      "store.myshopify.com?q=1",
+      "https://store.myshopify.com",
+      "store .myshopify.com",
+      "store\n.myshopify.com",
+      "../../../../etc/passwd",
+      "<script>alert(1)</script>",
+      "javascript:alert(1)",
     ];
 
     invalid.forEach((shop) => {
@@ -78,25 +74,96 @@ describe("isValidButtonLink", () => {
     });
   });
 
+  it("accepts empty string (optional field)", () => {
+    expect(isValidButtonLink("")).toBe(true);
+  });
+
+  it("accepts null (optional field)", () => {
+    expect(isValidButtonLink(null)).toBe(true);
+  });
+
+  it("accepts http:// links (merchants may use HTTP)", () => {
+    expect(isValidButtonLink("http://example.com")).toBe(true);
+  });
+
   describe("invalid/dangerous links", () => {
     const invalid = [
-      "",
-      null,
-      undefined,
-      "javascript:alert(1)", // XSS
-      "data:text/html,<script>", // data URI
-      "http://example.com", // http only (not https)
-      "ftp://example.com", // wrong protocol
-      "//example.com", // protocol-relative
-      "vbscript:alert(1)", // vbscript
-      "file:///etc/passwd", // file URI
+      "javascript:alert(1)",
+      "data:text/html,<script>",
+      "ftp://example.com",
+      "//example.com",
+      "vbscript:alert(1)",
+      "file:///etc/passwd",
     ];
 
     invalid.forEach((url) => {
-      it(`rejects ${JSON.stringify(url)}`, () => {
+      it(`rejects "${url}"`, () => {
         expect(isValidButtonLink(url)).toBe(false);
       });
     });
+  });
+});
+
+describe("isValidHex", () => {
+  it("accepts valid 6-char hex with #", () => {
+    expect(isValidHex("#288d40")).toBe(true);
+    expect(isValidHex("#ffffff")).toBe(true);
+    expect(isValidHex("#000000")).toBe(true);
+    expect(isValidHex("#FF00AA")).toBe(true);
+  });
+
+  it("rejects invalid hex", () => {
+    expect(isValidHex("288d40")).toBe(false);
+    expect(isValidHex("#fff")).toBe(false);
+    expect(isValidHex("#gggggg")).toBe(false);
+    expect(isValidHex("")).toBe(false);
+    expect(isValidHex("#12345")).toBe(false);
+  });
+});
+
+describe("validateCampaignForm", () => {
+  const validForm = {
+    barMessage: "Flash Sale!",
+    endDate: new Date(Date.now() + 86400000).toISOString(),
+    buttonLink: "/collections/all",
+    endAction: "hide",
+    customEndMessage: "",
+  };
+
+  it("returns no errors for valid form", () => {
+    expect(Object.keys(validateCampaignForm(validForm))).toHaveLength(0);
+  });
+
+  it("requires barMessage", () => {
+    const errors = validateCampaignForm({ ...validForm, barMessage: "" });
+    expect(errors.barMessage).toBeDefined();
+  });
+
+  it("rejects barMessage over 200 chars", () => {
+    const errors = validateCampaignForm({ ...validForm, barMessage: "x".repeat(201) });
+    expect(errors.barMessage).toContain("200");
+  });
+
+  it("requires endDate", () => {
+    const errors = validateCampaignForm({ ...validForm, endDate: "" });
+    expect(errors.endDate).toBeDefined();
+  });
+
+  it("rejects past endDate", () => {
+    const errors = validateCampaignForm({
+      ...validForm,
+      endDate: "2020-01-01T00:00",
+    });
+    expect(errors.endDate).toContain("future");
+  });
+
+  it("requires customEndMessage when endAction is show_custom", () => {
+    const errors = validateCampaignForm({
+      ...validForm,
+      endAction: "show_custom",
+      customEndMessage: "",
+    });
+    expect(errors.customEndMessage).toBeDefined();
   });
 });
 
