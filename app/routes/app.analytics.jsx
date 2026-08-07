@@ -157,10 +157,7 @@ export default function AnalyticsPage() {
           <Layout>
             <Layout.Section>
               <Card>
-                <EmptyState
-                  heading="No data yet"
-                  image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
-                >
+                <EmptyState heading="No data yet" image="">
                   <p>
                     Your analytics will appear here once your timer is live and receiving visitors.
                   </p>

@@ -54,8 +54,11 @@ model Campaign {
   timezone         String             @default("UTC")
 
   // Design
-  backgroundColor  String             @default("#288d40")
-  position         String             @default("top")   // "top" | "bottom"
+  backgroundColor       String        @default("#288d40")
+  textColor             String        @default("#ffffff")
+  buttonTextColor       String        @default("#111111")
+  buttonBackgroundColor String        @default("#ffffff")
+  position              String        @default("top")   // "top" | "bottom"
 
   // Behaviour after expiry
   endAction        String             @default("hide")  // "hide" | "show_ended" | "show_custom"

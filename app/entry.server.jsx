@@ -13,6 +13,9 @@ export default async function handleRequest(
   responseHeaders,
   remixContext
 ) {
+  // Must be called unconditionally on ALL requests. The Shopify embedded auth
+  // strategy relies on these headers for session token exchange and iframe
+  // CSP. Removing them from any route breaks authenticate.admin() flow.
   addDocumentResponseHeaders(request, responseHeaders);
   const userAgent = request.headers.get("user-agent");
   const callbackName = isbot(userAgent ?? "") ? "onAllReady" : "onShellReady";

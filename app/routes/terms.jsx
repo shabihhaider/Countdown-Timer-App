@@ -1,3 +1,11 @@
+import { useRouteError } from "@remix-run/react";
+
+export const meta = () => [{ title: "Terms of Service — Countdown Timer Bar" }];
+
+export const headers = () => ({
+  "X-Frame-Options": "DENY",
+});
+
 const SUPPORT_EMAIL = "support@countdown-timer-app.com";
 
 const styles = {
@@ -117,6 +125,22 @@ export default function Terms() {
           {SUPPORT_EMAIL}
         </a>
         .
+      </p>
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  useRouteError();
+  return (
+    <div style={{ ...styles.body, padding: "2rem" }}>
+      <h1 style={styles.h1}>Terms of Service</h1>
+      <p style={styles.p}>
+        Sorry, this page could not be loaded. Please contact us at{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`} style={styles.a}>
+          {SUPPORT_EMAIL}
+        </a>{" "}
+        for a copy of our Terms of Service.
       </p>
     </div>
   );
