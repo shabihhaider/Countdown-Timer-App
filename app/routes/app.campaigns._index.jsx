@@ -195,24 +195,20 @@ export default function CampaignsPage() {
                         </BlockStack>
 
                         <InlineStack gap="200" blockAlign="center">
-                          <form
-                            method="post"
-                            onSubmit={(e) => {
+                          <Button
+                            variant="secondary"
+                            loading={isToggling}
+                            disabled={isSubmitting}
+                            onClick={(e) => {
                               e.stopPropagation();
+                              const formData = new FormData();
+                              formData.set("intent", "toggle");
+                              formData.set("campaignId", String(id));
+                              submit(formData, { method: "post" });
                             }}
                           >
-                            <input type="hidden" name="intent" value="toggle" />
-                            <input type="hidden" name="campaignId" value={id} />
-                            <Button
-                              submit
-                              variant="secondary"
-                              loading={isToggling}
-                              disabled={isSubmitting}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {campaign.isActive ? "Deactivate" : "Activate"}
-                            </Button>
-                          </form>
+                            {campaign.isActive ? "Deactivate" : "Activate"}
+                          </Button>
 
                           <Button
                             tone="critical"
