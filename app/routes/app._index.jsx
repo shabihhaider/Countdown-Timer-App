@@ -7,11 +7,12 @@ import {
   BlockStack,
   Button,
   Badge,
+  Banner,
   EmptyState,
   ResourceList,
   ResourceItem,
 } from "@shopify/polaris";
-import { json, redirect } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 import { TitleBar } from "@shopify/app-bridge-react";
@@ -22,11 +23,14 @@ export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
 
-  // Check onboarding — redirect if incomplete
-  const onboarding = await db.onboardingState.findUnique({ where: { shop } });
-  if (!onboarding || !onboarding.completedAt) {
-    return redirect("/app/onboarding");
-  }
+  // Check onboarding status (no redirect — server-side redirects lose
+  // session context with embedded auth, causing login loops)
+  const onboarding = await db.onboardingState.upsert({
+    where: { shop },
+    create: { shop },
+    update: {},
+  });
+  const onboardingComplete = Boolean(onboarding.completedAt);
 
   // Load campaigns with recent analytics
   const sevenDaysAgo = new Date();
@@ -71,6 +75,7 @@ export const loader = async ({ request }) => {
   const activeCampaigns = await db.campaign.count({ where: { shop, isActive: true } });
 
   return json({
+    onboardingComplete,
     campaigns: campaignSummaries,
     totals: {
       impressions: totalImpressions,
@@ -116,7 +121,7 @@ function formatEndDate(date) {
 }
 
 export default function DashboardPage() {
-  const { campaigns, totals } = useLoaderData();
+  const { onboardingComplete, campaigns, totals } = useLoaderData();
   const navigate = useNavigate();
 
   return (
@@ -128,6 +133,19 @@ export default function DashboardPage() {
       </TitleBar>
 
       <BlockStack gap="500">
+        {!onboardingComplete && (
+          <Banner
+            title="Complete your setup"
+            tone="warning"
+            action={{
+              content: "Continue setup",
+              onAction: () => navigate("/app/onboarding"),
+            }}
+          >
+            <p>Finish setting up your countdown timer to start driving conversions.</p>
+          </Banner>
+        )}
+
         {/* Quick Analytics */}
         <Layout>
           <Layout.Section variant="oneThird">
