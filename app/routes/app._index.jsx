@@ -144,7 +144,7 @@ export default function DashboardPage() {
             tone="warning"
             action={{
               content: "Continue setup",
-              onAction: () => navigate("/app/onboarding"),
+              url: "/app/onboarding",
             }}
           >
             <p>Finish setting up your countdown timer to start driving conversions.</p>
@@ -157,7 +157,7 @@ export default function DashboardPage() {
             title={`You're on the ${planInfo.plan} plan`}
             action={{
               content: "Upgrade to Pro",
-              onAction: () => navigate("/app/billing"),
+              url: "/app/billing",
             }}
           >
             <p>Unlock unlimited campaigns, full analytics, and priority support for $6.99/mo.</p>
