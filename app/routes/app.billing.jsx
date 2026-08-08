@@ -12,7 +12,7 @@ import {
   Banner,
 } from "@shopify/polaris";
 import { json } from "@remix-run/node";
-import { useLoaderData, useSubmit, useNavigation } from "@remix-run/react";
+import { useLoaderData, useActionData, useSubmit, useNavigation } from "@remix-run/react";
 import { authenticate, PLAN_PRO } from "../shopify.server";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { getPlanInfo } from "../utils/billing.server";
@@ -29,18 +29,35 @@ export const action = async ({ request }) => {
   const intent = formData.get("intent");
 
   if (intent === "upgrade") {
-    // Build the return URL — where Shopify redirects after billing approval.
-    // Must be an absolute URL pointing back to our app in the admin.
-    const returnUrl = `https://admin.shopify.com/store/${session.shop.replace(".myshopify.com", "")}/apps/${process.env.SHOPIFY_API_KEY}/app/billing`;
+    try {
+      const returnUrl = `https://admin.shopify.com/store/${session.shop.replace(".myshopify.com", "")}/apps/${process.env.SHOPIFY_API_KEY}/app/billing`;
 
-    // billing.request() throws a redirect Response to Shopify's billing
-    // confirmation page. After the merchant approves, Shopify redirects
-    // them back to returnUrl.
-    await billing.request({
-      plan: PLAN_PRO,
-      isTest: true,
-      returnUrl,
-    });
+      await billing.request({
+        plan: PLAN_PRO,
+        isTest: true,
+        returnUrl,
+      });
+    } catch (error) {
+      // billing.request() throws a Response (redirect) on success — re-throw it
+      if (error instanceof Response) {
+        throw error;
+      }
+
+      // Shopify rejects billing API calls for apps not yet publicly distributed.
+      // Handle gracefully instead of crashing.
+      const errorMessage =
+        error?.errorData?.[0]?.message || error?.message || "Unknown billing error";
+
+      if (errorMessage.includes("public distribution")) {
+        return json({
+          success: false,
+          billingError:
+            "Billing is not available yet. The app must be published on the Shopify App Store before subscriptions can be created. All Pro features will work once the app is listed.",
+        });
+      }
+
+      return json({ success: false, billingError: errorMessage }, { status: 500 });
+    }
   }
 
   return json({ success: false }, { status: 400 });
@@ -91,6 +108,7 @@ function PlanCard({ name, price, features, current, onUpgrade, loading }) {
 
 export default function BillingPage() {
   const { planInfo } = useLoaderData();
+  const actionData = useActionData();
   const submit = useSubmit();
   const navigation = useNavigation();
 
@@ -107,6 +125,12 @@ export default function BillingPage() {
       <TitleBar title="Plan & Billing" />
 
       <BlockStack gap="500">
+        {actionData?.billingError && (
+          <Banner tone="warning" title="Billing not available">
+            <p>{actionData.billingError}</p>
+          </Banner>
+        )}
+
         {planInfo.isPro && (
           <Banner tone="success" title="You're on the Pro plan">
             <p>You have access to all features. Thank you for your support!</p>
