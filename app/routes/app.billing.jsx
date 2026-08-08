@@ -29,18 +29,13 @@ export const action = async ({ request }) => {
   const intent = formData.get("intent");
 
   if (intent === "upgrade") {
-    await billing.require({
-      plans: [PLAN_PRO],
+    // billing.request() redirects the merchant to Shopify's billing
+    // confirmation page. After approval, Shopify redirects back to the app.
+    // It throws a Response (302 redirect), so we don't need to return it.
+    await billing.request({
+      plan: PLAN_PRO,
       isTest: true,
-      onFailure: async () =>
-        billing.request({
-          plan: PLAN_PRO,
-          isTest: true,
-        }),
     });
-
-    // If we reach here, the merchant already has an active subscription
-    return json({ success: true });
   }
 
   return json({ success: false }, { status: 400 });
