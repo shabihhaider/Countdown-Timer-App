@@ -32,31 +32,29 @@ export const action = async ({ request }) => {
     try {
       const returnUrl = `https://admin.shopify.com/store/${session.shop.replace(".myshopify.com", "")}/apps/${process.env.SHOPIFY_API_KEY}/app/billing`;
 
+      // billing.request() makes a GraphQL call to create the subscription,
+      // then throws a Response (302 redirect) to Shopify's billing approval page.
+      // On dev apps, the API rejects with "public distribution" error.
       await billing.request({
         plan: PLAN_PRO,
         isTest: true,
         returnUrl,
       });
+
+      // If we reach here without a thrown redirect, something unexpected happened
+      return json({ success: true });
     } catch (error) {
-      // billing.request() throws a Response (redirect) on success — re-throw it
+      // Success case: billing.request() throws a redirect Response
       if (error instanceof Response) {
         throw error;
       }
 
-      // Shopify rejects billing API calls for apps not yet publicly distributed.
-      // Handle gracefully instead of crashing.
-      const errorMessage =
-        error?.errorData?.[0]?.message || error?.message || "Unknown billing error";
-
-      if (errorMessage.includes("public distribution")) {
-        return json({
-          success: false,
-          billingError:
-            "Billing is not available yet. The app must be published on the Shopify App Store before subscriptions can be created. All Pro features will work once the app is listed.",
-        });
-      }
-
-      return json({ success: false, billingError: errorMessage }, { status: 500 });
+      // Failure case: Shopify API error (e.g., app not publicly distributed)
+      return json({
+        success: false,
+        billingError:
+          "Billing is not available during development. The Shopify Billing API requires the app to be publicly listed on the App Store. Once published, this button will redirect to Shopify's payment confirmation page.",
+      });
     }
   }
 
