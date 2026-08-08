@@ -28,11 +28,12 @@ import { TitleBar } from "@shopify/app-bridge-react";
 import db from "../db.server";
 import { getCampaignStatus } from "../utils/campaign";
 
-function formatEndDate(date) {
+function formatEndDate(date, timezone) {
   if (!date) return "No end date set";
   const d = new Date(date);
   if (isNaN(d.getTime())) return "No end date set";
   return d.toLocaleDateString("en-US", {
+    timeZone: timezone || "UTC",
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -168,7 +169,7 @@ export default function CampaignsPage() {
                 resourceName={{ singular: "campaign", plural: "campaigns" }}
                 items={campaigns}
                 renderItem={(campaign) => {
-                  const { id, name, barMessage, endDate, status } = campaign;
+                  const { id, name, barMessage, endDate, timezone, status } = campaign;
                   const isRowSubmitting = submittingCampaignId === id;
                   const isToggling = isRowSubmitting && submittingIntent === "toggle";
 
@@ -190,7 +191,7 @@ export default function CampaignsPage() {
                             {barMessage}
                           </Text>
                           <Text variant="bodySm" tone="subdued" as="span">
-                            {formatEndDate(endDate)}
+                            {formatEndDate(endDate, timezone)}
                           </Text>
                         </BlockStack>
 
