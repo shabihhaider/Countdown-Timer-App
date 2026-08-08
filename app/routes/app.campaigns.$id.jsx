@@ -28,6 +28,7 @@ import {
 } from "../utils/campaign";
 import { ColorPickerField } from "../components/ColorPickerField";
 import { TimerPreview } from "../components/TimerPreview";
+import { TemplateSelector } from "../components/TemplateSelector";
 
 export const loader = async ({ request, params }) => {
   const { session } = await authenticate.admin(request);
@@ -282,6 +283,14 @@ export default function CampaignEditPage() {
                     <Text variant="headingMd" as="h2">
                       Design
                     </Text>
+                    <TemplateSelector
+                      onSelect={(t) => {
+                        handleChange("barColor", t.barColor);
+                        handleChange("textColor", t.textColor);
+                        handleChange("buttonBgColor", t.buttonBgColor);
+                        handleChange("buttonTextColor", t.buttonTextColor);
+                      }}
+                    />
                     <ColorPickerField
                       label="Bar Background Color"
                       value={formState.barColor}

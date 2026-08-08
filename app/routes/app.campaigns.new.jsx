@@ -27,6 +27,7 @@ import {
   TIMEZONE_OPTIONS,
 } from "../utils/campaign";
 import { ColorPickerField } from "../components/ColorPickerField";
+import { TemplateSelector } from "../components/TemplateSelector";
 import { TimerPreview } from "../components/TimerPreview";
 
 export const loader = async ({ request }) => {
@@ -221,6 +222,14 @@ export default function CampaignNewPage() {
                     <Text variant="headingMd" as="h2">
                       Design
                     </Text>
+                    <TemplateSelector
+                      onSelect={(t) => {
+                        handleChange("barColor", t.barColor);
+                        handleChange("textColor", t.textColor);
+                        handleChange("buttonBgColor", t.buttonBgColor);
+                        handleChange("buttonTextColor", t.buttonTextColor);
+                      }}
+                    />
                     <ColorPickerField
                       label="Bar Background Color"
                       value={formState.barColor}
