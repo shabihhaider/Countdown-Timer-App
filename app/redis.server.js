@@ -39,25 +39,28 @@ const RATE_LIMIT_MAX = RATE_LIMIT.MAX_REQUESTS;
  * Redis-backed rate limiter. Falls back to a simple in-memory Map when Redis
  * is unavailable so the app continues to work in local dev without Docker.
  *
- * @param {string} ip
+ * @param {string} key - Rate limit key (e.g. IP address, "shop:domain")
+ * @param {number} [maxRequests] - Override max requests for this check
+ * @param {number} [windowSeconds] - Override window duration for this check
  * @returns {Promise<boolean>} true if the request should be blocked
  */
 
 // In-memory fallback (used when Redis is not configured)
 const fallbackMap = new Map();
 
-export async function isRateLimited(ip) {
+export async function isRateLimited(key, maxRequests, windowSeconds) {
+  const max = maxRequests ?? RATE_LIMIT_MAX;
+  const windowSec = windowSeconds ?? RATE_LIMIT_WINDOW_SEC;
   const client = getRedis();
 
   if (client && client.status === "ready") {
     try {
-      const key = `rl:${ip}`;
-      const count = await client.incr(key);
+      const redisKey = `rl:${key}`;
+      const count = await client.incr(redisKey);
       if (count === 1) {
-        // First request in this window — set the expiry
-        await client.expire(key, RATE_LIMIT_WINDOW_SEC);
+        await client.expire(redisKey, windowSec);
       }
-      return count > RATE_LIMIT_MAX;
+      return count > max;
     } catch {
       // Redis error — fall through to in-memory
     }
@@ -65,16 +68,16 @@ export async function isRateLimited(ip) {
 
   // In-memory fallback
   const now = Date.now();
-  const windowMs = RATE_LIMIT_WINDOW_SEC * 1000;
-  const entry = fallbackMap.get(ip);
+  const windowMs = windowSec * 1000;
+  const entry = fallbackMap.get(key);
 
   if (!entry || now - entry.windowStart > windowMs) {
-    fallbackMap.set(ip, { windowStart: now, count: 1 });
+    fallbackMap.set(key, { windowStart: now, count: 1 });
     return false;
   }
 
   entry.count += 1;
-  return entry.count > RATE_LIMIT_MAX;
+  return entry.count > max;
 }
 
 // Periodically clean up the fallback map to prevent unbounded growth
