@@ -24,17 +24,22 @@ export const loader = async ({ request }) => {
 };
 
 export const action = async ({ request }) => {
-  const { billing } = await authenticate.admin(request);
+  const { billing, session } = await authenticate.admin(request);
   const formData = await request.formData();
   const intent = formData.get("intent");
 
   if (intent === "upgrade") {
-    // billing.request() redirects the merchant to Shopify's billing
-    // confirmation page. After approval, Shopify redirects back to the app.
-    // It throws a Response (302 redirect), so we don't need to return it.
+    // Build the return URL — where Shopify redirects after billing approval.
+    // Must be an absolute URL pointing back to our app in the admin.
+    const returnUrl = `https://admin.shopify.com/store/${session.shop.replace(".myshopify.com", "")}/apps/${process.env.SHOPIFY_API_KEY}/app/billing`;
+
+    // billing.request() throws a redirect Response to Shopify's billing
+    // confirmation page. After the merchant approves, Shopify redirects
+    // them back to returnUrl.
     await billing.request({
       plan: PLAN_PRO,
       isTest: true,
+      returnUrl,
     });
   }
 
