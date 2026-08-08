@@ -24,6 +24,7 @@ import {
   formValuesToCampaignData,
   validateCampaignForm,
   isValidHex,
+  TIMEZONE_OPTIONS,
 } from "../utils/campaign";
 import { ColorPickerField } from "../components/ColorPickerField";
 import { TimerPreview } from "../components/TimerPreview";
@@ -71,7 +72,9 @@ export const action = async ({ request, params }) => {
     barMessage: String(formData.get("barMessage") || "").trim(),
     buttonText: String(formData.get("buttonText") || "").trim(),
     buttonLink: String(formData.get("buttonLink") || "").trim(),
+    startDate: String(formData.get("startDate") || "").trim(),
     endDate: String(formData.get("endDate") || "").trim(),
+    timezone: String(formData.get("timezone") || "UTC").trim(),
     barColor: String(formData.get("barColor") || DEFAULT_CAMPAIGN_FORM.barColor).trim(),
     textColor: String(formData.get("textColor") || DEFAULT_CAMPAIGN_FORM.textColor).trim(),
     buttonTextColor: String(
@@ -147,10 +150,6 @@ export default function CampaignEditPage() {
     setFormState({ ...savedState });
   }, [savedState]);
 
-  const nowIso = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
-
   return (
     <Frame>
       {isDirty && (
@@ -219,14 +218,30 @@ export default function CampaignEditPage() {
                         autoComplete="off"
                         error={fieldErrors.barMessage}
                       />
+                      <Select
+                        label="Timezone"
+                        options={TIMEZONE_OPTIONS}
+                        value={formState.timezone}
+                        onChange={(v) => handleChange("timezone", v)}
+                        name="timezone"
+                        helpText="Dates are interpreted in this timezone and stored as UTC."
+                      />
                       <TextField
-                        label="Countdown End Date & Time"
+                        label="Start Date & Time (optional)"
+                        value={formState.startDate}
+                        onChange={(v) => handleChange("startDate", v)}
+                        type="datetime-local"
+                        name="startDate"
+                        helpText="Leave empty to start immediately when active. Use this to schedule campaigns in advance."
+                        error={fieldErrors.startDate}
+                      />
+                      <TextField
+                        label="End Date & Time"
                         value={formState.endDate}
                         onChange={(v) => handleChange("endDate", v)}
                         type="datetime-local"
                         name="endDate"
                         helpText="When your sale ends. Must be in the future."
-                        min={nowIso}
                         error={fieldErrors.endDate}
                       />
                     </FormLayout>

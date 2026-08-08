@@ -3,7 +3,6 @@ import {
   Layout,
   Card,
   BlockStack,
-  InlineStack,
   Text,
   Badge,
   Divider,
@@ -13,6 +12,7 @@ import {
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
+import { getCampaignStatus } from "../utils/campaign";
 import { TitleBar } from "@shopify/app-bridge-react";
 import db from "../db.server";
 
@@ -72,7 +72,7 @@ export async function loader({ request }) {
     return {
       id: campaign.id,
       name: campaign.name,
-      isActive: campaign.isActive,
+      status: getCampaignStatus(campaign),
       impressions,
       clicks,
     };
@@ -116,7 +116,7 @@ export default function AnalyticsPage() {
 
   const rows = campaigns.map((campaign) => [
     campaign.name,
-    campaign.isActive ? <Badge tone="success">Active</Badge> : <Badge>Inactive</Badge>,
+    <Badge tone={campaign.status.tone}>{campaign.status.label}</Badge>,
     formatNumber(campaign.impressions),
     formatNumber(campaign.clicks),
     formatCtr(campaign.clicks, campaign.impressions),
