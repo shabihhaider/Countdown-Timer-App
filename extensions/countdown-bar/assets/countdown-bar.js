@@ -39,6 +39,64 @@
       // Fail silently — never show a broken bar on a merchant's storefront
     });
 
+  // --- Compute the countdown end time based on timer type ---
+  function computeEndMs(s) {
+    const timerType = s.timerType || "one_time";
+
+    if (timerType === "daily") {
+      // Daily timer: counts down to dailyResetTime each day in the campaign timezone
+      const resetTime = s.dailyResetTime || "00:00";
+      const parts = resetTime.split(":");
+      const resetHour = parseInt(parts[0], 10) || 0;
+      const resetMin = parseInt(parts[1], 10) || 0;
+
+      // Build today's reset time in UTC using timezone offset
+      const now = new Date();
+      const todayStr = now.toLocaleDateString("en-CA", { timeZone: s.timezone || "UTC" });
+      const resetStr = todayStr + "T" + resetTime + ":00";
+
+      // Get UTC offset for the timezone
+      const tempDate = new Date(resetStr + "Z");
+      const utcStr = tempDate.toLocaleString("en-US", { timeZone: "UTC" });
+      const tzStr = tempDate.toLocaleString("en-US", { timeZone: s.timezone || "UTC" });
+      const offsetMs = new Date(tzStr).getTime() - new Date(utcStr).getTime();
+      let resetMs = tempDate.getTime() - offsetMs;
+
+      // If reset time has passed today, target tomorrow
+      if (resetMs <= Date.now()) {
+        resetMs += 86400000; // add 24 hours
+      }
+
+      return resetMs;
+    }
+
+    if (timerType === "evergreen") {
+      // Evergreen: per-visitor timer stored in localStorage
+      const evergreenKey = "cdb_eg_" + shop;
+      const minutes = parseInt(s.evergreenMinutes, 10) || 30;
+      const stored = localStorage.getItem(evergreenKey);
+
+      if (stored) {
+        const storedMs = parseInt(stored, 10);
+        if (storedMs > Date.now()) {
+          return storedMs;
+        }
+        // Expired — don't show again for this visitor
+        return null;
+      }
+
+      // First visit: set the timer
+      const endMs = Date.now() + minutes * 60 * 1000;
+      localStorage.setItem(evergreenKey, String(endMs));
+      return endMs;
+    }
+
+    // one_time: standard fixed end date
+    const endDate = s.endDate ? new Date(s.endDate) : null;
+    if (!endDate || isNaN(endDate.getTime())) return null;
+    return endDate.getTime();
+  }
+
   // --- Apply settings and start countdown ---
   function applySettings(s) {
     // Colors
@@ -69,16 +127,16 @@
       }
     }
 
-    // Validate end date — stored in UTC ISO format
-    const endDate = s.endDate ? new Date(s.endDate) : null;
-    if (!endDate || isNaN(endDate.getTime())) return; // No valid end date — hide bar
+    // Compute the target end time based on timer type
+    const endMs = computeEndMs(s);
+    if (!endMs) return; // No valid end time — hide bar
 
     // Show bar and fire impression
     bar.style.display = "block";
     fireTrack("impression");
 
     // Start timer
-    startCountdown(endDate.getTime(), s.endAction, s.customEndMessage);
+    startCountdown(endMs, s.endAction, s.customEndMessage);
   }
 
   // --- UTC-based countdown using requestAnimationFrame ---

@@ -45,9 +45,12 @@ export const action = async ({ request }) => {
     barMessage: String(formData.get("barMessage") || "").trim(),
     buttonText: String(formData.get("buttonText") || "").trim(),
     buttonLink: String(formData.get("buttonLink") || "").trim(),
+    timerType: String(formData.get("timerType") || "one_time"),
     startDate: String(formData.get("startDate") || "").trim(),
     endDate: String(formData.get("endDate") || "").trim(),
     timezone: String(formData.get("timezone") || "UTC").trim(),
+    dailyResetTime: String(formData.get("dailyResetTime") || "00:00").trim(),
+    evergreenMinutes: String(formData.get("evergreenMinutes") || "30").trim(),
     barColor: String(formData.get("barColor") || DEFAULT_CAMPAIGN_FORM.barColor).trim(),
     textColor: String(formData.get("textColor") || DEFAULT_CAMPAIGN_FORM.textColor).trim(),
     buttonTextColor: String(
@@ -159,6 +162,18 @@ export default function CampaignNewPage() {
                         error={fieldErrors.barMessage}
                       />
                       <Select
+                        label="Timer Type"
+                        options={[
+                          { label: "One-time countdown (fixed end date)", value: "one_time" },
+                          { label: "Daily recurring (resets every day)", value: "daily" },
+                          { label: "Evergreen (per-visitor timer)", value: "evergreen" },
+                        ]}
+                        value={formState.timerType}
+                        onChange={(v) => handleChange("timerType", v)}
+                        name="timerType"
+                        helpText="Choose how the countdown timer behaves."
+                      />
+                      <Select
                         label="Timezone"
                         options={TIMEZONE_OPTIONS}
                         value={formState.timezone}
@@ -166,24 +181,50 @@ export default function CampaignNewPage() {
                         name="timezone"
                         helpText="Dates are interpreted in this timezone and stored as UTC."
                       />
-                      <TextField
-                        label="Start Date & Time (optional)"
-                        value={formState.startDate}
-                        onChange={(v) => handleChange("startDate", v)}
-                        type="datetime-local"
-                        name="startDate"
-                        helpText="Leave empty to start immediately when active. Use this to schedule campaigns in advance."
-                        error={fieldErrors.startDate}
-                      />
-                      <TextField
-                        label="End Date & Time"
-                        value={formState.endDate}
-                        onChange={(v) => handleChange("endDate", v)}
-                        type="datetime-local"
-                        name="endDate"
-                        helpText="When your sale ends. Must be in the future."
-                        error={fieldErrors.endDate}
-                      />
+                      {formState.timerType === "one_time" && (
+                        <>
+                          <TextField
+                            label="Start Date & Time (optional)"
+                            value={formState.startDate}
+                            onChange={(v) => handleChange("startDate", v)}
+                            type="datetime-local"
+                            name="startDate"
+                            helpText="Leave empty to start immediately. Use this to schedule campaigns in advance."
+                            error={fieldErrors.startDate}
+                          />
+                          <TextField
+                            label="End Date & Time"
+                            value={formState.endDate}
+                            onChange={(v) => handleChange("endDate", v)}
+                            type="datetime-local"
+                            name="endDate"
+                            helpText="When your sale ends. Must be in the future."
+                            error={fieldErrors.endDate}
+                          />
+                        </>
+                      )}
+                      {formState.timerType === "daily" && (
+                        <TextField
+                          label="Daily Reset Time"
+                          value={formState.dailyResetTime}
+                          onChange={(v) => handleChange("dailyResetTime", v)}
+                          type="time"
+                          name="dailyResetTime"
+                          helpText="The timer resets at this time every day in the selected timezone."
+                        />
+                      )}
+                      {formState.timerType === "evergreen" && (
+                        <TextField
+                          label="Timer Duration (minutes)"
+                          value={formState.evergreenMinutes}
+                          onChange={(v) => handleChange("evergreenMinutes", v)}
+                          type="number"
+                          name="evergreenMinutes"
+                          min="1"
+                          max="1440"
+                          helpText="Each visitor gets a personal countdown starting from their first visit. Timer only shows once per visitor."
+                        />
+                      )}
                     </FormLayout>
                   </BlockStack>
                 </Card>
