@@ -37,7 +37,7 @@ export default function LandingPage() {
       {/* Hero */}
       <header
         style={{
-          background: "linear-gradient(135deg, #0f3d2e 0%, #1a6b4a 50%, #288d40 100%)",
+          background: "linear-gradient(135deg, #0f3d2e 0%, #1a6b4a 50%, #1a6b3a 100%)",
           color: "#ffffff",
           padding: "80px 24px 60px",
           textAlign: "center",
@@ -287,7 +287,7 @@ export default function LandingPage() {
                     width: 56,
                     height: 56,
                     borderRadius: "50%",
-                    background: "#288d40",
+                    background: "#1a6b3a",
                     color: "#fff",
                     display: "flex",
                     alignItems: "center",
@@ -335,7 +335,7 @@ export default function LandingPage() {
             style={{
               padding: 32,
               borderRadius: 12,
-              border: "2px solid #288d40",
+              border: "2px solid #1a6b3a",
               background: "#f0fdf4",
               position: "relative",
             }}
@@ -345,7 +345,7 @@ export default function LandingPage() {
                 position: "absolute",
                 top: -12,
                 right: 20,
-                background: "#288d40",
+                background: "#1a6b3a",
                 color: "#fff",
                 padding: "4px 16px",
                 borderRadius: 20,
