@@ -35,4 +35,5 @@ database.sqlite
 .prettiercache
 
 # ── Lighthouse CI ─────────────────────────────────────────────────────────────
-.lighthouseci/
+.lighthouseci/screenshots/
+test-report.html

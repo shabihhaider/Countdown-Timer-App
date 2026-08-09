@@ -28,7 +28,6 @@ import {
   FONT_OPTIONS,
   ANIMATION_OPTIONS,
   GRADIENT_DIRECTIONS,
-  PAGE_TARGETING_MODES,
 } from "../utils/campaign";
 import { ColorPickerField } from "../components/ColorPickerField";
 import { TemplateSelector } from "../components/TemplateSelector";

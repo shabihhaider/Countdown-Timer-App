@@ -1,10 +1,11 @@
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
+import { logger } from "../utils/logger.server";
 
 export const action = async ({ request }) => {
   const { shop, session, topic } = await authenticate.webhook(request);
 
-  console.log(`Received ${topic} webhook for ${shop}`);
+  logger.info({ topic, shop }, "webhook.received");
 
   // Webhook requests can trigger multiple times and after an app has already been uninstalled.
   // If this webhook already ran, the session may have been deleted previously.

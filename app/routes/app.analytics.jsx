@@ -20,11 +20,6 @@ import { getCampaignStatus } from "../utils/campaign";
 import { TitleBar } from "@shopify/app-bridge-react";
 import db from "../db.server";
 
-function formatCtr(clicks, impressions) {
-  if (impressions === 0) return "\u2014";
-  return `${((clicks / impressions) * 100).toFixed(1)}%`;
-}
-
 function formatNumber(value) {
   return value.toLocaleString("en-US");
 }

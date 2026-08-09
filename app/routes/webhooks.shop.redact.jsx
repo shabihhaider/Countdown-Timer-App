@@ -1,5 +1,6 @@
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
+import { logger } from "../utils/logger.server";
 
 /**
  * Shopify mandatory GDPR webhook: shop/redact
@@ -12,7 +13,7 @@ import db from "../db.server";
  */
 export const action = async ({ request }) => {
   const { topic, shop, payload } = await authenticate.webhook(request);
-  console.log(`[Webhook] ${topic} received for ${shop} — deleting all shop data`);
+  logger.info({ topic, shop }, "webhook.gdpr.shop_redact — deleting all shop data");
 
   const shopDomain = payload?.shop_domain || shop;
 
@@ -26,9 +27,12 @@ export const action = async ({ request }) => {
     await db.session.deleteMany({ where: { shop: shopDomain } });
     await db.setting.deleteMany({ where: { shop: shopDomain } });
 
-    console.log(`[Webhook] ${topic} — all data deleted for ${shopDomain}`);
+    logger.info({ topic, shopDomain }, "webhook.gdpr.shop_redact — data deleted");
   } catch (error) {
-    console.error(`[Webhook] ${topic} — error deleting data for ${shopDomain}:`, error.message);
+    logger.error(
+      { topic, shopDomain, error: error.message },
+      "webhook.gdpr.shop_redact — delete failed"
+    );
   }
 
   return new Response(null, { status: 200 });

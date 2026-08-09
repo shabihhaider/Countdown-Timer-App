@@ -10,6 +10,8 @@ import {
   formatNumber,
   DEFAULT_CAMPAIGN_FORM,
   FONT_OPTIONS,
+  ANIMATION_OPTIONS,
+  GRADIENT_DIRECTIONS,
   PAGE_TARGETING_MODES,
   TIMEZONE_OPTIONS,
 } from "../../../app/utils/campaign";
@@ -250,5 +252,96 @@ describe("formValuesToCampaignData — new fields", () => {
   it("defaults system fontFamily", () => {
     const data = formValuesToCampaignData(DEFAULT_CAMPAIGN_FORM);
     expect(data.fontFamily).toBe("system");
+  });
+
+  it("creates gradient backgroundStyle JSON", () => {
+    const data = formValuesToCampaignData({
+      ...DEFAULT_CAMPAIGN_FORM,
+      bgType: "gradient",
+      gradientDirection: "135deg",
+      gradientColor1: "#ff0000",
+      gradientColor2: "#0000ff",
+    });
+    const parsed = JSON.parse(data.backgroundStyle);
+    expect(parsed.type).toBe("gradient");
+    expect(parsed.direction).toBe("135deg");
+    expect(parsed.colorStops).toEqual(["#ff0000", "#0000ff"]);
+  });
+
+  it("returns empty backgroundStyle for solid", () => {
+    const data = formValuesToCampaignData({ ...DEFAULT_CAMPAIGN_FORM, bgType: "solid" });
+    expect(data.backgroundStyle).toBe("");
+  });
+
+  it("sets animationStyle", () => {
+    const data = formValuesToCampaignData({ ...DEFAULT_CAMPAIGN_FORM, animationStyle: "fade" });
+    expect(data.animationStyle).toBe("fade");
+  });
+});
+
+describe("campaignToFormValues — gradient parsing", () => {
+  const baseCampaign = {
+    name: "Test",
+    barMessage: "Sale",
+    buttonText: "Shop",
+    buttonUrl: "/",
+    discountCode: "",
+    timerType: "one_time",
+    startDate: null,
+    endDate: null,
+    timezone: "UTC",
+    dailyResetTime: "00:00",
+    evergreenMinutes: 30,
+    fontFamily: "system",
+    animationStyle: "slide",
+    backgroundColor: "#000",
+    textColor: "#fff",
+    buttonTextColor: "#000",
+    buttonBackgroundColor: "#fff",
+    position: "top",
+    endAction: "hide",
+    customEndMessage: "",
+    pageTargeting: "[]",
+  };
+
+  it("parses gradient backgroundStyle", () => {
+    const form = campaignToFormValues({
+      ...baseCampaign,
+      backgroundStyle: JSON.stringify({
+        type: "gradient",
+        direction: "45deg",
+        colorStops: ["#aaa", "#bbb"],
+      }),
+    });
+    expect(form.bgType).toBe("gradient");
+    expect(form.gradientDirection).toBe("45deg");
+    expect(form.gradientColor1).toBe("#aaa");
+    expect(form.gradientColor2).toBe("#bbb");
+    expect(form.animationStyle).toBe("slide");
+  });
+
+  it("defaults to solid when backgroundStyle is empty", () => {
+    const form = campaignToFormValues({ ...baseCampaign, backgroundStyle: "" });
+    expect(form.bgType).toBe("solid");
+  });
+
+  it("handles invalid JSON in backgroundStyle", () => {
+    const form = campaignToFormValues({ ...baseCampaign, backgroundStyle: "not-json" });
+    expect(form.bgType).toBe("solid");
+  });
+});
+
+describe("ANIMATION_OPTIONS", () => {
+  it("has none, fade, slide", () => {
+    const values = ANIMATION_OPTIONS.map((a) => a.value);
+    expect(values).toContain("none");
+    expect(values).toContain("fade");
+    expect(values).toContain("slide");
+  });
+});
+
+describe("GRADIENT_DIRECTIONS", () => {
+  it("has at least 4 directions", () => {
+    expect(GRADIENT_DIRECTIONS.length).toBeGreaterThanOrEqual(4);
   });
 });

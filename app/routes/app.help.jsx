@@ -1,4 +1,4 @@
-import { Page, Card, BlockStack, Text, Collapsible, InlineStack, Divider } from "@shopify/polaris";
+import { Page, Card, BlockStack, Text, Collapsible } from "@shopify/polaris";
 import { useState, useCallback } from "react";
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
