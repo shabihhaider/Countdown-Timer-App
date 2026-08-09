@@ -13,6 +13,8 @@ export function TimerPreview({ formState }) {
   const btnBgColor = formState.buttonBgColor || "#ffffff";
   const message = formState.barMessage || "Flash Sale Ends In...";
   const buttonText = formState.buttonText || "";
+  const discountCode = formState.discountCode || "";
+  const fontFamily = formState.fontFamily || "system";
   const position = formState.barPosition || "top";
 
   return (
@@ -68,7 +70,12 @@ export function TimerPreview({ formState }) {
               backgroundColor: bgColor,
               color: txtColor,
               padding: "10px 16px",
-              fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+              fontFamily:
+                fontFamily === "system"
+                  ? "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                  : fontFamily === "inherit"
+                    ? "inherit"
+                    : fontFamily,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -144,6 +151,37 @@ export function TimerPreview({ formState }) {
                 </span>
               ))}
             </div>
+
+            {/* Discount Code */}
+            {discountCode && (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "rgba(255,255,255,0.15)",
+                  border: "1px dashed rgba(255,255,255,0.5)",
+                  borderRadius: "6px",
+                  padding: "4px 10px",
+                  fontSize: "13px",
+                }}
+              >
+                <span style={{ fontWeight: 700, letterSpacing: "1px", fontFamily: "monospace" }}>
+                  {discountCode}
+                </span>
+                <span
+                  style={{
+                    background: "rgba(255,255,255,0.25)",
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                  }}
+                >
+                  Copy
+                </span>
+              </span>
+            )}
 
             {/* CTA Button */}
             {buttonText && (
