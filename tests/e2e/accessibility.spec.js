@@ -9,12 +9,16 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 test.describe("Accessibility @a11y", () => {
-  test("/ redirects to /app (no landing page)", async ({ page }) => {
-    // The root route always redirects to /app for embedded auth compatibility.
-    // In CI (no Shopify session), this will redirect further to /auth/login.
-    const response = await page.request.get("/", { maxRedirects: 0 });
-    expect(response.status()).toBe(302);
-    expect(response.headers()["location"]).toContain("/app");
+  test("/ landing page has no critical accessibility violations", async ({ page }) => {
+    await page.goto("/");
+
+    const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+
+    const critical = results.violations.filter(
+      (v) => v.impact === "critical" || v.impact === "serious"
+    );
+
+    expect(critical).toHaveLength(0);
   });
 
   test("/privacy has no critical accessibility violations", async ({ page }) => {
