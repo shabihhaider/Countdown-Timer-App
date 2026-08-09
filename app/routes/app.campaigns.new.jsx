@@ -26,6 +26,8 @@ import {
   isValidHex,
   TIMEZONE_OPTIONS,
   FONT_OPTIONS,
+  ANIMATION_OPTIONS,
+  GRADIENT_DIRECTIONS,
   PAGE_TARGETING_MODES,
 } from "../utils/campaign";
 import { ColorPickerField } from "../components/ColorPickerField";
@@ -79,6 +81,11 @@ export const action = async ({ request }) => {
       formData.get("buttonBgColor") || DEFAULT_CAMPAIGN_FORM.buttonBgColor
     ).trim(),
     fontFamily: String(formData.get("fontFamily") || "system"),
+    animationStyle: String(formData.get("animationStyle") || "none"),
+    bgType: String(formData.get("bgType") || "solid"),
+    gradientDirection: String(formData.get("gradientDirection") || "to right"),
+    gradientColor1: String(formData.get("gradientColor1") || "#667eea"),
+    gradientColor2: String(formData.get("gradientColor2") || "#764ba2"),
     barPosition: String(formData.get("barPosition") || "top"),
     endAction: String(formData.get("endAction") || "hide"),
     customEndMessage: String(formData.get("customEndMessage") || "").trim(),
@@ -343,6 +350,47 @@ export default function CampaignNewPage() {
                       name="fontFamily"
                       helpText="Web-safe fonts — no external loading, zero performance impact."
                     />
+                    <Select
+                      label="Digit Animation"
+                      options={ANIMATION_OPTIONS}
+                      value={formState.animationStyle}
+                      onChange={(v) => handleChange("animationStyle", v)}
+                      name="animationStyle"
+                      helpText="Animation effect when countdown digits change."
+                    />
+                    <Select
+                      label="Background Type"
+                      options={[
+                        { label: "Solid color", value: "solid" },
+                        { label: "Gradient", value: "gradient" },
+                      ]}
+                      value={formState.bgType}
+                      onChange={(v) => handleChange("bgType", v)}
+                      name="bgType"
+                    />
+                    {formState.bgType === "gradient" && (
+                      <>
+                        <Select
+                          label="Gradient Direction"
+                          options={GRADIENT_DIRECTIONS}
+                          value={formState.gradientDirection}
+                          onChange={(v) => handleChange("gradientDirection", v)}
+                          name="gradientDirection"
+                        />
+                        <ColorPickerField
+                          label="Gradient Start Color"
+                          value={formState.gradientColor1}
+                          onChange={(v) => handleChange("gradientColor1", v)}
+                          name="gradientColor1"
+                        />
+                        <ColorPickerField
+                          label="Gradient End Color"
+                          value={formState.gradientColor2}
+                          onChange={(v) => handleChange("gradientColor2", v)}
+                          name="gradientColor2"
+                        />
+                      </>
+                    )}
                   </BlockStack>
                 </Card>
 

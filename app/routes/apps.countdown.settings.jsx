@@ -70,6 +70,8 @@ export const loader = async ({ request }) => {
         evergreenMinutes: campaign.evergreenMinutes,
         timezone: campaign.timezone,
         fontFamily: campaign.fontFamily,
+        animationStyle: campaign.animationStyle,
+        backgroundStyle: campaign.backgroundStyle,
         barColor: campaign.backgroundColor,
         pageTargeting: campaign.pageTargeting,
         textColor: campaign.textColor,

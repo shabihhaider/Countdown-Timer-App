@@ -150,8 +150,27 @@
     const fontSize = themeSettings.fontSize ? themeSettings.fontSize + "px" : null;
     const barPadding = themeSettings.barPadding ? themeSettings.barPadding + "px" : null;
 
-    // Apply colors
-    bar.style.backgroundColor = bgColor;
+    // Apply background (solid or gradient)
+    if (s.backgroundStyle) {
+      try {
+        const bg =
+          typeof s.backgroundStyle === "string" ? JSON.parse(s.backgroundStyle) : s.backgroundStyle;
+        if (bg.type === "gradient" && bg.colorStops) {
+          bar.style.background =
+            "linear-gradient(" +
+            (bg.direction || "to right") +
+            ", " +
+            bg.colorStops.join(", ") +
+            ")";
+        } else {
+          bar.style.backgroundColor = bgColor;
+        }
+      } catch {
+        bar.style.backgroundColor = bgColor;
+      }
+    } else {
+      bar.style.backgroundColor = bgColor;
+    }
     bar.style.color = textColor;
 
     // Apply font family
@@ -232,6 +251,9 @@
     bar.style.display = "block";
     fireTrack("impression");
 
+    // Store animation style for use in tick function
+    bar.dataset.animation = s.animationStyle || "none";
+
     // Start timer
     startCountdown(endMs, s.endAction, s.customEndMessage);
   }
@@ -274,10 +296,10 @@
         const mins = Math.floor((totalSecs % 3600) / 60);
         const secs = totalSecs % 60;
 
-        if (daysEl) daysEl.textContent = pad(days);
-        if (hoursEl) hoursEl.textContent = pad(hours);
-        if (minsEl) minsEl.textContent = pad(mins);
-        if (secsEl) secsEl.textContent = pad(secs);
+        updateDigit(daysEl, pad(days));
+        updateDigit(hoursEl, pad(hours));
+        updateDigit(minsEl, pad(mins));
+        updateDigit(secsEl, pad(secs));
 
         // Announce to screen reader once per minute
         const minuteBucket = Math.floor(totalSecs / 60);
@@ -345,6 +367,19 @@
       }
     } catch (e) {
       // Tracking must never break the storefront
+    }
+  }
+
+  // Update a digit element with optional animation
+  function updateDigit(el, newValue) {
+    if (!el || el.textContent === newValue) return;
+    el.textContent = newValue;
+
+    const anim = bar.dataset.animation;
+    if (anim && anim !== "none") {
+      el.classList.remove("cdb__value--fade", "cdb__value--slide");
+      void el.offsetWidth; // force reflow to restart animation
+      el.classList.add("cdb__value--" + anim);
     }
   }
 

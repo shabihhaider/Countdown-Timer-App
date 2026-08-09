@@ -1,0 +1,43 @@
+/* Post-purchase / thank you page message */
+
+.cdt {
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 16px 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  text-align: center;
+}
+
+.cdt__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.cdt__icon {
+  font-size: 24px;
+}
+
+.cdt__message {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.cdt__cta {
+  display: inline-block;
+  padding: 10px 24px;
+  color: #ffffff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: opacity 0.15s ease;
+}
+
+.cdt__cta:hover {
+  opacity: 0.9;
+}

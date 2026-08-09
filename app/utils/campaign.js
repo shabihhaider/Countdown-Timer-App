@@ -17,6 +17,11 @@ export const DEFAULT_CAMPAIGN_FORM = {
   dailyResetTime: "00:00",
   evergreenMinutes: "30",
   fontFamily: "system",
+  animationStyle: "none",
+  bgType: "solid",
+  gradientDirection: "to right",
+  gradientColor1: "#667eea",
+  gradientColor2: "#764ba2",
   barColor: "#288d40",
   textColor: "#ffffff",
   buttonTextColor: "#111111",
@@ -36,6 +41,22 @@ export const FONT_OPTIONS = [
   { label: "Trebuchet MS (sans-serif)", value: "'Trebuchet MS', sans-serif" },
   { label: "Courier New (monospace)", value: "'Courier New', monospace" },
   { label: "Impact (display)", value: "Impact, sans-serif" },
+];
+
+/** Animation style options for countdown digits. */
+export const ANIMATION_OPTIONS = [
+  { label: "None (instant update)", value: "none" },
+  { label: "Fade", value: "fade" },
+  { label: "Slide up", value: "slide" },
+];
+
+/** Gradient direction options. */
+export const GRADIENT_DIRECTIONS = [
+  { label: "Left to Right", value: "to right" },
+  { label: "Right to Left", value: "to left" },
+  { label: "Top to Bottom", value: "to bottom" },
+  { label: "Diagonal ↘", value: "135deg" },
+  { label: "Diagonal ↗", value: "45deg" },
 ];
 
 /** Page targeting mode options. */
@@ -124,6 +145,45 @@ export function campaignToFormValues(campaign) {
     dailyResetTime: campaign.dailyResetTime,
     evergreenMinutes: String(campaign.evergreenMinutes),
     fontFamily: campaign.fontFamily,
+    animationStyle: campaign.animationStyle,
+    bgType: campaign.backgroundStyle
+      ? (() => {
+          try {
+            return JSON.parse(campaign.backgroundStyle).type || "solid";
+          } catch {
+            return "solid";
+          }
+        })()
+      : "solid",
+    gradientDirection: campaign.backgroundStyle
+      ? (() => {
+          try {
+            return JSON.parse(campaign.backgroundStyle).direction || "to right";
+          } catch {
+            return "to right";
+          }
+        })()
+      : "to right",
+    gradientColor1: campaign.backgroundStyle
+      ? (() => {
+          try {
+            const s = JSON.parse(campaign.backgroundStyle).colorStops;
+            return s?.[0] || "#667eea";
+          } catch {
+            return "#667eea";
+          }
+        })()
+      : "#667eea",
+    gradientColor2: campaign.backgroundStyle
+      ? (() => {
+          try {
+            const s = JSON.parse(campaign.backgroundStyle).colorStops;
+            return s?.[1] || "#764ba2";
+          } catch {
+            return "#764ba2";
+          }
+        })()
+      : "#764ba2",
     barColor: campaign.backgroundColor,
     textColor: campaign.textColor,
     buttonTextColor: campaign.buttonTextColor,
@@ -184,6 +244,15 @@ export function formValuesToCampaignData(form) {
     dailyResetTime: form.dailyResetTime || "00:00",
     evergreenMinutes: parseInt(form.evergreenMinutes, 10) || 30,
     fontFamily: form.fontFamily || "system",
+    animationStyle: form.animationStyle || "none",
+    backgroundStyle:
+      form.bgType === "gradient"
+        ? JSON.stringify({
+            type: "gradient",
+            direction: form.gradientDirection || "to right",
+            colorStops: [form.gradientColor1 || "#667eea", form.gradientColor2 || "#764ba2"],
+          })
+        : "",
     backgroundColor: form.barColor,
     textColor: form.textColor || "#ffffff",
     buttonTextColor: form.buttonTextColor || "#111111",

@@ -44,10 +44,42 @@
   }
 }
 
+/* ---- Digit Animations ---- */
+
+.cdb__value--fade {
+  animation: cdb-fade-digit 0.4s ease-out;
+}
+
+.cdb__value--slide {
+  animation: cdb-slide-digit 0.3s ease-out;
+}
+
+@keyframes cdb-fade-digit {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes cdb-slide-digit {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* Disable animation for users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .cdb--top,
-  .cdb--bottom {
+  .cdb--bottom,
+  .cdb__value--fade,
+  .cdb__value--slide {
     animation: none;
   }
 }

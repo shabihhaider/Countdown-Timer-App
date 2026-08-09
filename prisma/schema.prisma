@@ -63,6 +63,8 @@ model Campaign {
   buttonTextColor       String        @default("#111111")
   buttonBackgroundColor String        @default("#ffffff")
   fontFamily            String        @default("system") // font family identifier
+  animationStyle        String        @default("none")   // "none" | "fade" | "slide"
+  backgroundStyle       String        @default("")       // JSON: gradient config (empty = solid backgroundColor)
   position              String        @default("top")   // "top" | "bottom"
 
   // Behaviour after expiry

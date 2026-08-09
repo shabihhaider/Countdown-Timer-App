@@ -1,0 +1,86 @@
+{% if cart.item_count > 0 %}
+<div class="cdc"
+     data-shop="{{ shop.permanent_domain }}"
+     data-message="{{ block.settings.message }}"
+     data-minutes="{{ block.settings.reservation_minutes }}"
+     data-expiry-action="{{ block.settings.expiry_action }}"
+     data-redirect-url="{{ block.settings.redirect_url }}"
+     data-text-color="{{ block.settings.text_color }}"
+     data-bg-color="{{ block.settings.bg_color }}"
+     data-accent-color="{{ block.settings.accent_color }}"
+     style="display: none;"
+     role="timer"
+     aria-label="Cart reservation countdown">
+
+  <div class="cdc__content">
+    <span class="cdc__icon" aria-hidden="true">🔥</span>
+    <span class="cdc__message">{{ block.settings.message }}</span>
+    <span class="cdc__time">
+      <span class="cdc__mins">00</span>:<span class="cdc__secs">00</span>
+    </span>
+  </div>
+</div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Cart Countdown Timer",
+  "target": "section",
+  "stylesheet": "countdown-cart.css",
+  "javascript": "countdown-cart.js",
+  "enabled_on": {
+    "templates": ["cart"]
+  },
+  "settings": [
+    {
+      "type": "range",
+      "id": "reservation_minutes",
+      "label": "Reservation time (minutes)",
+      "min": 1,
+      "max": 60,
+      "step": 1,
+      "default": 10
+    },
+    {
+      "type": "text",
+      "id": "message",
+      "label": "Timer message",
+      "default": "Your cart is reserved for"
+    },
+    {
+      "type": "select",
+      "id": "expiry_action",
+      "label": "When timer expires",
+      "options": [
+        { "value": "hide", "label": "Hide the timer" },
+        { "value": "clear_cart", "label": "Clear the cart" },
+        { "value": "redirect", "label": "Redirect to page" }
+      ],
+      "default": "hide"
+    },
+    {
+      "type": "url",
+      "id": "redirect_url",
+      "label": "Redirect URL"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#991b1b"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#fef2f2"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Timer digit color",
+      "default": "#dc2626"
+    }
+  ]
+}
+{% endschema %}

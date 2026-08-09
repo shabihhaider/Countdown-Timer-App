@@ -1,0 +1,87 @@
+<div class="cdt"
+     data-shop="{{ shop.permanent_domain }}"
+     data-message="{{ block.settings.message }}"
+     data-text-color="{{ block.settings.text_color }}"
+     data-bg-color="{{ block.settings.bg_color }}"
+     style="display: none;"
+     role="region"
+     aria-label="Post-purchase timer">
+
+  <div class="cdt__content">
+    <span class="cdt__icon" aria-hidden="true">🎉</span>
+    <span class="cdt__message">{{ block.settings.message }}</span>
+  </div>
+
+  {% if block.settings.show_cta %}
+  <a href="{{ block.settings.cta_url }}"
+     class="cdt__cta"
+     style="background-color: {{ block.settings.cta_color }};">
+    {{ block.settings.cta_text }}
+  </a>
+  {% endif %}
+</div>
+
+<script>
+  // Simple self-contained script — no external JS needed for thank you page
+  (function() {
+    var el = document.querySelector('.cdt');
+    if (!el) return;
+    el.style.display = '';
+    el.style.color = el.dataset.textColor || '#1a1a2e';
+    el.style.backgroundColor = el.dataset.bgColor || '#f0fdf4';
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Post-Purchase Message",
+  "target": "section",
+  "stylesheet": "countdown-thankyou.css",
+  "enabled_on": {
+    "templates": ["*"]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "message",
+      "label": "Message",
+      "default": "Thank you for your order! Here's an exclusive offer for your next purchase:"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cta",
+      "label": "Show call-to-action button",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "Button text",
+      "default": "Shop Again & Save 10%"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "Button link"
+    },
+    {
+      "type": "color",
+      "id": "cta_color",
+      "label": "Button color",
+      "default": "#16a34a"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#1a1a2e"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#f0fdf4"
+    }
+  ]
+}
+{% endschema %}
