@@ -132,50 +132,90 @@
 
 ---
 
-## 3. Feature Matrix
+## 3. Feature Matrix (Corrected Aug 9 — Evidence from App Store Screenshots)
 
-### What Competitors Offer vs. What We Have
+### Widget Types & Placements
 
-| Feature                        | Ours (Aug 9) | GSC      | Hextom  | Samita  | GA:Urgency |
-| ------------------------------ | ------------ | -------- | ------- | ------- | ---------- |
-| Announcement bar timer         | **Yes**      | Yes      | Yes     | Yes     | Yes        |
-| Product page timer             | No           | Yes      | Yes     | Yes     | Yes        |
-| Cart page timer                | No           | Yes      | Yes     | Yes     | Yes        |
-| Multiple concurrent campaigns  | **Yes**      | Limited  | Yes     | Yes     | Yes        |
-| Recurring/daily timers         | **Yes**      | Yes      | Yes     | Yes     | Yes        |
-| Evergreen (per-visitor) timers | **Yes**      | Yes      | Yes     | No      | Yes        |
-| Fixed-date countdown           | **Yes**      | Yes      | Yes     | Yes     | Yes        |
-| Custom colors (4 pickers)      | **Yes**      | Yes      | Yes     | Yes     | Yes        |
-| Pre-built templates            | **Yes (8)**  | Seasonal | No      | No      | No         |
-| Live preview in admin          | **Yes**      | No       | No      | No      | No         |
-| Timezone-aware scheduling      | **Yes**      | No       | Yes     | No      | No         |
-| Start date scheduling          | **Yes**      | No       | Yes     | Yes     | No         |
-| Geo-targeting                  | No           | No       | Yes     | No      | No         |
-| Page targeting                 | Schema only  | Yes      | Yes     | No      | Yes        |
-| Device targeting               | No           | No       | Yes     | No      | No         |
-| Built-in analytics             | **Yes**      | No       | No      | No      | **Yes**    |
-| A/B testing                    | No           | No       | No      | No      | **Yes**    |
-| Discount code display          | No           | Yes      | Yes     | No      | Yes        |
-| Theme editor settings          | No           | No       | No      | No      | No         |
-| Multi-language                 | No (EN only) | No       | 10      | 19      | No         |
-| Custom fonts                   | No           | Yes      | Yes     | No      | No         |
-| Background images              | No           | Yes      | Yes     | No      | No         |
-| Animation effects              | No           | No       | Yes     | Yes     | No         |
-| Close/dismiss button           | **Yes**      | Yes      | Yes     | Yes     | Yes        |
-| Sticky bar                     | **Yes**      | Yes      | Yes     | Yes     | Yes        |
-| Mobile responsive              | **Yes**      | Yes      | Yes     | Yes     | Yes        |
-| WCAG accessibility             | **Yes**      | No       | No      | No      | No         |
-| Contextual save bar (BFS)      | **Yes**      | N/A      | N/A     | N/A     | N/A        |
-| Server-side UTC enforcement    | **Yes**      | No       | No      | No      | No         |
-| Sentry error tracking          | **Yes**      | N/A      | N/A     | N/A     | N/A        |
-| Accessibility (a11y)           | Good         | Unknown  | Unknown | Unknown | Unknown    |
-| Free tier                      | No\*\*\*\*   | Free     | Yes     | Free    | Yes        |
-| Onboarding wizard              | Yes          | Unknown  | Unknown | Unknown | Unknown    |
+| Placement                    | Ours    | GSC (Free)     | Hextom ($9.99) | Samita (Free)    |
+| ---------------------------- | ------- | -------------- | -------------- | ---------------- |
+| Announcement bar timer       | **Yes** | Yes            | Yes            | Yes              |
+| Product card timers          | **No**  | Yes (4 styles) | Yes            | Yes              |
+| Inline product page timer    | **No**  | Yes (multiple) | Yes            | Yes              |
+| Cart page timer              | **No**  | Yes            | Yes            | Yes (cart clear) |
+| Delivery countdown           | **No**  | No             | No             | Yes              |
+| Stock quantity counter       | **No**  | No             | No             | Yes              |
+| Sales popup with images      | **No**  | No             | No             | Yes              |
+| Theme editor draggable block | **No**  | No             | No             | **Yes**          |
+| Shortcode placement          | **No**  | No             | No             | Yes              |
+| Widget types total           | **1**   | **5+**         | **3+**         | **7+**           |
 
-\* _Campaign model exists but settings page still writes to legacy Setting model_
-\*\* _Background color only — no text color, button color, or gradient_
-\*\*\* _Page targeting field exists in schema but no UI for configuring it_
-\*\*\*\* _No billing/pricing implemented yet_
+### Timer Configuration
+
+| Feature                     | Ours    | GSC           | Hextom        | Samita  |
+| --------------------------- | ------- | ------------- | ------------- | ------- |
+| Fixed-date countdown        | **Yes** | Yes           | Yes           | Yes     |
+| Recurring/daily timers      | **Yes** | Yes           | Yes           | Yes     |
+| Evergreen per-visitor       | **Yes** | Yes (session) | Yes (session) | Yes     |
+| Day-of-week scheduling      | **No**  | No            | Yes           | **Yes** |
+| Timezone-aware              | **Yes** | No            | Yes           | No      |
+| Start date scheduling       | **Yes** | No            | Yes           | Yes     |
+| Server-side UTC enforcement | **Yes** | No            | No            | No      |
+
+### Design & Customization
+
+| Feature                     | Ours          | GSC              | Hextom      | Samita            |
+| --------------------------- | ------------- | ---------------- | ----------- | ----------------- |
+| Custom colors (4 pickers)   | **Yes**       | Yes              | Yes         | Yes               |
+| Pre-built templates         | **8** (color) | **14+** (layout) | No          | Yes (diverse)     |
+| Live preview in admin       | **Yes**       | Yes              | Yes         | No                |
+| Background images/gradients | **No**        | Yes              | Yes         | No                |
+| Custom fonts                | **No**        | Yes              | Yes         | No                |
+| Emoji support               | **No**        | Yes              | Yes         | Yes               |
+| Rich text editor            | **No**        | No               | No          | Yes (B/I/U/align) |
+| Image uploads               | **No**        | No               | No          | Yes               |
+| Animation effects           | **No**        | No               | Yes         | Yes               |
+| 6+ position options         | **No** (2)    | No               | **Yes** (6) | No                |
+| Close button toggle         | **No**        | No               | **Yes**     | No                |
+
+### Targeting & Intelligence
+
+| Feature              | Ours        | GSC | Hextom | Samita |
+| -------------------- | ----------- | --- | ------ | ------ |
+| Page targeting       | Schema only | Yes | Yes    | No     |
+| Geo-targeting        | No          | No  | Yes    | No     |
+| Device targeting     | No          | No  | Yes    | No     |
+| UTM/social targeting | No          | No  | Yes    | No     |
+
+### Analytics & Business
+
+| Feature               | Ours           | GSC                  | Hextom | GA:Urgency |
+| --------------------- | -------------- | -------------------- | ------ | ---------- |
+| Built-in analytics    | **Yes**        | **Yes** (sparklines) | No     | **Yes**    |
+| Per-widget analytics  | **No**         | **Yes** (per type)   | No     | Yes        |
+| Analytics with charts | **No** (table) | **Yes**              | No     | Yes        |
+| A/B testing           | No             | No                   | No     | **Yes**    |
+| CTR tracking          | **Yes**        | No (views only)      | No     | Yes        |
+
+### Platform & Compliance
+
+| Feature                   | Ours         | GSC            | Hextom   | Samita         |
+| ------------------------- | ------------ | -------------- | -------- | -------------- |
+| WCAG accessibility        | **Yes**      | No             | No       | No             |
+| Contextual save bar (BFS) | **Yes**      | N/A            | N/A      | N/A            |
+| Sentry error tracking     | **Yes**      | N/A            | N/A      | N/A            |
+| Multi-language            | No (EN only) | No             | 10       | 19             |
+| Free tier                 | **Yes**      | Free           | Yes      | Free           |
+| Billing (Pro plan)        | **Yes**      | N/A (all free) | $9.99/mo | N/A (all free) |
+
+### Honest Assessment
+
+**Where we lead:** Server-side UTC enforcement (unique), WCAG accessibility (unique), BFS compliance patterns (save bar, live preview), CTR tracking.
+
+**Where we're behind:** Widget variety (1 vs 5-7), visual customization (no fonts/images/emoji/animations), theme editor integration (Samita has it), analytics visualization (GSC has charts), and multi-language support.
+
+**Our templates vs theirs:** Our 8 templates only change colors. GSC's 14+ presets change the entire layout, fonts, and visual style. Not comparable.
+
+**v1 positioning (honest):** "The most trustworthy countdown bar with real deadlines and built-in ROI tracking" — not "the most feature-rich timer app."
 
 ---
 
@@ -635,42 +675,78 @@ Create real urgency with server-side countdown timers that never fake. Built-in 
 | **Feature gating enforcement** | LOW (0.5 day) | Free plan says "1 campaign" but code doesn't enforce it. Must block creation when limit reached.                                           |
 | **GDPR compliance webhooks**   | LOW (0.5 day) | Shopify requires `customers/data_request`, `customers/redact`, `shop/redact` webhook handlers for App Store submission. Currently missing. |
 
-### Should Have (v1.1 — post-launch)
+### Should Have (v1.1 — immediate post-launch, competitive parity)
 
-| Item                            | Why                                                                                               | Complexity |
-| ------------------------------- | ------------------------------------------------------------------------------------------------- | ---------- |
-| Theme editor settings           | Quick customization from Shopify customizer (no competitor has this — differentiator opportunity) | MEDIUM     |
-| Analytics charts/visualizations | Data tables work but charts are more compelling                                                   | MEDIUM     |
-| Discount code display in bar    | GSC and Hextom both offer this                                                                    | LOW        |
-| In-app help/FAQ                 | Reduces support burden                                                                            | LOW        |
-| Page targeting UI               | Schema field exists but no UI                                                                     | LOW        |
+| Item                        | Why                                                                                                          | Complexity | Priority |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------- | -------- |
+| Theme editor block settings | **Samita HAS this.** Merchants expect to drag/customize from theme editor. Our extension has `settings: []`. | MEDIUM     | **HIGH** |
+| Product page inline timer   | **GSC, Hextom, Samita all have this FOR FREE.** Missing it limits value proposition significantly.           | HIGH       | **HIGH** |
+| Analytics charts            | **GSC has sparkline charts per widget.** Our table-only analytics looks basic by comparison.                 | MEDIUM     | HIGH     |
+| Discount code display       | GSC and Hextom both offer copy-to-clipboard coupon codes in the bar.                                         | LOW        | MEDIUM   |
+| Emoji support               | GSC and Samita both support emojis in timer messages. Table-stakes UX.                                       | LOW        | MEDIUM   |
+| Font customization          | GSC and Hextom both offer font selection.                                                                    | LOW        | MEDIUM   |
+| Page targeting UI           | Schema field exists but no UI for merchants to configure.                                                    | LOW        | MEDIUM   |
+
+### Should Have (v1.2 — competitive differentiation)
+
+| Item                       | Why                                                                                       | Complexity |
+| -------------------------- | ----------------------------------------------------------------------------------------- | ---------- |
+| Cart page timer            | Samita has cart clearing on expiry. High-impact for abandonment reduction.                | MEDIUM     |
+| More position options      | Hextom offers 6 positions (top/bottom × push/sticky/overlay). We have 2.                  | LOW        |
+| Close button toggle        | Hextom lets merchants hide the close button. We always show it.                           | LOW        |
+| Background images on bars  | GSC shows bars with cherry blossom, gradient backgrounds. Visual polish.                  | MEDIUM     |
+| Template layout variations | Our 8 templates only change colors. GSC's 14+ presets change fonts/layout/style entirely. | HIGH       |
+| Day-of-week scheduling     | Samita lets merchants pick specific days (Mon-Sun).                                       | LOW        |
+| In-app help/FAQ            | Reduces support burden.                                                                   | LOW        |
 
 ### Future (v2+)
 
-| Item                        | Why                                   |
-| --------------------------- | ------------------------------------- |
-| Product page timer          | Most competitors have this            |
-| Cart page timer             | Cart abandonment reduction            |
-| Multi-language support      | Samita has 19 languages               |
-| A/B testing                 | GA: Urgency Timer already offers this |
-| Geo-targeting               | Hextom differentiator                 |
-| Background images/gradients | GSC and Hextom offer this             |
-| Animation effects           | Visual polish                         |
+| Item                     | Why                                                                  |
+| ------------------------ | -------------------------------------------------------------------- |
+| Stock quantity counter   | Samita tracks real inventory for dual urgency (time + scarcity)      |
+| Delivery countdown       | Samita shows shipping cutoff timers with dispatch/delivery estimates |
+| Sales popups with images | Samita has rich popup campaigns with image uploads                   |
+| Rich text editor         | Samita has B/I/U/alignment/color in message editor                   |
+| Shortcode placement      | Samita lets merchants embed timers anywhere via HTML snippet         |
+| Product card timers      | GSC shows 4 different timer styles on collection page product cards  |
+| Multi-language support   | Samita: 19 languages, Hextom: 10. We have English only.              |
+| A/B testing              | GA: Urgency Timer already offers this                                |
+| Geo-targeting            | Hextom premium differentiator                                        |
+| Animation effects        | Samita and Hextom both offer animated timer digits                   |
 
-## 15. Conclusion (Updated August 9)
+## 15. Conclusion (Updated August 9 — Post-Screenshot Re-Audit)
 
-The app has been transformed from a 5/10 MVP to a 7.5/10 near-production-ready product in one implementation sprint. 18 issues resolved, 95 tests passing at 92.76% coverage, QA verified across all features.
+### Honest Assessment
 
-**What we have that no one else does:**
+The app has been transformed from a 5/10 MVP to a **7/10 focused v1** in one implementation sprint. 20 issues resolved, 95 tests passing at 92.76% coverage, QA verified.
 
-1. Server-side UTC enforcement (real deadlines, not fake)
-2. Built-in analytics (only GA: Urgency Timer also has this)
-3. WCAG 2.1 AA accessibility (unique in category)
-4. Live preview in admin (unique in category)
-5. 8 pre-built design templates (only TicTac has templates)
-6. Contextual save bar (BFS compliance, unique among timer apps)
+However, the competitive landscape is **more sophisticated than initially assessed**. Free competitors (GSC, Samita) offer 5-7 widget types, theme editor integration, product/cart/delivery timers, image uploads, emoji support, and rich customization — all for free. Our app offers 1 widget type (announcement bar).
 
-**2 blockers remain** (feature gating + GDPR webhooks) — estimated 1 day of work. After those, the focus shifts to App Store listing preparation, storefront e2e testing, and production deployment.
+### What we genuinely have that others don't:
+
+1. **Server-side UTC enforcement** — the only app with real deadlines that can't be faked (unique)
+2. **WCAG 2.1 AA accessibility** — screen reader support, reduced motion, 44px targets (unique)
+3. **CTR tracking** — impressions + clicks + click-through rate (GSC tracks views only, GA tracks similar)
+4. **BFS compliance patterns** — contextual save bar, live preview (unique among timer apps)
+
+### What we claimed but was wrong:
+
+1. ~~"No competitor has analytics"~~ — GSC has per-widget sparkline analytics, GA has analytics + A/B testing
+2. ~~"No competitor has theme editor settings"~~ — Samita has draggable blocks in the theme editor
+3. ~~"8 templates is competitive"~~ — GSC has 14+ presets that change layout/fonts/style, not just colors
+4. ~~"We're above free competitor parity"~~ — GSC and Samita are significantly more feature-rich
+
+### v1 Launch Positioning
+
+**Don't compete on features.** Compete on trust.
+
+> "The most trustworthy countdown timer for Shopify. Real deadlines that never fake. Built-in ROI tracking. WCAG accessible. No gimmicks."
+
+This is honest, defensible, and targets the #1 complaint across all competitor reviews (fake timers, session resets, deceptive urgency).
+
+### Remaining v1 Blockers: ZERO
+
+Feature gating and GDPR webhooks are implemented. The app is feature-complete for a focused v1 launch. Post-launch priorities should focus on widget variety (product page timer, theme editor settings) to close the gap with free competitors.
 
 **The goal remains:** A focused, polished, trustworthy v1 that does less but does it better than 176 competitors.
 
