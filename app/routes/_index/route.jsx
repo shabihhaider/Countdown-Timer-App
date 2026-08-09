@@ -126,7 +126,7 @@ export default function LandingPage() {
       {/* Timer Demo */}
       <section
         style={{
-          background: "#288d40",
+          background: "#1a6b3a",
           color: "#ffffff",
           padding: "12px 24px",
           display: "flex",
@@ -160,9 +160,9 @@ export default function LandingPage() {
                 </span>
                 <span
                   style={{
-                    fontSize: 10,
+                    fontSize: 11,
                     textTransform: "uppercase",
-                    opacity: 0.85,
+                    fontWeight: 600,
                     letterSpacing: "0.5px",
                   }}
                 >
