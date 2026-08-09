@@ -15,7 +15,8 @@ export const loader = async ({ request }) => {
     request.headers.get("x-real-ip") ||
     "unknown";
 
-  if (await isRateLimited(ip)) {
+  // Per-IP rate limit (60 req/min)
+  if (await isRateLimited(`ip:${ip}`)) {
     return json(
       { success: false, error: "Too many requests" },
       { status: 429, headers: { "Retry-After": "60", "Cache-Control": "no-store" } }
@@ -31,6 +32,14 @@ export const loader = async ({ request }) => {
 
   if (!SHOP_PARAM_REGEX.test(shop)) {
     return json({ success: false, error: "Invalid shop parameter" }, { status: 400 });
+  }
+
+  // Per-shop rate limit (120 req/min — prevents shop enumeration)
+  if (await isRateLimited(`shop:${shop}`, 120, 60)) {
+    return json(
+      { success: false, error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": "60", "Cache-Control": "no-store" } }
+    );
   }
 
   try {
@@ -54,8 +63,15 @@ export const loader = async ({ request }) => {
         barMessage: campaign.barMessage,
         buttonText: campaign.buttonText,
         buttonUrl: campaign.buttonUrl,
+        discountCode: campaign.discountCode,
+        timerType: campaign.timerType,
         endDate: campaign.endDate?.toISOString() ?? null,
+        dailyResetTime: campaign.dailyResetTime,
+        evergreenMinutes: campaign.evergreenMinutes,
+        timezone: campaign.timezone,
+        fontFamily: campaign.fontFamily,
         barColor: campaign.backgroundColor,
+        pageTargeting: campaign.pageTargeting,
         textColor: campaign.textColor,
         buttonTextColor: campaign.buttonTextColor,
         buttonBgColor: campaign.buttonBackgroundColor,

@@ -119,6 +119,43 @@
   margin-top: 2px;
 }
 
+/* ---- Discount Code Badge ---- */
+
+.cdb__code {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.cdb__code-text {
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-family: monospace;
+}
+
+.cdb__code-copy {
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  color: inherit;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background-color 0.15s ease;
+  min-height: 28px;
+}
+
+.cdb__code-copy:hover,
+.cdb__code-copy:focus-visible {
+  background: rgba(255, 255, 255, 0.4);
+}
+
 /* ---- CTA Button — minimum 44px touch target (WCAG 2.5.5) ---- */
 
 .cdb__btn {

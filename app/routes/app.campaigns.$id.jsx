@@ -24,9 +24,13 @@ import {
   formValuesToCampaignData,
   validateCampaignForm,
   isValidHex,
+  TIMEZONE_OPTIONS,
+  FONT_OPTIONS,
+  PAGE_TARGETING_MODES,
 } from "../utils/campaign";
 import { ColorPickerField } from "../components/ColorPickerField";
 import { TimerPreview } from "../components/TimerPreview";
+import { TemplateSelector } from "../components/TemplateSelector";
 
 export const loader = async ({ request, params }) => {
   const { session } = await authenticate.admin(request);
@@ -71,7 +75,13 @@ export const action = async ({ request, params }) => {
     barMessage: String(formData.get("barMessage") || "").trim(),
     buttonText: String(formData.get("buttonText") || "").trim(),
     buttonLink: String(formData.get("buttonLink") || "").trim(),
+    discountCode: String(formData.get("discountCode") || "").trim(),
+    timerType: String(formData.get("timerType") || "one_time"),
+    startDate: String(formData.get("startDate") || "").trim(),
     endDate: String(formData.get("endDate") || "").trim(),
+    timezone: String(formData.get("timezone") || "UTC").trim(),
+    dailyResetTime: String(formData.get("dailyResetTime") || "00:00").trim(),
+    evergreenMinutes: String(formData.get("evergreenMinutes") || "30").trim(),
     barColor: String(formData.get("barColor") || DEFAULT_CAMPAIGN_FORM.barColor).trim(),
     textColor: String(formData.get("textColor") || DEFAULT_CAMPAIGN_FORM.textColor).trim(),
     buttonTextColor: String(
@@ -80,9 +90,11 @@ export const action = async ({ request, params }) => {
     buttonBgColor: String(
       formData.get("buttonBgColor") || DEFAULT_CAMPAIGN_FORM.buttonBgColor
     ).trim(),
+    fontFamily: String(formData.get("fontFamily") || "system"),
     barPosition: String(formData.get("barPosition") || "top"),
     endAction: String(formData.get("endAction") || "hide"),
     customEndMessage: String(formData.get("customEndMessage") || "").trim(),
+    pageTargeting: String(formData.get("pageTargeting") || "[]"),
   };
 
   const errors = validateCampaignForm(raw);
@@ -146,10 +158,6 @@ export default function CampaignEditPage() {
   const handleDiscard = useCallback(() => {
     setFormState({ ...savedState });
   }, [savedState]);
-
-  const nowIso = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
 
   return (
     <Frame>
@@ -219,16 +227,70 @@ export default function CampaignEditPage() {
                         autoComplete="off"
                         error={fieldErrors.barMessage}
                       />
-                      <TextField
-                        label="Countdown End Date & Time"
-                        value={formState.endDate}
-                        onChange={(v) => handleChange("endDate", v)}
-                        type="datetime-local"
-                        name="endDate"
-                        helpText="When your sale ends. Must be in the future."
-                        min={nowIso}
-                        error={fieldErrors.endDate}
+                      <Select
+                        label="Timer Type"
+                        options={[
+                          { label: "One-time countdown (fixed end date)", value: "one_time" },
+                          { label: "Daily recurring (resets every day)", value: "daily" },
+                          { label: "Evergreen (per-visitor timer)", value: "evergreen" },
+                        ]}
+                        value={formState.timerType}
+                        onChange={(v) => handleChange("timerType", v)}
+                        name="timerType"
+                        helpText="Choose how the countdown timer behaves."
                       />
+                      <Select
+                        label="Timezone"
+                        options={TIMEZONE_OPTIONS}
+                        value={formState.timezone}
+                        onChange={(v) => handleChange("timezone", v)}
+                        name="timezone"
+                        helpText="Dates are interpreted in this timezone and stored as UTC."
+                      />
+                      {formState.timerType === "one_time" && (
+                        <>
+                          <TextField
+                            label="Start Date & Time (optional)"
+                            value={formState.startDate}
+                            onChange={(v) => handleChange("startDate", v)}
+                            type="datetime-local"
+                            name="startDate"
+                            helpText="Leave empty to start immediately. Use this to schedule campaigns in advance."
+                            error={fieldErrors.startDate}
+                          />
+                          <TextField
+                            label="End Date & Time"
+                            value={formState.endDate}
+                            onChange={(v) => handleChange("endDate", v)}
+                            type="datetime-local"
+                            name="endDate"
+                            helpText="When your sale ends. Must be in the future."
+                            error={fieldErrors.endDate}
+                          />
+                        </>
+                      )}
+                      {formState.timerType === "daily" && (
+                        <TextField
+                          label="Daily Reset Time"
+                          value={formState.dailyResetTime}
+                          onChange={(v) => handleChange("dailyResetTime", v)}
+                          type="time"
+                          name="dailyResetTime"
+                          helpText="The timer resets at this time every day in the selected timezone."
+                        />
+                      )}
+                      {formState.timerType === "evergreen" && (
+                        <TextField
+                          label="Timer Duration (minutes)"
+                          value={formState.evergreenMinutes}
+                          onChange={(v) => handleChange("evergreenMinutes", v)}
+                          type="number"
+                          name="evergreenMinutes"
+                          min="1"
+                          max="1440"
+                          helpText="Each visitor gets a personal countdown starting from their first visit. Timer only shows once per visitor."
+                        />
+                      )}
                     </FormLayout>
                   </BlockStack>
                 </Card>
@@ -258,6 +320,15 @@ export default function CampaignEditPage() {
                         autoComplete="off"
                         error={fieldErrors.buttonLink}
                       />
+                      <TextField
+                        label="Discount Code (optional)"
+                        value={formState.discountCode}
+                        onChange={(v) => handleChange("discountCode", v)}
+                        name="discountCode"
+                        placeholder="SAVE20"
+                        helpText="Display a promo code with a copy button. Leave empty to hide."
+                        autoComplete="off"
+                      />
                     </FormLayout>
                   </BlockStack>
                 </Card>
@@ -267,6 +338,14 @@ export default function CampaignEditPage() {
                     <Text variant="headingMd" as="h2">
                       Design
                     </Text>
+                    <TemplateSelector
+                      onSelect={(t) => {
+                        handleChange("barColor", t.barColor);
+                        handleChange("textColor", t.textColor);
+                        handleChange("buttonBgColor", t.buttonBgColor);
+                        handleChange("buttonTextColor", t.buttonTextColor);
+                      }}
+                    />
                     <ColorPickerField
                       label="Bar Background Color"
                       value={formState.barColor}
@@ -300,6 +379,91 @@ export default function CampaignEditPage() {
                       value={formState.barPosition}
                       onChange={(v) => handleChange("barPosition", v)}
                       name="barPosition"
+                    />
+                    <Select
+                      label="Font Family"
+                      options={FONT_OPTIONS}
+                      value={formState.fontFamily}
+                      onChange={(v) => handleChange("fontFamily", v)}
+                      name="fontFamily"
+                      helpText="Web-safe fonts — no external loading, zero performance impact."
+                    />
+                  </BlockStack>
+                </Card>
+
+                <Card>
+                  <BlockStack gap="400">
+                    <Text variant="headingMd" as="h2">
+                      Page Targeting
+                    </Text>
+                    <Select
+                      label="Display mode"
+                      options={PAGE_TARGETING_MODES}
+                      value={(() => {
+                        try {
+                          const parsed = JSON.parse(formState.pageTargeting || "{}");
+                          return parsed.mode || "all";
+                        } catch {
+                          return "all";
+                        }
+                      })()}
+                      onChange={(mode) => {
+                        if (mode === "all") {
+                          handleChange("pageTargeting", JSON.stringify({ mode: "all" }));
+                        } else {
+                          const current = (() => {
+                            try {
+                              return JSON.parse(formState.pageTargeting || "{}");
+                            } catch {
+                              return {};
+                            }
+                          })();
+                          handleChange(
+                            "pageTargeting",
+                            JSON.stringify({ mode, patterns: current.patterns || [] })
+                          );
+                        }
+                      }}
+                      helpText="Control which pages show the countdown timer."
+                    />
+                    {(() => {
+                      try {
+                        const parsed = JSON.parse(formState.pageTargeting || "{}");
+                        if (parsed.mode === "include" || parsed.mode === "exclude") {
+                          return (
+                            <TextField
+                              label={
+                                parsed.mode === "include"
+                                  ? "Show only on these URLs"
+                                  : "Hide on these URLs"
+                              }
+                              value={(parsed.patterns || []).join("\n")}
+                              onChange={(v) => {
+                                const patterns = v
+                                  .split("\n")
+                                  .map((p) => p.trim())
+                                  .filter(Boolean);
+                                handleChange(
+                                  "pageTargeting",
+                                  JSON.stringify({ mode: parsed.mode, patterns })
+                                );
+                              }}
+                              multiline={3}
+                              placeholder={"/collections/*\n/products/sale-item\n/pages/deals"}
+                              helpText="One URL pattern per line. Use * as wildcard (e.g. /collections/* matches all collections)."
+                              autoComplete="off"
+                            />
+                          );
+                        }
+                        return null;
+                      } catch {
+                        return null;
+                      }
+                    })()}
+                    <input
+                      type="hidden"
+                      name="pageTargeting"
+                      value={formState.pageTargeting || '{"mode":"all"}'}
                     />
                   </BlockStack>
                 </Card>
@@ -343,7 +507,15 @@ export default function CampaignEditPage() {
 
           {/* Live Preview — Secondary */}
           <Layout.Section variant="oneThird">
-            <div style={{ position: "sticky", top: "20px" }}>
+            <div
+              style={{
+                position: "sticky",
+                top: "0px",
+                alignSelf: "flex-start",
+                maxHeight: "100vh",
+                overflowY: "auto",
+              }}
+            >
               <TimerPreview formState={formState} />
             </div>
           </Layout.Section>

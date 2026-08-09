@@ -18,10 +18,12 @@ import { authenticate } from "../shopify.server";
 import { TitleBar } from "@shopify/app-bridge-react";
 import db from "../db.server";
 import { getCampaignStatus, formatNumber } from "../utils/campaign";
+import { getPlanInfo } from "../utils/billing.server";
 
 export const loader = async ({ request }) => {
-  const { session } = await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
   const shop = session.shop;
+  const planInfo = await getPlanInfo(billing);
 
   // Check onboarding status (no redirect — server-side redirects lose
   // session context with embedded auth, causing login loops)
@@ -65,6 +67,7 @@ export const loader = async ({ request }) => {
       name: campaign.name,
       barMessage: campaign.barMessage,
       endDate: campaign.endDate,
+      timezone: campaign.timezone,
       status,
       impressions,
       clicks,
@@ -76,6 +79,7 @@ export const loader = async ({ request }) => {
 
   return json({
     onboardingComplete,
+    planInfo,
     campaigns: campaignSummaries,
     totals: {
       impressions: totalImpressions,
@@ -107,11 +111,12 @@ function MetricCard({ title, value, subtitle }) {
   );
 }
 
-function formatEndDate(date) {
+function formatEndDate(date, timezone) {
   if (!date) return "No end date";
   const d = new Date(date);
   if (isNaN(d.getTime())) return "No end date";
   return d.toLocaleDateString("en-US", {
+    timeZone: timezone || "UTC",
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -121,7 +126,7 @@ function formatEndDate(date) {
 }
 
 export default function DashboardPage() {
-  const { onboardingComplete, campaigns, totals } = useLoaderData();
+  const { onboardingComplete, planInfo, campaigns, totals } = useLoaderData();
   const navigate = useNavigate();
 
   return (
@@ -139,10 +144,23 @@ export default function DashboardPage() {
             tone="warning"
             action={{
               content: "Continue setup",
-              onAction: () => navigate("/app/onboarding"),
+              url: "/app/onboarding",
             }}
           >
             <p>Finish setting up your countdown timer to start driving conversions.</p>
+          </Banner>
+        )}
+
+        {!planInfo.isPro && onboardingComplete && (
+          <Banner
+            tone="info"
+            title={`You're on the ${planInfo.plan} plan`}
+            action={{
+              content: "Upgrade to Pro",
+              url: "/app/billing",
+            }}
+          >
+            <p>Unlock unlimited campaigns, full analytics, and priority support for $6.99/mo.</p>
           </Banner>
         )}
 
@@ -214,7 +232,7 @@ export default function DashboardPage() {
                               {campaign.barMessage}
                             </Text>
                             <Text variant="bodySm" tone="subdued" as="span">
-                              {formatEndDate(campaign.endDate)}
+                              {formatEndDate(campaign.endDate, campaign.timezone)}
                             </Text>
                           </BlockStack>
                           <BlockStack gap="100" inlineAlign="end">

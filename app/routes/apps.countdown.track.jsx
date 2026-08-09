@@ -3,7 +3,7 @@ import db from "../db.server";
 import { isRateLimited } from "../redis.server";
 
 const SHOP_PARAM_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/;
-const VALID_EVENTS = new Set(["impression", "click", "close"]);
+const VALID_EVENTS = new Set(["impression", "click", "close", "copy"]);
 
 // Track analytics events fired from the storefront countdown bar widget.
 // Called via navigator.sendBeacon or fetch POST.
@@ -17,7 +17,8 @@ export const action = async ({ request }) => {
     request.headers.get("x-real-ip") ||
     "unknown";
 
-  if (await isRateLimited(ip)) {
+  // Per-IP rate limit (20 req/min for tracking — a single visitor shouldn't fire more)
+  if (await isRateLimited(`track:${ip}`, 20, 60)) {
     // Return 200 so sendBeacon doesn't retry — tracking errors must not break the storefront
     return json({ success: true }, { status: 200 });
   }

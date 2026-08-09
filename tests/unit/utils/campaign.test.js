@@ -9,6 +9,9 @@ import {
   getCampaignStatus,
   formatNumber,
   DEFAULT_CAMPAIGN_FORM,
+  FONT_OPTIONS,
+  PAGE_TARGETING_MODES,
+  TIMEZONE_OPTIONS,
 } from "../../../app/utils/campaign";
 
 describe("campaignToFormValues", () => {
@@ -143,5 +146,109 @@ describe("formatNumber", () => {
   it("formats thousands with separators", () => {
     expect(formatNumber(1234)).toBe("1,234");
     expect(formatNumber(1000000)).toBe("1,000,000");
+  });
+});
+
+describe("DEFAULT_CAMPAIGN_FORM", () => {
+  it("has all required fields", () => {
+    expect(DEFAULT_CAMPAIGN_FORM.name).toBe("My Sale");
+    expect(DEFAULT_CAMPAIGN_FORM.discountCode).toBe("");
+    expect(DEFAULT_CAMPAIGN_FORM.fontFamily).toBe("system");
+    expect(DEFAULT_CAMPAIGN_FORM.timerType).toBe("one_time");
+    expect(DEFAULT_CAMPAIGN_FORM.dailyResetTime).toBe("00:00");
+    expect(DEFAULT_CAMPAIGN_FORM.evergreenMinutes).toBe("30");
+  });
+});
+
+describe("FONT_OPTIONS", () => {
+  it("has system default as first option", () => {
+    expect(FONT_OPTIONS[0].value).toBe("system");
+  });
+
+  it("has theme inherit option", () => {
+    expect(FONT_OPTIONS.find((f) => f.value === "inherit")).toBeTruthy();
+  });
+
+  it("has at least 6 font options", () => {
+    expect(FONT_OPTIONS.length).toBeGreaterThanOrEqual(6);
+  });
+});
+
+describe("PAGE_TARGETING_MODES", () => {
+  it("has 3 modes", () => {
+    expect(PAGE_TARGETING_MODES).toHaveLength(3);
+  });
+
+  it("includes all, include, exclude", () => {
+    const values = PAGE_TARGETING_MODES.map((m) => m.value);
+    expect(values).toContain("all");
+    expect(values).toContain("include");
+    expect(values).toContain("exclude");
+  });
+});
+
+describe("TIMEZONE_OPTIONS", () => {
+  it("has UTC as first option", () => {
+    expect(TIMEZONE_OPTIONS[0].value).toBe("UTC");
+  });
+
+  it("has at least 20 timezone options", () => {
+    const nonDisabled = TIMEZONE_OPTIONS.filter((t) => !t.disabled);
+    expect(nonDisabled.length).toBeGreaterThanOrEqual(20);
+  });
+});
+
+describe("campaignToFormValues — new fields", () => {
+  it("maps discountCode and fontFamily", () => {
+    const campaign = {
+      name: "Test",
+      barMessage: "Sale",
+      buttonText: "Shop",
+      buttonUrl: "/",
+      discountCode: "SAVE20",
+      timerType: "one_time",
+      startDate: null,
+      endDate: null,
+      timezone: "UTC",
+      dailyResetTime: "00:00",
+      evergreenMinutes: 30,
+      fontFamily: "Georgia, serif",
+      backgroundColor: "#000",
+      textColor: "#fff",
+      buttonTextColor: "#000",
+      buttonBackgroundColor: "#fff",
+      position: "top",
+      endAction: "hide",
+      customEndMessage: "",
+      pageTargeting: '{"mode":"include","patterns":["/collections/*"]}',
+    };
+    const form = campaignToFormValues(campaign);
+    expect(form.discountCode).toBe("SAVE20");
+    expect(form.fontFamily).toBe("Georgia, serif");
+    expect(form.pageTargeting).toBe('{"mode":"include","patterns":["/collections/*"]}');
+  });
+});
+
+describe("formValuesToCampaignData — new fields", () => {
+  it("maps discountCode, fontFamily, and pageTargeting", () => {
+    const data = formValuesToCampaignData({
+      ...DEFAULT_CAMPAIGN_FORM,
+      discountCode: "SUMMER50",
+      fontFamily: "Georgia, serif",
+      pageTargeting: '{"mode":"exclude","patterns":["/pages/about"]}',
+    });
+    expect(data.discountCode).toBe("SUMMER50");
+    expect(data.fontFamily).toBe("Georgia, serif");
+    expect(data.pageTargeting).toBe('{"mode":"exclude","patterns":["/pages/about"]}');
+  });
+
+  it("defaults empty discountCode", () => {
+    const data = formValuesToCampaignData(DEFAULT_CAMPAIGN_FORM);
+    expect(data.discountCode).toBe("");
+  });
+
+  it("defaults system fontFamily", () => {
+    const data = formValuesToCampaignData(DEFAULT_CAMPAIGN_FORM);
+    expect(data.fontFamily).toBe("system");
   });
 });

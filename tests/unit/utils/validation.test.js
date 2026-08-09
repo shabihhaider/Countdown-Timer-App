@@ -157,6 +157,39 @@ describe("validateCampaignForm", () => {
     expect(errors.endDate).toContain("future");
   });
 
+  it("rejects invalid endDate", () => {
+    const errors = validateCampaignForm({ ...validForm, endDate: "not-a-date" });
+    expect(errors.endDate).toContain("valid");
+  });
+
+  it("validates startDate is a valid date when provided", () => {
+    const errors = validateCampaignForm({ ...validForm, startDate: "not-a-date" });
+    expect(errors.startDate).toContain("valid");
+  });
+
+  it("rejects startDate after endDate", () => {
+    const errors = validateCampaignForm({
+      ...validForm,
+      startDate: new Date(Date.now() + 172800000).toISOString(),
+      endDate: new Date(Date.now() + 86400000).toISOString(),
+    });
+    expect(errors.startDate).toContain("before");
+  });
+
+  it("accepts valid startDate before endDate", () => {
+    const errors = validateCampaignForm({
+      ...validForm,
+      startDate: new Date(Date.now() + 3600000).toISOString(),
+      endDate: new Date(Date.now() + 86400000).toISOString(),
+    });
+    expect(errors.startDate).toBeUndefined();
+  });
+
+  it("accepts empty buttonLink", () => {
+    const errors = validateCampaignForm({ ...validForm, buttonLink: "" });
+    expect(errors.buttonLink).toBeUndefined();
+  });
+
   it("requires customEndMessage when endAction is show_custom", () => {
     const errors = validateCampaignForm({
       ...validForm,

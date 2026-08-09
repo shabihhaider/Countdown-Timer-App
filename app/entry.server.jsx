@@ -4,6 +4,15 @@ import { RemixServer } from "@remix-run/react";
 import { createReadableStreamFromReadable } from "@remix-run/node";
 import { isbot } from "isbot";
 import { addDocumentResponseHeaders } from "./shopify.server";
+import { Sentry, initSentry } from "./sentry.server";
+
+// Initialize Sentry before handling any requests.
+initSentry();
+
+// Tell Remix to route all loader/action errors through Sentry.
+// Without this export, errors are caught by Remix internally but
+// never reported to Sentry's Issues dashboard.
+export const handleError = Sentry.wrapRemixHandleError;
 
 export const streamTimeout = 5000;
 
@@ -38,10 +47,12 @@ export default async function handleRequest(
           pipe(body);
         },
         onShellError(error) {
+          Sentry.captureException(error);
           reject(error);
         },
         onError(error) {
           responseStatusCode = 500;
+          Sentry.captureException(error);
           console.error(error);
         },
       }

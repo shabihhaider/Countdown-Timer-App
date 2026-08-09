@@ -9,7 +9,14 @@ export const DEFAULT_CAMPAIGN_FORM = {
   barMessage: "Flash Sale Ends In...",
   buttonText: "Shop Now",
   buttonLink: "/collections/all",
+  discountCode: "",
+  timerType: "one_time",
+  startDate: "",
   endDate: "",
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+  dailyResetTime: "00:00",
+  evergreenMinutes: "30",
+  fontFamily: "system",
   barColor: "#288d40",
   textColor: "#ffffff",
   buttonTextColor: "#111111",
@@ -19,6 +26,56 @@ export const DEFAULT_CAMPAIGN_FORM = {
   customEndMessage: "",
 };
 
+/** Font family options — web-safe fonts with zero external loading. */
+export const FONT_OPTIONS = [
+  { label: "System default", value: "system" },
+  { label: "Theme font (inherit)", value: "inherit" },
+  { label: "Georgia (serif)", value: "Georgia, serif" },
+  { label: "Times New Roman (serif)", value: "'Times New Roman', serif" },
+  { label: "Verdana (sans-serif)", value: "Verdana, sans-serif" },
+  { label: "Trebuchet MS (sans-serif)", value: "'Trebuchet MS', sans-serif" },
+  { label: "Courier New (monospace)", value: "'Courier New', monospace" },
+  { label: "Impact (display)", value: "Impact, sans-serif" },
+];
+
+/** Page targeting mode options. */
+export const PAGE_TARGETING_MODES = [
+  { label: "Show on all pages", value: "all" },
+  { label: "Only show on these pages", value: "include" },
+  { label: "Hide on these pages", value: "exclude" },
+];
+
+/** Common timezones grouped by region for the timezone selector. */
+export const TIMEZONE_OPTIONS = [
+  { label: "UTC", value: "UTC" },
+  { label: "── Americas ──", value: "", disabled: true },
+  { label: "Eastern Time (ET)", value: "America/New_York" },
+  { label: "Central Time (CT)", value: "America/Chicago" },
+  { label: "Mountain Time (MT)", value: "America/Denver" },
+  { label: "Pacific Time (PT)", value: "America/Los_Angeles" },
+  { label: "Alaska (AKT)", value: "America/Anchorage" },
+  { label: "Hawaii (HST)", value: "Pacific/Honolulu" },
+  { label: "São Paulo (BRT)", value: "America/Sao_Paulo" },
+  { label: "Toronto (ET)", value: "America/Toronto" },
+  { label: "── Europe ──", value: "", disabled: true },
+  { label: "London (GMT/BST)", value: "Europe/London" },
+  { label: "Paris (CET)", value: "Europe/Paris" },
+  { label: "Berlin (CET)", value: "Europe/Berlin" },
+  { label: "Amsterdam (CET)", value: "Europe/Amsterdam" },
+  { label: "Istanbul (TRT)", value: "Europe/Istanbul" },
+  { label: "Moscow (MSK)", value: "Europe/Moscow" },
+  { label: "── Asia / Pacific ──", value: "", disabled: true },
+  { label: "Dubai (GST)", value: "Asia/Dubai" },
+  { label: "Karachi (PKT)", value: "Asia/Karachi" },
+  { label: "Kolkata (IST)", value: "Asia/Kolkata" },
+  { label: "Bangkok (ICT)", value: "Asia/Bangkok" },
+  { label: "Shanghai (CST)", value: "Asia/Shanghai" },
+  { label: "Tokyo (JST)", value: "Asia/Tokyo" },
+  { label: "Seoul (KST)", value: "Asia/Seoul" },
+  { label: "Sydney (AEST)", value: "Australia/Sydney" },
+  { label: "Auckland (NZST)", value: "Pacific/Auckland" },
+];
+
 // --- Campaign ↔ Form field mapping ---
 
 /**
@@ -26,17 +83,47 @@ export const DEFAULT_CAMPAIGN_FORM = {
  * @param {import("@prisma/client").Campaign} campaign
  * @returns {Record<string, string>}
  */
+/**
+ * Convert a UTC Date to a datetime-local string in a specific timezone.
+ * @param {Date | null} date
+ * @param {string} timezone - IANA timezone (e.g. "America/New_York")
+ * @returns {string} datetime-local format "YYYY-MM-DDTHH:MM" or ""
+ */
+function utcToLocalDatetimeString(date, timezone) {
+  if (!date) return "";
+  try {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone || "UTC",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(date);
+
+    const get = (type) => parts.find((p) => p.type === type)?.value || "00";
+    return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+  } catch {
+    return "";
+  }
+}
+
 export function campaignToFormValues(campaign) {
+  const tz = campaign.timezone || "UTC";
   return {
     name: campaign.name,
     barMessage: campaign.barMessage,
     buttonText: campaign.buttonText,
     buttonLink: campaign.buttonUrl,
-    endDate: campaign.endDate
-      ? new Date(campaign.endDate.getTime() - new Date().getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 16)
-      : "",
+    discountCode: campaign.discountCode,
+    timerType: campaign.timerType,
+    startDate: utcToLocalDatetimeString(campaign.startDate, tz),
+    endDate: utcToLocalDatetimeString(campaign.endDate, tz),
+    timezone: tz,
+    dailyResetTime: campaign.dailyResetTime,
+    evergreenMinutes: String(campaign.evergreenMinutes),
+    fontFamily: campaign.fontFamily,
     barColor: campaign.backgroundColor,
     textColor: campaign.textColor,
     buttonTextColor: campaign.buttonTextColor,
@@ -44,6 +131,7 @@ export function campaignToFormValues(campaign) {
     barPosition: campaign.position,
     endAction: campaign.endAction,
     customEndMessage: campaign.customEndMessage,
+    pageTargeting: campaign.pageTargeting,
   };
 }
 
@@ -52,13 +140,50 @@ export function campaignToFormValues(campaign) {
  * @param {Record<string, string>} form
  * @returns {Record<string, unknown>}
  */
+/**
+ * Parse a datetime-local string in a given timezone to a UTC Date.
+ * @param {string} localDatetime - "YYYY-MM-DDTHH:MM"
+ * @param {string} timezone - IANA timezone
+ * @returns {Date | null}
+ */
+function localDatetimeToUtc(localDatetime, timezone) {
+  if (!localDatetime) return null;
+  try {
+    // Create a date string that Intl can parse in the target timezone
+    const [datePart, timePart] = localDatetime.split("T");
+    const [year, month, day] = datePart.split("-").map(Number);
+    const [hour, minute] = timePart.split(":").map(Number);
+
+    // Use a known epoch offset approach: format the target time in UTC,
+    // then compute the difference to find the timezone offset
+    const tempDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+    const utcString = tempDate.toLocaleString("en-US", { timeZone: "UTC" });
+    const tzString = tempDate.toLocaleString("en-US", { timeZone: timezone });
+    const utcMs = new Date(utcString).getTime();
+    const tzMs = new Date(tzString).getTime();
+    const offsetMs = tzMs - utcMs;
+
+    return new Date(tempDate.getTime() - offsetMs);
+  } catch {
+    return new Date(localDatetime);
+  }
+}
+
 export function formValuesToCampaignData(form) {
+  const tz = form.timezone || "UTC";
   return {
     name: form.name || "My Sale",
     barMessage: form.barMessage,
     buttonText: form.buttonText,
     buttonUrl: form.buttonLink,
-    endDate: form.endDate ? new Date(form.endDate) : null,
+    discountCode: form.discountCode || "",
+    timerType: form.timerType || "one_time",
+    startDate: localDatetimeToUtc(form.startDate, tz),
+    endDate: localDatetimeToUtc(form.endDate, tz),
+    timezone: tz,
+    dailyResetTime: form.dailyResetTime || "00:00",
+    evergreenMinutes: parseInt(form.evergreenMinutes, 10) || 30,
+    fontFamily: form.fontFamily || "system",
     backgroundColor: form.barColor,
     textColor: form.textColor || "#ffffff",
     buttonTextColor: form.buttonTextColor || "#111111",
@@ -66,6 +191,7 @@ export function formValuesToCampaignData(form) {
     position: form.barPosition,
     endAction: form.endAction,
     customEndMessage: form.customEndMessage,
+    pageTargeting: form.pageTargeting || "[]",
   };
 }
 
@@ -102,6 +228,13 @@ export function validateCampaignForm(raw) {
     errors.barMessage = "Bar message must be 200 characters or fewer.";
   }
 
+  if (raw.startDate) {
+    const startMs = new Date(raw.startDate).getTime();
+    if (isNaN(startMs)) {
+      errors.startDate = "Start date is not a valid date.";
+    }
+  }
+
   if (!raw.endDate) {
     errors.endDate = "End date is required.";
   } else {
@@ -110,6 +243,14 @@ export function validateCampaignForm(raw) {
       errors.endDate = "End date is not a valid date.";
     } else if (endMs <= Date.now()) {
       errors.endDate = "End date must be in the future.";
+    }
+
+    // Start date must be before end date
+    if (raw.startDate && !errors.startDate && !errors.endDate) {
+      const startMs = new Date(raw.startDate).getTime();
+      if (startMs >= endMs) {
+        errors.startDate = "Start date must be before end date.";
+      }
     }
   }
 

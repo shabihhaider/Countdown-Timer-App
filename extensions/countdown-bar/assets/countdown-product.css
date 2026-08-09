@@ -1,0 +1,105 @@
+/* Product page inline countdown timer — scoped with .cdp- prefix */
+
+.cdp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+
+/* --- Styles --- */
+
+/* Minimal: text only, no background */
+.cdp--minimal {
+  padding: 0;
+}
+
+/* Card: bordered box with subtle background */
+.cdp--card {
+  padding: 10px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  width: 100%;
+}
+
+/* Badge: colored pill, compact */
+.cdp--badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+/* --- Label --- */
+
+.cdp__label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* --- Digits --- */
+
+.cdp__digits {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cdp__unit {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+}
+
+.cdp__value {
+  font-weight: 700;
+  font-size: 1em;
+}
+
+.cdp__unit-label {
+  font-size: 0.75em;
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+.cdp__sep {
+  font-weight: 700;
+  opacity: 0.5;
+  margin: 0 1px;
+}
+
+/* --- Screen reader only --- */
+
+.cdp__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* --- Responsive --- */
+
+@media (max-width: 600px) {
+  .cdp__label {
+    font-size: 0.9em;
+  }
+
+  .cdp__value {
+    font-size: 0.95em;
+  }
+}
+
+/* --- Reduced motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+  .cdp,
+  .cdp__value {
+    transition: none;
+  }
+}

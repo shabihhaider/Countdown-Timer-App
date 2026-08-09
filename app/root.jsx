@@ -1,4 +1,13 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteError } from "@remix-run/react";
+import { json } from "@remix-run/node";
+import { captureRemixErrorBoundaryError } from "@sentry/remix";
+
+export const loader = async () => {
+  return json({
+    sentryDsn: process.env.SENTRY_DSN || "",
+    sentryEnv: process.env.NODE_ENV || "development",
+  });
+};
 
 export default function App() {
   return (
@@ -15,6 +24,27 @@ export default function App() {
         <Outlet />
         <ScrollRestoration />
         <Scripts />
+      </body>
+    </html>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  captureRemixErrorBoundaryError(error);
+
+  return (
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Error — Countdown Timer Bar</title>
+      </head>
+      <body
+        style={{ fontFamily: "-apple-system, sans-serif", padding: "2rem", textAlign: "center" }}
+      >
+        <h1>Something went wrong</h1>
+        <p>We've been notified and are looking into it. Please try refreshing the page.</p>
       </body>
     </html>
   );

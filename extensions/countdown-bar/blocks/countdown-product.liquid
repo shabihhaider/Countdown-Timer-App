@@ -1,0 +1,106 @@
+<div class="cdp"
+     data-shop="{{ shop.permanent_domain }}"
+     data-style="{{ block.settings.style }}"
+     data-text-color="{{ block.settings.text_color }}"
+     data-accent-color="{{ block.settings.accent_color }}"
+     data-bg-color="{{ block.settings.bg_color }}"
+     data-font-size="{{ block.settings.font_size }}"
+     data-show-label="{{ block.settings.show_label }}"
+     data-label-text="{{ block.settings.label_text }}"
+     style="display: none;"
+     role="timer"
+     aria-label="Countdown timer">
+
+  {% if block.settings.show_label %}
+  <span class="cdp__label">{{ block.settings.label_text }}</span>
+  {% endif %}
+
+  <span class="cdp__digits">
+    <span class="cdp__unit">
+      <span class="cdp__value cdp__days">00</span>
+      <span class="cdp__unit-label">d</span>
+    </span>
+    <span class="cdp__sep">:</span>
+    <span class="cdp__unit">
+      <span class="cdp__value cdp__hours">00</span>
+      <span class="cdp__unit-label">h</span>
+    </span>
+    <span class="cdp__sep">:</span>
+    <span class="cdp__unit">
+      <span class="cdp__value cdp__mins">00</span>
+      <span class="cdp__unit-label">m</span>
+    </span>
+    <span class="cdp__sep">:</span>
+    <span class="cdp__unit">
+      <span class="cdp__value cdp__secs">00</span>
+      <span class="cdp__unit-label">s</span>
+    </span>
+  </span>
+
+  <!-- Screen reader announcement -->
+  <span class="cdp__sr" aria-live="polite" aria-atomic="true"></span>
+</div>
+
+{% schema %}
+{
+  "name": "Countdown Timer",
+  "target": "section",
+  "stylesheet": "countdown-product.css",
+  "javascript": "countdown-product.js",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "select",
+      "id": "style",
+      "label": "Timer style",
+      "options": [
+        { "value": "minimal", "label": "Minimal (text only)" },
+        { "value": "card", "label": "Card (bordered box)" },
+        { "value": "badge", "label": "Badge (colored pill)" }
+      ],
+      "default": "minimal"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Digit color",
+      "default": "#dc2626"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "label": "Font size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "checkbox",
+      "id": "show_label",
+      "label": "Show label text",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "label_text",
+      "label": "Label text",
+      "default": "Sale ends in"
+    }
+  ]
+}
+{% endschema %}
