@@ -6,6 +6,18 @@
 
   const shop = bar.getAttribute("data-shop") || "";
 
+  // Read theme editor settings from data attributes (set in Liquid template).
+  // These override API-fetched campaign values when explicitly changed by the merchant.
+  const themeSettings = {
+    bgColor: bar.dataset.bgColor || null,
+    textColor: bar.dataset.textColor || null,
+    accentColor: bar.dataset.accentColor || null,
+    position: bar.dataset.position || null,
+    fontSize: bar.dataset.fontSize || null,
+    showClose: bar.dataset.showClose,
+    barPadding: bar.dataset.barPadding || null,
+  };
+
   // Namespaced sessionStorage key prevents collisions with other apps
   const CLOSED_KEY = "cdb_closed_" + shop;
 
@@ -99,13 +111,31 @@
 
   // --- Apply settings and start countdown ---
   function applySettings(s) {
-    // Colors
-    bar.style.backgroundColor = s.barColor || "#288d40";
-    bar.style.color = s.textColor || "#ffffff";
+    // Theme editor settings override API-fetched campaign values.
+    // This lets merchants quickly adjust colors in the theme editor
+    // without changing the campaign in the app admin.
+    const bgColor = themeSettings.bgColor || s.barColor || "#288d40";
+    const textColor = themeSettings.textColor || s.textColor || "#ffffff";
+    const accentColor = themeSettings.accentColor || s.buttonBgColor || "#ffffff";
+    const pos = themeSettings.position || s.barPosition || "top";
+    const fontSize = themeSettings.fontSize ? themeSettings.fontSize + "px" : null;
+    const barPadding = themeSettings.barPadding ? themeSettings.barPadding + "px" : null;
+
+    // Apply colors
+    bar.style.backgroundColor = bgColor;
+    bar.style.color = textColor;
+
+    // Apply font size and padding from theme editor
+    if (fontSize) {
+      bar.querySelector(".cdb__message").style.fontSize = fontSize;
+    }
+    if (barPadding) {
+      bar.style.paddingTop = barPadding;
+      bar.style.paddingBottom = barPadding;
+    }
 
     // Position (top / bottom)
-    const pos = Array.isArray(s.barPosition) ? s.barPosition[0] : s.barPosition || "top";
-    bar.className = "cdb cdb--" + pos;
+    bar.className = "cdb cdb--" + (Array.isArray(pos) ? pos[0] : pos);
 
     // Message
     const msgEl = bar.querySelector(".cdb__message");
@@ -114,13 +144,13 @@
     // CTA button
     const btnEl = document.getElementById("cdb-btn");
     if (btnEl) {
-      const btnUrl = s.buttonUrl || s.buttonLink; // buttonLink is legacy fallback
+      const btnUrl = s.buttonUrl || s.buttonLink;
       if (s.buttonText && btnUrl) {
         btnEl.textContent = s.buttonText;
         btnEl.href = btnUrl;
         btnEl.style.display = "";
-        if (s.buttonTextColor) btnEl.style.color = s.buttonTextColor;
-        if (s.buttonBgColor) btnEl.style.backgroundColor = s.buttonBgColor;
+        btnEl.style.color = s.buttonTextColor || "#111111";
+        btnEl.style.backgroundColor = accentColor;
         btnEl.addEventListener("click", function () {
           fireTrack("click");
         });

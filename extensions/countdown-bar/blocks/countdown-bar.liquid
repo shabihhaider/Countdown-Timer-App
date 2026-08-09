@@ -1,6 +1,13 @@
 <div id="cdb-bar"
-     class="cdb cdb--top"
+     class="cdb cdb--{{ block.settings.position }}"
      data-shop="{{ shop.permanent_domain }}"
+     data-bg-color="{{ block.settings.bg_color }}"
+     data-text-color="{{ block.settings.text_color }}"
+     data-accent-color="{{ block.settings.accent_color }}"
+     data-position="{{ block.settings.position }}"
+     data-font-size="{{ block.settings.font_size }}"
+     data-show-close="{{ block.settings.show_close }}"
+     data-bar-padding="{{ block.settings.bar_padding }}"
      style="display: none;"
      role="region"
      aria-label="Countdown timer announcement">
@@ -47,11 +54,13 @@
       </a>
     </div>
 
+    {% if block.settings.show_close %}
     <button class="cdb__close" id="cdb-close" aria-label="Close countdown bar" type="button">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
         <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
     </button>
+    {% endif %}
   </div>
 </div>
 
@@ -61,6 +70,61 @@
   "target": "body",
   "stylesheet": "countdown-bar.css",
   "javascript": "countdown-bar.js",
-  "settings": []
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "t:settings.bg_color.label",
+      "default": "#288d40"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "t:settings.text_color.label",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "t:settings.accent_color.label",
+      "default": "#ffffff"
+    },
+    {
+      "type": "select",
+      "id": "position",
+      "label": "t:settings.position.label",
+      "options": [
+        { "value": "top", "label": "t:settings.position.options.top" },
+        { "value": "bottom", "label": "t:settings.position.options.bottom" }
+      ],
+      "default": "top"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "label": "t:settings.font_size.label",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "checkbox",
+      "id": "show_close",
+      "label": "t:settings.show_close.label",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "bar_padding",
+      "label": "t:settings.bar_padding.label",
+      "min": 4,
+      "max": 20,
+      "step": 2,
+      "unit": "px",
+      "default": 10
+    }
+  ]
 }
 {% endschema %}
