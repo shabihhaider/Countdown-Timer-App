@@ -36,8 +36,24 @@ export const loader = async ({ request }) => {
 };
 
 export const action = async ({ request }) => {
-  const { session } = await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
   const shop = session.shop;
+
+  // Enforce free plan limit (1 active campaign)
+  const { canCreateCampaign } = await import("../utils/billing.server");
+  const activeCampaigns = await db.campaign.count({ where: { shop, isActive: true } });
+  const { allowed, reason } = await canCreateCampaign(billing, activeCampaigns);
+
+  if (!allowed) {
+    return json(
+      {
+        success: false,
+        errors: { _form: reason },
+        values: null,
+      },
+      { status: 403 }
+    );
+  }
 
   const formData = await request.formData();
   const raw = {

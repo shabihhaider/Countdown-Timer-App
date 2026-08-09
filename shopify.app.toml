@@ -13,24 +13,41 @@ automatically_update_urls_on_dev = true
 api_version = "2025-07"
 
   [[webhooks.subscriptions]]
-  topics = [ "app/uninstalled" ]
   uri = "/webhooks/app/uninstalled"
+  topics = [ "app/uninstalled" ]
 
   [[webhooks.subscriptions]]
-  topics = [ "app/scopes_update" ]
   uri = "/webhooks/app/scopes_update"
+  topics = [ "app/scopes_update" ]
+
+  # GDPR mandatory webhooks (required for App Store submission)
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/data_request"
+  topics = [ "customers/data_request" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/redact"
+  topics = [ "customers/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/shop/redact"
+  topics = [ "shop/redact" ]
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "write_themes"
 
 [auth]
-redirect_urls = ["https://countdown-timer-app-sage.vercel.app/auth/callback", "https://countdown-timer-app-sage.vercel.app/auth/shopify/callback", "https://countdown-timer-app-sage.vercel.app/api/auth/callback"]
-
-[pos]
-embedded = false
+redirect_urls = [
+  "https://countdown-timer-app-sage.vercel.app/auth/callback",
+  "https://countdown-timer-app-sage.vercel.app/auth/shopify/callback",
+  "https://countdown-timer-app-sage.vercel.app/api/auth/callback"
+]
 
 [app_proxy]
 url = "https://countdown-timer-app-sage.vercel.app"
 subpath = "countdown"
 prefix = "apps"
+
+[pos]
+embedded = false

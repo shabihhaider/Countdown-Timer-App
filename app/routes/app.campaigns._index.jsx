@@ -62,7 +62,7 @@ export async function loader({ request }) {
 }
 
 export async function action({ request }) {
-  const { session } = await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
   const shop = session.shop;
 
   const formData = await request.formData();
@@ -82,6 +82,17 @@ export async function action({ request }) {
   }
 
   if (intent === "toggle") {
+    // If activating (currently inactive → active), check free plan limit
+    if (!campaign.isActive) {
+      const { canCreateCampaign } = await import("../utils/billing.server");
+      const activeCampaigns = await db.campaign.count({ where: { shop, isActive: true } });
+      const { allowed, reason } = await canCreateCampaign(billing, activeCampaigns);
+
+      if (!allowed) {
+        return json({ success: false, error: reason, action: "toggle" }, { status: 403 });
+      }
+    }
+
     await db.campaign.update({
       where: { id: campaignId },
       data: { isActive: !campaign.isActive },
@@ -120,14 +131,16 @@ export default function CampaignsPage() {
     setDeleteTarget(null);
   };
 
-  // Toast for successful actions
-  const showToast = actionData?.success && actionData?.action;
-  const toastMessage =
-    actionData?.action === "delete"
+  // Toast for actions (success or error)
+  const showToast = actionData?.action || actionData?.error;
+  const toastMessage = actionData?.error
+    ? actionData.error
+    : actionData?.action === "delete"
       ? "Campaign deleted"
       : actionData?.action === "toggle"
         ? "Campaign updated"
         : "";
+  const toastIsError = Boolean(actionData?.error);
 
   if (campaigns.length === 0) {
     return (
@@ -257,7 +270,9 @@ export default function CampaignsPage() {
           </Modal.Section>
         </Modal>
 
-        {showToast && <Toast content={toastMessage} onDismiss={() => {}} duration={3000} />}
+        {showToast && (
+          <Toast content={toastMessage} error={toastIsError} onDismiss={() => {}} duration={4000} />
+        )}
       </Page>
     </Frame>
   );
