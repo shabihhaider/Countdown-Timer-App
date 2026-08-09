@@ -3,7 +3,7 @@ import db from "../db.server";
 import { isRateLimited } from "../redis.server";
 
 const SHOP_PARAM_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/;
-const VALID_EVENTS = new Set(["impression", "click", "close"]);
+const VALID_EVENTS = new Set(["impression", "click", "close", "copy"]);
 
 // Track analytics events fired from the storefront countdown bar widget.
 // Called via navigator.sendBeacon or fetch POST.

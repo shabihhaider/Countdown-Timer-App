@@ -109,11 +109,40 @@
     return endDate.getTime();
   }
 
+  // --- Check page targeting before showing ---
+  function shouldShowOnPage(s) {
+    if (!s.pageTargeting) return true;
+    try {
+      const targeting =
+        typeof s.pageTargeting === "string" ? JSON.parse(s.pageTargeting) : s.pageTargeting;
+      if (!targeting.mode || targeting.mode === "all") return true;
+
+      const path = window.location.pathname;
+      const patterns = targeting.patterns || [];
+      if (patterns.length === 0) return true;
+
+      const matches = patterns.some(function (pattern) {
+        if (pattern === path) return true;
+        // Wildcard matching: /collections/* matches /collections/anything
+        if (pattern.endsWith("/*")) {
+          const prefix = pattern.slice(0, -1);
+          return path.startsWith(prefix);
+        }
+        return false;
+      });
+
+      return targeting.mode === "include" ? matches : !matches;
+    } catch {
+      return true;
+    }
+  }
+
   // --- Apply settings and start countdown ---
   function applySettings(s) {
+    // Check page targeting first
+    if (!shouldShowOnPage(s)) return;
+
     // Theme editor settings override API-fetched campaign values.
-    // This lets merchants quickly adjust colors in the theme editor
-    // without changing the campaign in the app admin.
     const bgColor = themeSettings.bgColor || s.barColor || "#288d40";
     const textColor = themeSettings.textColor || s.textColor || "#ffffff";
     const accentColor = themeSettings.accentColor || s.buttonBgColor || "#ffffff";
@@ -125,9 +154,15 @@
     bar.style.backgroundColor = bgColor;
     bar.style.color = textColor;
 
+    // Apply font family
+    if (s.fontFamily && s.fontFamily !== "system") {
+      bar.style.fontFamily = s.fontFamily === "inherit" ? "inherit" : s.fontFamily;
+    }
+
     // Apply font size and padding from theme editor
     if (fontSize) {
-      bar.querySelector(".cdb__message").style.fontSize = fontSize;
+      const msgEl = bar.querySelector(".cdb__message");
+      if (msgEl) msgEl.style.fontSize = fontSize;
     }
     if (barPadding) {
       bar.style.paddingTop = barPadding;
@@ -140,6 +175,38 @@
     // Message
     const msgEl = bar.querySelector(".cdb__message");
     if (msgEl) msgEl.textContent = s.barMessage || "Flash Sale Ends In...";
+
+    // Discount code
+    if (s.discountCode) {
+      const codeEl = document.createElement("span");
+      codeEl.className = "cdb__code";
+      codeEl.innerHTML =
+        '<span class="cdb__code-text">' +
+        s.discountCode +
+        "</span>" +
+        '<button class="cdb__code-copy" type="button" aria-label="Copy discount code">Copy</button>';
+
+      const copyBtn = codeEl.querySelector(".cdb__code-copy");
+      copyBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        navigator.clipboard.writeText(s.discountCode).then(function () {
+          copyBtn.textContent = "Copied!";
+          setTimeout(function () {
+            copyBtn.textContent = "Copy";
+          }, 2000);
+        });
+        fireTrack("copy");
+      });
+
+      const content = bar.querySelector(".cdb__content");
+      const btnEl = document.getElementById("cdb-btn");
+      if (content && btnEl) {
+        content.insertBefore(codeEl, btnEl);
+      } else if (content) {
+        content.appendChild(codeEl);
+      }
+    }
 
     // CTA button
     const btnEl = document.getElementById("cdb-btn");

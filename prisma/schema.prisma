@@ -47,6 +47,7 @@ model Campaign {
   barMessage       String             @default("Flash Sale Ends In...")
   buttonText       String             @default("Shop Now")
   buttonUrl        String             @default("/collections/all")
+  discountCode     String             @default("")               // optional promo code to display
 
   // Timer type and scheduling
   timerType        String             @default("one_time")  // "one_time" | "daily" | "evergreen"
@@ -61,6 +62,7 @@ model Campaign {
   textColor             String        @default("#ffffff")
   buttonTextColor       String        @default("#111111")
   buttonBackgroundColor String        @default("#ffffff")
+  fontFamily            String        @default("system") // font family identifier
   position              String        @default("top")   // "top" | "bottom"
 
   // Behaviour after expiry

@@ -9,12 +9,14 @@ export const DEFAULT_CAMPAIGN_FORM = {
   barMessage: "Flash Sale Ends In...",
   buttonText: "Shop Now",
   buttonLink: "/collections/all",
+  discountCode: "",
   timerType: "one_time",
   startDate: "",
   endDate: "",
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
   dailyResetTime: "00:00",
   evergreenMinutes: "30",
+  fontFamily: "system",
   barColor: "#288d40",
   textColor: "#ffffff",
   buttonTextColor: "#111111",
@@ -23,6 +25,25 @@ export const DEFAULT_CAMPAIGN_FORM = {
   endAction: "hide",
   customEndMessage: "",
 };
+
+/** Font family options — web-safe fonts with zero external loading. */
+export const FONT_OPTIONS = [
+  { label: "System default", value: "system" },
+  { label: "Theme font (inherit)", value: "inherit" },
+  { label: "Georgia (serif)", value: "Georgia, serif" },
+  { label: "Times New Roman (serif)", value: "'Times New Roman', serif" },
+  { label: "Verdana (sans-serif)", value: "Verdana, sans-serif" },
+  { label: "Trebuchet MS (sans-serif)", value: "'Trebuchet MS', sans-serif" },
+  { label: "Courier New (monospace)", value: "'Courier New', monospace" },
+  { label: "Impact (display)", value: "Impact, sans-serif" },
+];
+
+/** Page targeting mode options. */
+export const PAGE_TARGETING_MODES = [
+  { label: "Show on all pages", value: "all" },
+  { label: "Only show on these pages", value: "include" },
+  { label: "Hide on these pages", value: "exclude" },
+];
 
 /** Common timezones grouped by region for the timezone selector. */
 export const TIMEZONE_OPTIONS = [
@@ -95,12 +116,14 @@ export function campaignToFormValues(campaign) {
     barMessage: campaign.barMessage,
     buttonText: campaign.buttonText,
     buttonLink: campaign.buttonUrl,
+    discountCode: campaign.discountCode,
     timerType: campaign.timerType,
     startDate: utcToLocalDatetimeString(campaign.startDate, tz),
     endDate: utcToLocalDatetimeString(campaign.endDate, tz),
     timezone: tz,
     dailyResetTime: campaign.dailyResetTime,
     evergreenMinutes: String(campaign.evergreenMinutes),
+    fontFamily: campaign.fontFamily,
     barColor: campaign.backgroundColor,
     textColor: campaign.textColor,
     buttonTextColor: campaign.buttonTextColor,
@@ -108,6 +131,7 @@ export function campaignToFormValues(campaign) {
     barPosition: campaign.position,
     endAction: campaign.endAction,
     customEndMessage: campaign.customEndMessage,
+    pageTargeting: campaign.pageTargeting,
   };
 }
 
@@ -152,12 +176,14 @@ export function formValuesToCampaignData(form) {
     barMessage: form.barMessage,
     buttonText: form.buttonText,
     buttonUrl: form.buttonLink,
+    discountCode: form.discountCode || "",
     timerType: form.timerType || "one_time",
     startDate: localDatetimeToUtc(form.startDate, tz),
     endDate: localDatetimeToUtc(form.endDate, tz),
     timezone: tz,
     dailyResetTime: form.dailyResetTime || "00:00",
     evergreenMinutes: parseInt(form.evergreenMinutes, 10) || 30,
+    fontFamily: form.fontFamily || "system",
     backgroundColor: form.barColor,
     textColor: form.textColor || "#ffffff",
     buttonTextColor: form.buttonTextColor || "#111111",
@@ -165,6 +191,7 @@ export function formValuesToCampaignData(form) {
     position: form.barPosition,
     endAction: form.endAction,
     customEndMessage: form.customEndMessage,
+    pageTargeting: form.pageTargeting || "[]",
   };
 }
 

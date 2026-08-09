@@ -25,6 +25,8 @@ import {
   validateCampaignForm,
   isValidHex,
   TIMEZONE_OPTIONS,
+  FONT_OPTIONS,
+  PAGE_TARGETING_MODES,
 } from "../utils/campaign";
 import { ColorPickerField } from "../components/ColorPickerField";
 import { TemplateSelector } from "../components/TemplateSelector";
@@ -61,6 +63,7 @@ export const action = async ({ request }) => {
     barMessage: String(formData.get("barMessage") || "").trim(),
     buttonText: String(formData.get("buttonText") || "").trim(),
     buttonLink: String(formData.get("buttonLink") || "").trim(),
+    discountCode: String(formData.get("discountCode") || "").trim(),
     timerType: String(formData.get("timerType") || "one_time"),
     startDate: String(formData.get("startDate") || "").trim(),
     endDate: String(formData.get("endDate") || "").trim(),
@@ -75,9 +78,11 @@ export const action = async ({ request }) => {
     buttonBgColor: String(
       formData.get("buttonBgColor") || DEFAULT_CAMPAIGN_FORM.buttonBgColor
     ).trim(),
+    fontFamily: String(formData.get("fontFamily") || "system"),
     barPosition: String(formData.get("barPosition") || "top"),
     endAction: String(formData.get("endAction") || "hide"),
     customEndMessage: String(formData.get("customEndMessage") || "").trim(),
+    pageTargeting: String(formData.get("pageTargeting") || "[]"),
   };
 
   const errors = validateCampaignForm(raw);
@@ -270,6 +275,15 @@ export default function CampaignNewPage() {
                         autoComplete="off"
                         error={fieldErrors.buttonLink}
                       />
+                      <TextField
+                        label="Discount Code (optional)"
+                        value={formState.discountCode}
+                        onChange={(v) => handleChange("discountCode", v)}
+                        name="discountCode"
+                        placeholder="SAVE20"
+                        helpText="Display a promo code with a copy button. Leave empty to hide."
+                        autoComplete="off"
+                      />
                     </FormLayout>
                   </BlockStack>
                 </Card>
@@ -320,6 +334,14 @@ export default function CampaignNewPage() {
                       value={formState.barPosition}
                       onChange={(v) => handleChange("barPosition", v)}
                       name="barPosition"
+                    />
+                    <Select
+                      label="Font Family"
+                      options={FONT_OPTIONS}
+                      value={formState.fontFamily}
+                      onChange={(v) => handleChange("fontFamily", v)}
+                      name="fontFamily"
+                      helpText="Web-safe fonts — no external loading, zero performance impact."
                     />
                   </BlockStack>
                 </Card>
