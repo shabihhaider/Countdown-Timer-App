@@ -29,7 +29,7 @@ export async function getPlanInfo(billing) {
   try {
     const { hasActivePayment } = await billing.check({
       plans: [PLAN_PRO],
-      isTest: true, // Use test mode in development — remove for production
+      isTest: process.env.NODE_ENV !== "production",
     });
 
     return {

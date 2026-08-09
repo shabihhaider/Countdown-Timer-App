@@ -37,7 +37,7 @@ export const action = async ({ request }) => {
       // On dev apps, the API rejects with "public distribution" error.
       await billing.request({
         plan: PLAN_PRO,
-        isTest: true,
+        isTest: process.env.NODE_ENV !== "production",
         returnUrl,
       });
 
