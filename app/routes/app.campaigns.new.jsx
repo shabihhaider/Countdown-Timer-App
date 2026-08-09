@@ -397,7 +397,15 @@ export default function CampaignNewPage() {
 
           {/* Live Preview — Secondary */}
           <Layout.Section variant="oneThird">
-            <div style={{ position: "sticky", top: "20px" }}>
+            <div
+              style={{
+                position: "sticky",
+                top: "0px",
+                alignSelf: "flex-start",
+                maxHeight: "100vh",
+                overflowY: "auto",
+              }}
+            >
               <TimerPreview formState={formState} />
             </div>
           </Layout.Section>
