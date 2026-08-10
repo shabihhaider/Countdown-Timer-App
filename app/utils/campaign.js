@@ -272,6 +272,11 @@ export function formValuesToCampaignData(form) {
  */
 export function isValidButtonLink(link) {
   if (!link) return true;
+  const trimmed = link.trim().toLowerCase();
+  // Block dangerous URI schemes
+  if (trimmed.startsWith("javascript:") || trimmed.startsWith("data:") || trimmed.startsWith("vbscript:")) {
+    return false;
+  }
   return /^(\/(?!\/)|https?:\/\/)/.test(link.trim());
 }
 
@@ -288,8 +293,31 @@ export function isValidHex(hex) {
  * @param {Record<string, string>} raw
  * @returns {Record<string, string>}
  */
+const VALID_TIMER_TYPES = new Set(["one_time", "daily", "evergreen"]);
+const VALID_ANIMATIONS = new Set(["none", "fade", "slide"]);
+const VALID_POSITIONS = new Set(["top", "bottom"]);
+const VALID_END_ACTIONS = new Set(["hide", "show_ended", "show_custom"]);
+const VALID_BG_TYPES = new Set(["solid", "gradient"]);
+
 export function validateCampaignForm(raw) {
   const errors = {};
+
+  // Enum validation
+  if (raw.timerType && !VALID_TIMER_TYPES.has(raw.timerType)) {
+    errors.timerType = "Invalid timer type.";
+  }
+  if (raw.animationStyle && !VALID_ANIMATIONS.has(raw.animationStyle)) {
+    errors.animationStyle = "Invalid animation style.";
+  }
+  if (raw.barPosition && !VALID_POSITIONS.has(raw.barPosition)) {
+    errors.barPosition = "Invalid bar position.";
+  }
+  if (raw.endAction && !VALID_END_ACTIONS.has(raw.endAction)) {
+    errors.endAction = "Invalid end action.";
+  }
+  if (raw.bgType && !VALID_BG_TYPES.has(raw.bgType)) {
+    errors.bgType = "Invalid background type.";
+  }
 
   if (!raw.barMessage) {
     errors.barMessage = "Bar message is required.";
@@ -304,9 +332,12 @@ export function validateCampaignForm(raw) {
     }
   }
 
-  if (!raw.endDate) {
+  // endDate is only required for one_time timers
+  const needsEndDate = !raw.timerType || raw.timerType === "one_time";
+
+  if (needsEndDate && !raw.endDate) {
     errors.endDate = "End date is required.";
-  } else {
+  } else if (raw.endDate) {
     const endMs = new Date(raw.endDate).getTime();
     if (isNaN(endMs)) {
       errors.endDate = "End date is not a valid date.";

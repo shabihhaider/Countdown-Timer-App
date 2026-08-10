@@ -12,10 +12,11 @@ import { logger } from "../utils/logger.server";
  * See: https://shopify.dev/docs/apps/webhooks/configuration/mandatory-webhooks
  */
 export const action = async ({ request }) => {
-  const { topic, shop, payload } = await authenticate.webhook(request);
+  const { topic, shop } = await authenticate.webhook(request);
   logger.info({ topic, shop }, "webhook.gdpr.shop_redact — deleting all shop data");
 
-  const shopDomain = payload?.shop_domain || shop;
+  // Use only the HMAC-verified shop from authenticate.webhook — never trust payload
+  const shopDomain = shop;
 
   try {
     // Delete in order: analytics → campaigns → onboarding → sessions → settings

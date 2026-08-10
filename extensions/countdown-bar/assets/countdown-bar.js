@@ -195,17 +195,23 @@
     const msgEl = bar.querySelector(".cdb__message");
     if (msgEl) msgEl.textContent = s.barMessage || "Flash Sale Ends In...";
 
-    // Discount code
+    // Discount code (safe DOM construction — no innerHTML to prevent XSS)
     if (s.discountCode) {
       const codeEl = document.createElement("span");
       codeEl.className = "cdb__code";
-      codeEl.innerHTML =
-        '<span class="cdb__code-text">' +
-        s.discountCode +
-        "</span>" +
-        '<button class="cdb__code-copy" type="button" aria-label="Copy discount code">Copy</button>';
 
-      const copyBtn = codeEl.querySelector(".cdb__code-copy");
+      const codeTextEl = document.createElement("span");
+      codeTextEl.className = "cdb__code-text";
+      codeTextEl.textContent = s.discountCode;
+
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "cdb__code-copy";
+      copyBtn.type = "button";
+      copyBtn.setAttribute("aria-label", "Copy discount code");
+      copyBtn.textContent = "Copy";
+
+      codeEl.appendChild(codeTextEl);
+      codeEl.appendChild(copyBtn);
       copyBtn.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -215,7 +221,6 @@
             copyBtn.textContent = "Copy";
           }, 2000);
         });
-        fireTrack("copy");
       });
 
       const content = bar.querySelector(".cdb__content");
@@ -231,9 +236,11 @@
     const btnEl = document.getElementById("cdb-btn");
     if (btnEl) {
       const btnUrl = s.buttonUrl || s.buttonLink;
-      if (s.buttonText && btnUrl) {
+      const safeBtnUrl = btnUrl ? btnUrl.trim() : "";
+      // Block dangerous URI schemes even if server sends them
+      if (s.buttonText && safeBtnUrl && !safeBtnUrl.toLowerCase().startsWith("javascript:") && !safeBtnUrl.toLowerCase().startsWith("data:")) {
         btnEl.textContent = s.buttonText;
-        btnEl.href = btnUrl;
+        btnEl.href = safeBtnUrl;
         btnEl.style.display = "";
         btnEl.style.color = s.buttonTextColor || "#111111";
         btnEl.style.backgroundColor = accentColor;
