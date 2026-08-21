@@ -26,8 +26,10 @@ const PRO_LIMITS = {
  * @returns {Promise<{ isPro: boolean, limits: typeof FREE_LIMITS }>}
  */
 export async function getPlanInfo(billing) {
-  // ── Dev override: set FORCE_PRO_PLAN=true in .env to bypass billing check ──
-  if (process.env.FORCE_PRO_PLAN === "true") {
+  // ── Dev override: set FORCE_PRO_PLAN=true in .env to test Pro features while
+  // the app is unpublished (unpublished apps can't use the Billing API at all).
+  // Hard-gated to non-production so it can never grant free Pro to real merchants.
+  if (process.env.NODE_ENV !== "production" && process.env.FORCE_PRO_PLAN === "true") {
     return { isPro: true, plan: "Pro", limits: PRO_LIMITS };
   }
 

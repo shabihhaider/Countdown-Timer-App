@@ -43,6 +43,34 @@ describe("getPlanInfo", () => {
   });
 });
 
+describe("FORCE_PRO_PLAN dev override", () => {
+  afterEach(() => {
+    delete process.env.FORCE_PRO_PLAN;
+    vi.unstubAllEnvs();
+  });
+
+  it("grants Pro without a billing check when enabled outside production", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("FORCE_PRO_PLAN", "true");
+    const mockBilling = { check: vi.fn() };
+    const result = await getPlanInfo(mockBilling);
+    expect(result.isPro).toBe(true);
+    expect(result.plan).toBe("Pro");
+    expect(mockBilling.check).not.toHaveBeenCalled();
+  });
+
+  it("is ignored in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("FORCE_PRO_PLAN", "true");
+    const mockBilling = {
+      check: vi.fn().mockResolvedValue({ hasActivePayment: false }),
+    };
+    const result = await getPlanInfo(mockBilling);
+    expect(result.isPro).toBe(false);
+    expect(mockBilling.check).toHaveBeenCalled();
+  });
+});
+
 describe("canCreateCampaign", () => {
   it("allows creation on free plan with 0 active campaigns", async () => {
     const mockBilling = {
