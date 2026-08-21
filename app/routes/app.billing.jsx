@@ -75,13 +75,25 @@ export const action = async ({ request }) => {
         throw error;
       }
 
-      logger.error({ shop: session.shop, error: error?.message }, "billing.upgrade_failed");
+      logger.error(
+        {
+          shop: session.shop,
+          error: error?.message || String(error),
+          errorName: error?.name,
+          errorDetail: error?.errorData ?? null,
+        },
+        "billing.upgrade_failed"
+      );
 
       // Unpublished apps can't use the Billing API — only show the development
       // explanation for that specific rejection, never for real merchant errors.
       const message = String(error?.message || "");
+      // BillingError buries the GraphQL userErrors in errorData, so check both
+      const detail = JSON.stringify(error?.errorData ?? "");
       const isDistributionError =
-        message.includes("public distribution") || message.includes("not approved");
+        message.includes("public distribution") ||
+        message.includes("not approved") ||
+        detail.includes("public distribution");
 
       return json({
         success: false,

@@ -19,7 +19,10 @@ import { useLoaderData, useSearchParams, useNavigate, useRouteError } from "@rem
 import { authenticate } from "../shopify.server";
 import { getCampaignStatus } from "../utils/campaign";
 import { TitleBar } from "@shopify/app-bridge-react";
+import { getPlanInfo } from "../utils/billing.server";
 import db from "../db.server";
+
+const BILLING_PATH = "/app/billing";
 
 function formatNumber(value) {
   return value.toLocaleString("en-US");
@@ -34,7 +37,8 @@ function formatCompact(value) {
 const RANGES = { 7: 7, 30: 30, 90: 90 };
 
 export async function loader({ request }) {
-  const { session } = await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
+  const { isPro } = await getPlanInfo(billing);
   const shop = session.shop;
 
   const url = new URL(request.url);
@@ -132,6 +136,7 @@ export async function loader({ request }) {
     campaigns: campaignSummaries,
     dailyData: Array.from(dailyMap.values()),
     rangeDays,
+    isPro,
     totals: {
       impressions: totalImpressions,
       clicks: totalClicks,
@@ -341,9 +346,34 @@ function MetricCard({ title, value, subtitle, change }) {
   );
 }
 
+// --- Locked metric card (Free plan) ---
+
+function LockedMetricCard({ title }) {
+  const navigate = useNavigate();
+  return (
+    <Card>
+      <BlockStack gap="200">
+        <Text as="p" variant="bodySm" tone="subdued">
+          {title}
+        </Text>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 0" }}>
+          <span style={{ fontSize: "20px" }}>🔒</span>
+          <Text as="p" variant="bodyLg" fontWeight="semibold" tone="subdued">
+            Pro feature
+          </Text>
+        </div>
+        <Button size="slim" onClick={() => navigate(BILLING_PATH)}>
+          Upgrade to Pro
+        </Button>
+      </BlockStack>
+    </Card>
+  );
+}
+
 // --- Campaign Row ---
 
-function CampaignRow({ campaign, onViewDetails }) {
+function CampaignRow({ campaign, onViewDetails, isPro }) {
+  const navigate = useNavigate();
   return (
     <div
       style={{
@@ -386,19 +416,79 @@ function CampaignRow({ campaign, onViewDetails }) {
       </div>
 
       <div style={{ flex: "0 0 100px", textAlign: "right" }}>
-        <Text variant="bodyMd" fontWeight="semibold" as="span">
-          {formatNumber(campaign.clicks)}
-        </Text>
-        <Text variant="bodySm" tone="subdued" as="span">
-          {" "}
-          clicks
-        </Text>
+        {isPro ? (
+          <>
+            <Text variant="bodyMd" fontWeight="semibold" as="span">
+              {formatNumber(campaign.clicks)}
+            </Text>
+            <Text variant="bodySm" tone="subdued" as="span">
+              {" "}
+              clicks
+            </Text>
+          </>
+        ) : (
+          <span
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(BILLING_PATH);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.stopPropagation();
+                navigate(BILLING_PATH);
+              }
+            }}
+            style={{
+              fontSize: "12px",
+              color: "#6b7280",
+              background: "#f3f4f6",
+              padding: "2px 8px",
+              borderRadius: "12px",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Upgrade to Pro to see clicks"
+          >
+            🔒 Pro
+          </span>
+        )}
       </div>
 
       <div style={{ flex: "0 0 60px", textAlign: "right" }}>
-        <Text variant="bodyMd" fontWeight="semibold" as="span">
-          {campaign.ctr ? `${campaign.ctr}%` : "\u2014"}
-        </Text>
+        {isPro ? (
+          <Text variant="bodyMd" fontWeight="semibold" as="span">
+            {campaign.ctr ? `${campaign.ctr}%` : "—"}
+          </Text>
+        ) : (
+          <span
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(BILLING_PATH);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.stopPropagation();
+                navigate(BILLING_PATH);
+              }
+            }}
+            style={{
+              fontSize: "12px",
+              color: "#6b7280",
+              background: "#f3f4f6",
+              padding: "2px 8px",
+              borderRadius: "12px",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Upgrade to Pro to see CTR"
+          >
+            🔒 Pro
+          </span>
+        )}
       </div>
 
       {/* View button */}
@@ -439,7 +529,7 @@ export function ErrorBoundary() {
 }
 
 export default function AnalyticsPage() {
-  const { campaigns, dailyData, rangeDays, totals } = useLoaderData();
+  const { campaigns, dailyData, rangeDays, totals, isPro } = useLoaderData();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [detailCampaign, setDetailCampaign] = useState(null);
@@ -493,19 +583,27 @@ export default function AnalyticsPage() {
             />
           </Layout.Section>
           <Layout.Section variant="oneQuarter">
-            <MetricCard
-              title="Clicks"
-              value={formatNumber(totals.clicks)}
-              subtitle={rangeLabel}
-              change={totals.clickChange}
-            />
+            {isPro ? (
+              <MetricCard
+                title="Clicks"
+                value={formatNumber(totals.clicks)}
+                subtitle={rangeLabel}
+                change={totals.clickChange}
+              />
+            ) : (
+              <LockedMetricCard title="Clicks" />
+            )}
           </Layout.Section>
           <Layout.Section variant="oneQuarter">
-            <MetricCard
-              title="CTR"
-              value={totals.ctr !== null ? `${totals.ctr}%` : "\u2014"}
-              subtitle={rangeLabel}
-            />
+            {isPro ? (
+              <MetricCard
+                title="CTR"
+                value={totals.ctr !== null ? `${totals.ctr}%` : "—"}
+                subtitle={rangeLabel}
+              />
+            ) : (
+              <LockedMetricCard title="CTR" />
+            )}
           </Layout.Section>
           <Layout.Section variant="oneQuarter">
             <MetricCard
@@ -541,33 +639,37 @@ export default function AnalyticsPage() {
                           Impressions
                         </Text>
                       </InlineStack>
-                      <InlineStack gap="100" blockAlign="center">
-                        <span
-                          style={{
-                            width: 12,
-                            height: 3,
-                            borderRadius: 2,
-                            background: "#16a34a",
-                            display: "inline-block",
-                          }}
-                        />
-                        <Text variant="bodySm" tone="subdued" as="span">
-                          Clicks
-                        </Text>
-                      </InlineStack>
+                      {isPro && (
+                        <InlineStack gap="100" blockAlign="center">
+                          <span
+                            style={{
+                              width: 12,
+                              height: 3,
+                              borderRadius: 2,
+                              background: "#16a34a",
+                              display: "inline-block",
+                            }}
+                          />
+                          <Text variant="bodySm" tone="subdued" as="span">
+                            Clicks
+                          </Text>
+                        </InlineStack>
+                      )}
                     </InlineStack>
                   </InlineStack>
                   <AreaChart data={dailyData} dataKey="impressions" color="#2563eb" height={180} />
-                  <div style={{ marginTop: -20 }}>
-                    <AreaChart
-                      data={dailyData}
-                      dataKey="clicks"
-                      color="#16a34a"
-                      height={100}
-                      showGrid={false}
-                      showYAxis={false}
-                    />
-                  </div>
+                  {isPro && (
+                    <div style={{ marginTop: -20 }}>
+                      <AreaChart
+                        data={dailyData}
+                        dataKey="clicks"
+                        color="#16a34a"
+                        height={100}
+                        showGrid={false}
+                        showYAxis={false}
+                      />
+                    </div>
+                  )}
                 </BlockStack>
               </Card>
             </Layout.Section>
@@ -630,6 +732,7 @@ export default function AnalyticsPage() {
                       key={campaign.id}
                       campaign={campaign}
                       onViewDetails={setDetailCampaign}
+                      isPro={isPro}
                     />
                   ))}
                 </BlockStack>
@@ -659,22 +762,50 @@ export default function AnalyticsPage() {
                     {formatNumber(detailCampaign.impressions)}
                   </Text>
                 </BlockStack>
-                <BlockStack gap="100">
-                  <Text variant="bodySm" tone="subdued" as="p">
-                    Clicks
-                  </Text>
-                  <Text variant="headingLg" fontWeight="bold" as="p">
-                    {formatNumber(detailCampaign.clicks)}
-                  </Text>
-                </BlockStack>
-                <BlockStack gap="100">
-                  <Text variant="bodySm" tone="subdued" as="p">
-                    CTR
-                  </Text>
-                  <Text variant="headingLg" fontWeight="bold" as="p">
-                    {detailCampaign.ctr ? `${detailCampaign.ctr}%` : "\u2014"}
-                  </Text>
-                </BlockStack>
+                {isPro ? (
+                  <BlockStack gap="100">
+                    <Text variant="bodySm" tone="subdued" as="p">
+                      Clicks
+                    </Text>
+                    <Text variant="headingLg" fontWeight="bold" as="p">
+                      {formatNumber(detailCampaign.clicks)}
+                    </Text>
+                  </BlockStack>
+                ) : (
+                  <BlockStack gap="100">
+                    <Text variant="bodySm" tone="subdued" as="p">
+                      Clicks
+                    </Text>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ fontSize: "16px" }}>🔒</span>
+                      <Text variant="bodyMd" tone="subdued" as="p">
+                        Pro feature
+                      </Text>
+                    </div>
+                  </BlockStack>
+                )}
+                {isPro ? (
+                  <BlockStack gap="100">
+                    <Text variant="bodySm" tone="subdued" as="p">
+                      CTR
+                    </Text>
+                    <Text variant="headingLg" fontWeight="bold" as="p">
+                      {detailCampaign.ctr ? `${detailCampaign.ctr}%` : "—"}
+                    </Text>
+                  </BlockStack>
+                ) : (
+                  <BlockStack gap="100">
+                    <Text variant="bodySm" tone="subdued" as="p">
+                      CTR
+                    </Text>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ fontSize: "16px" }}>🔒</span>
+                      <Text variant="bodyMd" tone="subdued" as="p">
+                        Pro feature
+                      </Text>
+                    </div>
+                  </BlockStack>
+                )}
                 <BlockStack gap="100">
                   <Text variant="bodySm" tone="subdued" as="p">
                     Dismissals
@@ -700,15 +831,28 @@ export default function AnalyticsPage() {
                     height={200}
                   />
 
-                  <Text variant="headingMd" as="h3">
-                    Daily Clicks
-                  </Text>
-                  <AreaChart
-                    data={detailCampaign.dailyData}
-                    dataKey="clicks"
-                    color="#16a34a"
-                    height={160}
-                  />
+                  {isPro ? (
+                    <>
+                      <Text variant="headingMd" as="h3">
+                        Daily Clicks
+                      </Text>
+                      <AreaChart
+                        data={detailCampaign.dailyData}
+                        dataKey="clicks"
+                        color="#16a34a"
+                        height={160}
+                      />
+                    </>
+                  ) : (
+                    <Banner tone="info">
+                      <p>
+                        Upgrade to Pro to unlock click analytics.{" "}
+                        <Button variant="plain" onClick={() => navigate(BILLING_PATH)}>
+                          Upgrade now
+                        </Button>
+                      </p>
+                    </Banner>
+                  )}
                 </BlockStack>
               ) : (
                 <Text as="p" tone="subdued">

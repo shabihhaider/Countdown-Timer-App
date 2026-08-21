@@ -424,13 +424,10 @@ export function formValuesToCampaignData(form) {
 export function isValidButtonLink(link) {
   if (!link) return true;
   const trimmed = link.trim().toLowerCase();
-  // Block dangerous URI schemes
-  // eslint-disable-next-line no-script-url -- literal used to REJECT dangerous schemes
-  if (
-    trimmed.startsWith("javascript:") ||
-    trimmed.startsWith("data:") ||
-    trimmed.startsWith("vbscript:")
-  ) {
+  // Dangerous URI schemes rejected in merchant-supplied links
+  // eslint-disable-next-line no-script-url -- literals used to REJECT dangerous schemes
+  const blockedSchemes = ["javascript:", "data:", "vbscript:"];
+  if (blockedSchemes.some((scheme) => trimmed.startsWith(scheme))) {
     return false;
   }
   return /^(\/(?!\/)|https?:\/\/)/.test(link.trim());
@@ -544,6 +541,13 @@ function validateEndDate(raw, errors, { isEditing }) {
     if (endUtc && endUtc.getTime() <= Date.now()) {
       errors.endDate = "End date must be in the future.";
     }
+  }
+
+  // Sanity bound: a mistyped year (e.g. 20261) would otherwise render an
+  // absurd multi-million-day countdown on the storefront.
+  const MAX_HORIZON_MS = 5 * 365 * 24 * 60 * 60 * 1000;
+  if (!errors.endDate && endMs > Date.now() + MAX_HORIZON_MS) {
+    errors.endDate = "End date must be within the next 5 years.";
   }
 
   if (raw.startDate && !errors.startDate && !errors.endDate) {

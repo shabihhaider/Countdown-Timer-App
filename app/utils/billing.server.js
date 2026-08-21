@@ -26,6 +26,11 @@ const PRO_LIMITS = {
  * @returns {Promise<{ isPro: boolean, limits: typeof FREE_LIMITS }>}
  */
 export async function getPlanInfo(billing) {
+  // ── Dev override: set FORCE_PRO_PLAN=true in .env to bypass billing check ──
+  if (process.env.FORCE_PRO_PLAN === "true") {
+    return { isPro: true, plan: "Pro", limits: PRO_LIMITS };
+  }
+
   try {
     // isTest: true means test subscriptions COUNT as valid (real ones always do).
     // Required so dev stores — including Shopify app reviewers — get Pro access

@@ -776,6 +776,28 @@ describe("validateCampaignForm gradient colors", () => {
   });
 });
 
+describe("validateCampaignForm endDate horizon", () => {
+  it("rejects end dates more than 5 years out (mistyped year guard)", () => {
+    const errors = validateCampaignForm({
+      barMessage: "Sale!",
+      timerType: "one_time",
+      endDate: "2261-08-30T23:59",
+    });
+    expect(errors.endDate).toContain("within the next 5 years");
+  });
+
+  it("accepts an end date one year out", () => {
+    const future = new Date(Date.now() + 365 * 24 * 3600 * 1000);
+    const iso = future.toISOString().slice(0, 16);
+    const errors = validateCampaignForm({
+      barMessage: "Sale!",
+      timerType: "one_time",
+      endDate: iso,
+    });
+    expect(errors.endDate).toBeUndefined();
+  });
+});
+
 describe("validateCampaignForm evergreenMinutes range", () => {
   const base = {
     type: "bar",
