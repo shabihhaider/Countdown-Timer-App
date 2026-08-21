@@ -13,6 +13,7 @@ import {
   Modal,
   Toast,
   Frame,
+  Banner,
 } from "@shopify/polaris";
 import { useState } from "react";
 import { json } from "@remix-run/node";
@@ -22,11 +23,13 @@ import {
   useNavigation,
   useSubmit,
   useNavigate,
+  useRouteError,
 } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 import { TitleBar } from "@shopify/app-bridge-react";
 import db from "../db.server";
-import { getCampaignStatus } from "../utils/campaign";
+import { canCreateCampaign } from "../utils/billing.server";
+import { getCampaignStatus, CAMPAIGN_TYPE_LABELS, CAMPAIGN_TYPES } from "../utils/campaign";
 
 function formatEndDate(date, timezone) {
   if (!date) return "No end date set";
@@ -49,12 +52,27 @@ export async function loader({ request }) {
   const campaigns = await db.campaign.findMany({
     where: { shop },
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      barMessage: true,
+      endDate: true,
+      startDate: true,
+      timezone: true,
+      isActive: true,
+      type: true,
+    },
   });
 
   const campaignsWithStatus = campaigns.map((c) => ({
-    ...c,
+    id: c.id,
+    name: c.name,
+    barMessage: c.barMessage,
     endDate: c.endDate?.toISOString() ?? null,
     startDate: c.startDate?.toISOString() ?? null,
+    timezone: c.timezone,
+    isActive: c.isActive,
+    type: c.type || CAMPAIGN_TYPES.BAR,
     status: getCampaignStatus(c),
   }));
 
@@ -84,7 +102,6 @@ export async function action({ request }) {
   if (intent === "toggle") {
     // If activating (currently inactive → active), check free plan limit
     if (!campaign.isActive) {
-      const { canCreateCampaign } = await import("../utils/billing.server");
       const activeCampaigns = await db.campaign.count({ where: { shop, isActive: true } });
       const { allowed, reason } = await canCreateCampaign(billing, activeCampaigns);
 
@@ -101,11 +118,32 @@ export async function action({ request }) {
   }
 
   if (intent === "delete") {
+    await db.campaignAnalytics.deleteMany({ where: { campaignId } });
     await db.campaign.delete({ where: { id: campaignId } });
     return json({ success: true, action: "delete" });
   }
 
   return json({ success: false, error: "Unknown intent" }, { status: 400 });
+}
+
+export function ErrorBoundary() {
+  useRouteError();
+  return (
+    <Page title="Error">
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="300">
+              <Banner tone="critical">
+                <p>Something went wrong loading this page. Please try again.</p>
+              </Banner>
+              <Button onClick={() => window.location.reload()}>Try again</Button>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
+  );
 }
 
 export default function CampaignsPage() {
@@ -182,9 +220,11 @@ export default function CampaignsPage() {
                 resourceName={{ singular: "campaign", plural: "campaigns" }}
                 items={campaigns}
                 renderItem={(campaign) => {
-                  const { id, name, barMessage, endDate, timezone, status } = campaign;
+                  const { id, name, barMessage, endDate, timezone, status, type } = campaign;
                   const isRowSubmitting = submittingCampaignId === id;
                   const isToggling = isRowSubmitting && submittingIntent === "toggle";
+                  // eslint-disable-next-line security/detect-object-injection -- lookup into a constant label map with fallback
+                  const typeLabel = CAMPAIGN_TYPE_LABELS[type] || "Bar";
 
                   return (
                     <ResourceItem
@@ -199,9 +239,11 @@ export default function CampaignsPage() {
                               {name}
                             </Text>
                             <Badge tone={status.tone}>{status.label}</Badge>
+                            <Badge tone="info">{typeLabel}</Badge>
                           </InlineStack>
                           <Text variant="bodySm" tone="subdued" as="span">
-                            {barMessage}
+                            {barMessage ||
+                              (type === CAMPAIGN_TYPES.PRODUCT_TIMER ? "Product timer" : "")}
                           </Text>
                           <Text variant="bodySm" tone="subdued" as="span">
                             {formatEndDate(endDate, timezone)}

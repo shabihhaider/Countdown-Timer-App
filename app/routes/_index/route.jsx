@@ -326,9 +326,10 @@ export default function LandingPage() {
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, lineHeight: 2 }}>
               <li>1 active campaign</li>
-              <li>Basic analytics</li>
-              <li>Color customization</li>
-              <li>Mobile responsive</li>
+              <li>All timer types: bar, product, cart</li>
+              <li>All templates &amp; full styling</li>
+              <li>Impressions analytics</li>
+              <li>No traffic or view limits</li>
             </ul>
           </div>
           <div
@@ -362,9 +363,9 @@ export default function LandingPage() {
             <ul style={{ listStyle: "none", padding: 0, margin: 0, lineHeight: 2 }}>
               <li>Unlimited campaigns</li>
               <li>Full analytics (clicks + CTR)</li>
-              <li>Campaign scheduling</li>
-              <li>All customization options</li>
-              <li>7-day free trial</li>
+              <li>Run all timers simultaneously</li>
+              <li>Priority email support</li>
+              <li>14-day free trial</li>
             </ul>
           </div>
         </div>

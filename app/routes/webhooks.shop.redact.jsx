@@ -34,6 +34,8 @@ export const action = async ({ request }) => {
       { topic, shopDomain, error: error.message },
       "webhook.gdpr.shop_redact — delete failed"
     );
+    // Non-200 makes Shopify retry the webhook — required to meet the 48h purge obligation
+    return new Response(null, { status: 500 });
   }
 
   return new Response(null, { status: 200 });

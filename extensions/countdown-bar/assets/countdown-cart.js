@@ -1,95 +1,69 @@
+"use strict";
 (function () {
   "use strict";
-
-  const timers = document.querySelectorAll(".cdc");
-  if (!timers.length) return;
-
-  timers.forEach(function (el) {
-    initCartTimer(el);
+  const a = document.querySelectorAll(".cdc");
+  if (!a.length) return;
+  a.forEach(function (t) {
+    _(t);
   });
-
-  function initCartTimer(el) {
-    const shop = el.dataset.shop || "";
-    const minutes = parseInt(el.dataset.minutes, 10) || 10;
-    const expiryAction = el.dataset.expiryAction || "hide";
-    const redirectUrl = el.dataset.redirectUrl || "/";
-    const textColor = el.dataset.textColor || "#991b1b";
-    const bgColor = el.dataset.bgColor || "#fef2f2";
-    const accentColor = el.dataset.accentColor || "#dc2626";
-
-    // Apply styles
-    el.style.color = textColor;
-    el.style.backgroundColor = bgColor;
-
-    const timeEl = el.querySelector(".cdc__time");
-    if (timeEl) timeEl.style.color = accentColor;
-
-    // Session-based timer — resets when browser closes
-    const storageKey = "cdc_cart_" + shop;
-    let endMs;
-
-    const stored = sessionStorage.getItem(storageKey);
-    if (stored) {
-      endMs = parseInt(stored, 10);
-      if (endMs <= Date.now()) {
-        // Timer expired — take action
-        handleExpiry(el, expiryAction, redirectUrl);
+  function _(t) {
+    const n = t.dataset.shop || "",
+      c = parseInt(t.dataset.minutes, 10) || 10,
+      l = t.dataset.expiryAction || "hide",
+      f = t.dataset.redirectUrl || "/",
+      w = t.dataset.textColor || "#991b1b",
+      x = t.dataset.bgColor || "#fef2f2",
+      A = t.dataset.accentColor || "#dc2626";
+    ((t.style.color = w), (t.style.backgroundColor = x));
+    const m = t.querySelector(".cdc__time");
+    m && (m.style.color = A);
+    const u = "cdc_cart_" + n;
+    let o;
+    const h = sessionStorage.getItem(u);
+    if (h) {
+      if (((o = parseInt(h, 10)), o <= Date.now())) {
+        d(t, l, f);
         return;
       }
-    } else {
-      endMs = Date.now() + minutes * 60 * 1000;
-      sessionStorage.setItem(storageKey, String(endMs));
-    }
-
-    // Show timer
-    el.style.display = "";
-
-    const minsEl = el.querySelector(".cdc__mins");
-    const secsEl = el.querySelector(".cdc__secs");
-    let lastSec = -1;
-    let rafId;
-
-    function tick() {
-      const dist = endMs - Date.now();
-
-      if (dist <= 0) {
-        if (rafId) cancelAnimationFrame(rafId);
-        handleExpiry(el, expiryAction, redirectUrl);
+    } else ((o = Date.now() + c * 60 * 1e3), sessionStorage.setItem(u, String(o)));
+    t.style.display = "";
+    const y = t.querySelector(".cdc__mins"),
+      p = t.querySelector(".cdc__secs");
+    let g = -1,
+      e;
+    function S() {
+      const C = o - Date.now();
+      if (C <= 0) {
+        (e && cancelAnimationFrame(e), d(t, l, f));
         return;
       }
-
-      const totalSecs = Math.floor(dist / 1000);
-      if (totalSecs !== lastSec) {
-        lastSec = totalSecs;
-        const m = Math.floor(totalSecs / 60);
-        const s = totalSecs % 60;
-        if (minsEl) minsEl.textContent = m < 10 ? "0" + m : String(m);
-        if (secsEl) secsEl.textContent = s < 10 ? "0" + s : String(s);
+      const s = Math.floor(C / 1e3);
+      if (s !== g) {
+        g = s;
+        const r = Math.floor(s / 60),
+          i = s % 60;
+        (y && (y.textContent = r < 10 ? "0" + r : String(r)),
+          p && (p.textContent = i < 10 ? "0" + i : String(i)));
       }
-
-      rafId = requestAnimationFrame(tick);
+      e = requestAnimationFrame(S);
     }
-
-    rafId = requestAnimationFrame(tick);
-
-    window.addEventListener("pagehide", function () {
-      if (rafId) cancelAnimationFrame(rafId);
-    });
+    ((e = requestAnimationFrame(S)),
+      window.addEventListener("pagehide", function () {
+        e && cancelAnimationFrame(e);
+      }));
   }
-
-  function handleExpiry(el, action, redirectUrl) {
-    el.style.display = "none";
-    sessionStorage.removeItem("cdc_cart_" + (el.dataset.shop || ""));
-
-    if (action === "clear_cart") {
-      fetch("/cart/clear.js", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      }).then(function () {
-        window.location.reload();
-      });
-    } else if (action === "redirect" && redirectUrl) {
-      window.location.href = redirectUrl;
-    }
+  function d(t, n, c) {
+    ((t.style.display = "none"),
+      sessionStorage.removeItem("cdc_cart_" + (t.dataset.shop || "")),
+      n === "clear_cart"
+        ? fetch("/cart/clear.js", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+          })
+            .then(function () {
+              window.location.reload();
+            })
+            .catch(function () {})
+        : n === "redirect" && c && (window.location.href = c));
   }
 })();

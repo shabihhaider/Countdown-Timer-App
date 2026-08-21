@@ -58,5 +58,20 @@ module.exports = {
         "no-console": "off",
       },
     },
+    {
+      // Prisma seed/migration helpers are CLI scripts — console output is the UI
+      files: ["prisma/**/*.js"],
+      rules: {
+        "no-console": "off",
+        "sonarjs/cognitive-complexity": "off",
+      },
+    },
+    {
+      // Tests legitimately contain attack-string literals (e.g. "javascript:") to verify sanitizers
+      files: ["tests/**/*.{js,jsx,ts,tsx}", "**/*.test.{js,jsx,ts,tsx}"],
+      rules: {
+        "no-script-url": "off",
+      },
+    },
   ],
 };

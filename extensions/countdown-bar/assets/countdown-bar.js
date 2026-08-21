@@ -1,396 +1,351 @@
+"use strict";
 (function () {
   "use strict";
-
-  const bar = document.getElementById("cdb-bar");
-  if (!bar) return;
-
-  const shop = bar.getAttribute("data-shop") || "";
-
-  // Read theme editor settings from data attributes (set in Liquid template).
-  // These override API-fetched campaign values when explicitly changed by the merchant.
-  const themeSettings = {
-    bgColor: bar.dataset.bgColor || null,
-    textColor: bar.dataset.textColor || null,
-    accentColor: bar.dataset.accentColor || null,
-    position: bar.dataset.position || null,
-    fontSize: bar.dataset.fontSize || null,
-    showClose: bar.dataset.showClose,
-    barPadding: bar.dataset.barPadding || null,
-  };
-
-  // Namespaced sessionStorage key prevents collisions with other apps
-  const CLOSED_KEY = "cdb_closed_" + shop;
-
-  if (sessionStorage.getItem(CLOSED_KEY) === "1") {
-    return; // User already dismissed — keep hidden
-  }
-
-  const closeBtn = document.getElementById("cdb-close");
-  if (closeBtn) {
-    closeBtn.addEventListener("click", function () {
-      bar.style.display = "none";
-      sessionStorage.setItem(CLOSED_KEY, "1");
-      fireTrack("close");
+  const i = document.getElementById("cdb-bar");
+  if (!i) return;
+  const m = i.getAttribute("data-shop") || "",
+    p = { fontSize: i.dataset.fontSize || null, barPadding: i.dataset.barPadding || null },
+    _ = "cdb_closed_" + m;
+  if (sessionStorage.getItem(_) === "1") return;
+  let l = null,
+    S = null;
+  const T = document.getElementById("cdb-close");
+  T &&
+    T.addEventListener("click", function () {
+      ((i.style.display = "none"),
+        h(),
+        l && (cancelAnimationFrame(l), (l = null)),
+        sessionStorage.setItem(_, "1"),
+        C("close"));
     });
-  }
-
-  // --- Fetch settings via App Proxy (authenticated by Shopify) ---
-  fetch("/apps/countdown/settings?shop=" + encodeURIComponent(shop), {
-    headers: { Accept: "application/json" },
-  })
-    .then(function (res) {
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return res.json();
+  const b = i.dataset.apiUrl || "",
+    U = b
+      ? b + "/apps/countdown/settings?shop=" + encodeURIComponent(m) + "&type=bar"
+      : "/apps/countdown/settings?shop=" + encodeURIComponent(m) + "&type=bar";
+  fetch(U, { headers: { Accept: "application/json" } })
+    .then(function (t) {
+      if (!t.ok) throw new Error(t.status);
+      return t.json();
     })
-    .then(function (data) {
-      if (!data.success || !data.settings) return; // No campaign — bar stays hidden
-
-      applySettings(data.settings);
+    .then(function (t) {
+      t.success && t.settings && W(t.settings);
     })
-    .catch(function () {
-      // Fail silently — never show a broken bar on a merchant's storefront
-    });
-
-  // --- Compute the countdown end time based on timer type ---
-  function computeEndMs(s) {
-    const timerType = s.timerType || "one_time";
-
-    if (timerType === "daily") {
-      // Daily timer: counts down to dailyResetTime each day in the campaign timezone
-      const resetTime = s.dailyResetTime || "00:00";
-      const parts = resetTime.split(":");
-      const resetHour = parseInt(parts[0], 10) || 0;
-      const resetMin = parseInt(parts[1], 10) || 0;
-
-      // Build today's reset time in UTC using timezone offset
-      const now = new Date();
-      const todayStr = now.toLocaleDateString("en-CA", { timeZone: s.timezone || "UTC" });
-      const resetStr = todayStr + "T" + resetTime + ":00";
-
-      // Get UTC offset for the timezone
-      const tempDate = new Date(resetStr + "Z");
-      const utcStr = tempDate.toLocaleString("en-US", { timeZone: "UTC" });
-      const tzStr = tempDate.toLocaleString("en-US", { timeZone: s.timezone || "UTC" });
-      const offsetMs = new Date(tzStr).getTime() - new Date(utcStr).getTime();
-      let resetMs = tempDate.getTime() - offsetMs;
-
-      // If reset time has passed today, target tomorrow
-      if (resetMs <= Date.now()) {
-        resetMs += 86400000; // add 24 hours
-      }
-
-      return resetMs;
-    }
-
-    if (timerType === "evergreen") {
-      // Evergreen: per-visitor timer stored in localStorage
-      const evergreenKey = "cdb_eg_" + shop;
-      const minutes = parseInt(s.evergreenMinutes, 10) || 30;
-      const stored = localStorage.getItem(evergreenKey);
-
-      if (stored) {
-        const storedMs = parseInt(stored, 10);
-        if (storedMs > Date.now()) {
-          return storedMs;
-        }
-        // Expired — don't show again for this visitor
-        return null;
-      }
-
-      // First visit: set the timer
-      const endMs = Date.now() + minutes * 60 * 1000;
-      localStorage.setItem(evergreenKey, String(endMs));
-      return endMs;
-    }
-
-    // one_time: standard fixed end date
-    const endDate = s.endDate ? new Date(s.endDate) : null;
-    if (!endDate || isNaN(endDate.getTime())) return null;
-    return endDate.getTime();
-  }
-
-  // --- Check page targeting before showing ---
-  function shouldShowOnPage(s) {
-    if (!s.pageTargeting) return true;
+    .catch(function () {});
+  function v(t, e) {
     try {
-      const targeting =
-        typeof s.pageTargeting === "string" ? JSON.parse(s.pageTargeting) : s.pageTargeting;
-      if (!targeting.mode || targeting.mode === "all") return true;
-
-      const path = window.location.pathname;
-      const patterns = targeting.patterns || [];
-      if (patterns.length === 0) return true;
-
-      const matches = patterns.some(function (pattern) {
-        if (pattern === path) return true;
-        // Wildcard matching: /collections/* matches /collections/anything
-        if (pattern.endsWith("/*")) {
-          const prefix = pattern.slice(0, -1);
-          return path.startsWith(prefix);
-        }
-        return false;
+      const n = new Intl.DateTimeFormat("en-US", {
+          timeZone: e,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: !1,
+        }).formatToParts(new Date(t + "Z")),
+        o = {};
+      n.forEach(function (r) {
+        r.type !== "literal" && (o[r.type] = parseInt(r.value, 10));
       });
-
-      return targeting.mode === "include" ? matches : !matches;
-    } catch {
-      return true;
+      const c = new Date(t + "Z"),
+        a =
+          new Date(
+            Date.UTC(o.year, o.month - 1, o.day, o.hour, o.minute, o.second || 0)
+          ).getTime() - c.getTime();
+      return c.getTime() - a;
+    } catch (n) {
+      return new Date(t).getTime();
     }
   }
-
-  // --- Apply settings and start countdown ---
-  function applySettings(s) {
-    // Check page targeting first
-    if (!shouldShowOnPage(s)) return;
-
-    // Theme editor settings override API-fetched campaign values.
-    const bgColor = themeSettings.bgColor || s.barColor || "#288d40";
-    const textColor = themeSettings.textColor || s.textColor || "#ffffff";
-    const accentColor = themeSettings.accentColor || s.buttonBgColor || "#ffffff";
-    const pos = themeSettings.position || s.barPosition || "top";
-    const fontSize = themeSettings.fontSize ? themeSettings.fontSize + "px" : null;
-    const barPadding = themeSettings.barPadding ? themeSettings.barPadding + "px" : null;
-
-    // Apply background (solid or gradient)
-    if (s.backgroundStyle) {
-      try {
-        const bg =
-          typeof s.backgroundStyle === "string" ? JSON.parse(s.backgroundStyle) : s.backgroundStyle;
-        if (bg.type === "gradient" && bg.colorStops) {
-          bar.style.background =
-            "linear-gradient(" +
-            (bg.direction || "to right") +
-            ", " +
-            bg.colorStops.join(", ") +
-            ")";
-        } else {
-          bar.style.backgroundColor = bgColor;
-        }
-      } catch {
-        bar.style.backgroundColor = bgColor;
-      }
-    } else {
-      bar.style.backgroundColor = bgColor;
-    }
-    bar.style.color = textColor;
-
-    // Apply font family
-    if (s.fontFamily && s.fontFamily !== "system") {
-      bar.style.fontFamily = s.fontFamily === "inherit" ? "inherit" : s.fontFamily;
-    }
-
-    // Apply font size and padding from theme editor
-    if (fontSize) {
-      const msgEl = bar.querySelector(".cdb__message");
-      if (msgEl) msgEl.style.fontSize = fontSize;
-    }
-    if (barPadding) {
-      bar.style.paddingTop = barPadding;
-      bar.style.paddingBottom = barPadding;
-    }
-
-    // Position (top / bottom)
-    bar.className = "cdb cdb--" + (Array.isArray(pos) ? pos[0] : pos);
-
-    // Message
-    const msgEl = bar.querySelector(".cdb__message");
-    if (msgEl) msgEl.textContent = s.barMessage || "Flash Sale Ends In...";
-
-    // Discount code (safe DOM construction — no innerHTML to prevent XSS)
-    if (s.discountCode) {
-      const codeEl = document.createElement("span");
-      codeEl.className = "cdb__code";
-
-      const codeTextEl = document.createElement("span");
-      codeTextEl.className = "cdb__code-text";
-      codeTextEl.textContent = s.discountCode;
-
-      const copyBtn = document.createElement("button");
-      copyBtn.className = "cdb__code-copy";
-      copyBtn.type = "button";
-      copyBtn.setAttribute("aria-label", "Copy discount code");
-      copyBtn.textContent = "Copy";
-
-      codeEl.appendChild(codeTextEl);
-      codeEl.appendChild(copyBtn);
-      copyBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        navigator.clipboard.writeText(s.discountCode).then(function () {
-          copyBtn.textContent = "Copied!";
-          setTimeout(function () {
-            copyBtn.textContent = "Copy";
-          }, 2000);
+  function L(t) {
+    const e = t.timerType || "one_time";
+    if (e === "daily") {
+      const o = t.dailyResetTime || "00:00",
+        c = new Date(),
+        a = c.toLocaleDateString("en-CA", { timeZone: t.timezone || "UTC" }) + "T" + o + ":00";
+      let r = v(a, t.timezone || "UTC");
+      if (r <= Date.now()) {
+        const s = new Date(c.getTime() + 864e5).toLocaleDateString("en-CA", {
+          timeZone: t.timezone || "UTC",
         });
-      });
-
-      const content = bar.querySelector(".cdb__content");
-      const btnEl = document.getElementById("cdb-btn");
-      if (content && btnEl) {
-        content.insertBefore(codeEl, btnEl);
-      } else if (content) {
-        content.appendChild(codeEl);
+        r = v(s + "T" + o + ":00", t.timezone || "UTC");
       }
+      return r;
     }
-
-    // CTA button
-    const btnEl = document.getElementById("cdb-btn");
-    if (btnEl) {
-      const btnUrl = s.buttonUrl || s.buttonLink;
-      const safeBtnUrl = btnUrl ? btnUrl.trim() : "";
-      // Block dangerous URI schemes even if server sends them
-      if (s.buttonText && safeBtnUrl && !safeBtnUrl.toLowerCase().startsWith("javascript:") && !safeBtnUrl.toLowerCase().startsWith("data:")) {
-        btnEl.textContent = s.buttonText;
-        btnEl.href = safeBtnUrl;
-        btnEl.style.display = "";
-        btnEl.style.color = s.buttonTextColor || "#111111";
-        btnEl.style.backgroundColor = accentColor;
-        btnEl.addEventListener("click", function () {
-          fireTrack("click");
-        });
+    if (e === "evergreen") {
+      const o = "cdb_eg_" + (t.id || "") + "_" + m,
+        c = parseInt(t.evergreenMinutes, 10) || 30,
+        d = localStorage.getItem(o);
+      if (d) {
+        const r = parseInt(d, 10);
+        if (r > Date.now()) return r;
+        const u = Date.now() + c * 6e4;
+        return (localStorage.setItem(o, String(u)), u);
       }
+      const a = Date.now() + c * 6e4;
+      return (localStorage.setItem(o, String(a)), a);
     }
-
-    // Compute the target end time based on timer type
-    const endMs = computeEndMs(s);
-    if (!endMs) return; // No valid end time — hide bar
-
-    // Show bar and fire impression
-    bar.style.display = "block";
-    fireTrack("impression");
-
-    // Store animation style for use in tick function
-    bar.dataset.animation = s.animationStyle || "none";
-
-    // Start timer
-    startCountdown(endMs, s.endAction, s.customEndMessage);
+    const n = t.endDate ? new Date(t.endDate) : null;
+    return !n || isNaN(n.getTime()) ? null : n.getTime();
   }
-
-  // --- UTC-based countdown using requestAnimationFrame ---
-  function startCountdown(endMs, endAction, customMsg) {
-    const daysEl = document.getElementById("cdb-days");
-    const hoursEl = document.getElementById("cdb-hours");
-    const minsEl = document.getElementById("cdb-mins");
-    const secsEl = document.getElementById("cdb-secs");
-    const timerEl = document.getElementById("cdb-timer");
-    const msgEl = bar.querySelector(".cdb__message");
-    const srEl = bar.querySelector(".cdb__sr-timer");
-
-    let lastSec = -1;
-    let lastSrAnnounce = -1; // announce to screen reader every 60s
-    let rafId;
-    let ended = false;
-
-    function tick() {
-      if (ended) return;
-
-      const now = Date.now();
-      const dist = endMs - now;
-
-      if (dist <= 0) {
-        ended = true;
-        handleEnd();
+  function z(t) {
+    if (!t.pageTargeting) return !0;
+    try {
+      const e = typeof t.pageTargeting == "string" ? JSON.parse(t.pageTargeting) : t.pageTargeting;
+      if (!e.mode || e.mode === "all") return !0;
+      const n = window.location.pathname.toLowerCase(),
+        o = e.patterns || [];
+      if (!o.length) return !0;
+      const c = o.some(function (d) {
+        const a = d.toLowerCase();
+        return a === n ? !0 : a.endsWith("/*") ? n.startsWith(a.slice(0, -1)) : !1;
+      });
+      return e.mode === "include" ? c : !c;
+    } catch (e) {
+      return !0;
+    }
+  }
+  function N(t, e) {
+    if (!t.backgroundStyle) {
+      i.style.backgroundColor = e;
+      return;
+    }
+    try {
+      const n =
+        typeof t.backgroundStyle == "string" ? JSON.parse(t.backgroundStyle) : t.backgroundStyle;
+      n.type === "gradient" && n.colorStops
+        ? (i.style.background =
+            "linear-gradient(" + (n.direction || "to right") + ", " + n.colorStops.join(", ") + ")")
+        : (i.style.backgroundColor = e);
+    } catch (n) {
+      i.style.backgroundColor = e;
+    }
+  }
+  function P(t) {
+    if (
+      (t.fontFamily &&
+        t.fontFamily !== "system" &&
+        (i.style.fontFamily = t.fontFamily === "inherit" ? "inherit" : t.fontFamily),
+      p.fontSize)
+    ) {
+      const e = i.querySelector(".cdb__message");
+      e && (e.style.fontSize = p.fontSize + "px");
+    }
+    p.barPadding &&
+      ((i.style.paddingTop = p.barPadding + "px"), (i.style.paddingBottom = p.barPadding + "px"));
+  }
+  function q(t) {
+    const e = i.querySelector(".cdb__message");
+    if (e && ((e.textContent = t.barMessage || "Flash Sale Ends In..."), t.barIcon)) {
+      const n = document.createElement("span");
+      ((n.className = "cdb__icon"),
+        n.setAttribute("aria-hidden", "true"),
+        (n.textContent = t.barIcon),
+        e.insertBefore(n, e.firstChild));
+    }
+  }
+  function R(t) {
+    if (
+      !t.fontFamily ||
+      t.fontFamily === "system" ||
+      t.fontFamily === "inherit" ||
+      t.fontFamily.indexOf(",") !== -1
+    )
+      return;
+    const e = "cdb-font-" + t.fontFamily.replace(/\s+/g, "-");
+    if (document.getElementById(e)) return;
+    const n = document.createElement("link");
+    ((n.id = e),
+      (n.rel = "stylesheet"),
+      (n.href =
+        "https://fonts.googleapis.com/css2?family=" +
+        encodeURIComponent(t.fontFamily) +
+        ":wght@400;600;700&display=swap"),
+      document.head.appendChild(n));
+  }
+  function j(t) {
+    if (!t.discountCode) return;
+    const e = document.createElement("span");
+    e.className = "cdb__code";
+    const n = document.createElement("span");
+    ((n.className = "cdb__code-text"), (n.textContent = t.discountCode));
+    const o = document.createElement("button");
+    ((o.className = "cdb__code-copy"),
+      (o.type = "button"),
+      o.setAttribute("aria-label", "Copy discount code"),
+      (o.textContent = "Copy"),
+      e.appendChild(n),
+      e.appendChild(o),
+      o.addEventListener("click", function (a) {
+        (a.preventDefault(), a.stopPropagation());
+        const r = function () {
+            ((o.textContent = "Copied!"),
+              setTimeout(function () {
+                o.textContent = "Copy";
+              }, 2e3));
+          },
+          u = function () {
+            try {
+              const s = document.createElement("textarea");
+              ((s.value = t.discountCode),
+                s.setAttribute("readonly", ""),
+                (s.style.position = "absolute"),
+                (s.style.left = "-9999px"),
+                document.body.appendChild(s),
+                s.select(),
+                document.execCommand("copy"),
+                document.body.removeChild(s),
+                r());
+            } catch (s) {}
+          };
+        navigator.clipboard && navigator.clipboard.writeText
+          ? navigator.clipboard.writeText(t.discountCode).then(r).catch(u)
+          : u();
+      }));
+    const c = i.querySelector(".cdb__content"),
+      d = document.getElementById("cdb-btn");
+    c && d ? c.insertBefore(e, d) : c && c.appendChild(e);
+  }
+  function O(t) {
+    const e = document.getElementById("cdb-btn");
+    if (!e) return;
+    const n = (t.buttonUrl || "").trim();
+    !t.buttonText ||
+      !n ||
+      n.toLowerCase().startsWith("javascript:") ||
+      n.toLowerCase().startsWith("data:") ||
+      ((e.textContent = t.buttonText),
+      (e.href = n),
+      (e.style.display = ""),
+      (e.style.color = t.buttonTextColor || "#111111"),
+      (e.style.backgroundColor = t.buttonBgColor || "#ffffff"),
+      e.addEventListener("click", function () {
+        C("click");
+      }));
+  }
+  function W(t) {
+    if (!z(t)) return;
+    S = t.id || null;
+    const e = t.barPosition || "top";
+    (N(t, t.barColor || "#288d40"),
+      (i.style.color = t.textColor || "#ffffff"),
+      P(t),
+      (i.className = "cdb cdb--" + e),
+      q(t),
+      R(t),
+      j(t),
+      O(t));
+    const n = L(t);
+    if (!n || n <= Date.now()) {
+      x(t.endAction, t.customEndMessage);
+      return;
+    }
+    ((i.style.display = "block"),
+      I(e),
+      C("impression"),
+      (i.dataset.animation = t.animationStyle || "none"),
+      Z(n, t.endAction, t.customEndMessage, e));
+  }
+  function x(t, e) {
+    const n = document.getElementById("cdb-timer"),
+      o = i.querySelector(".cdb__message");
+    t === "show_ended"
+      ? ((i.style.display = "block"),
+        n && (n.style.display = "none"),
+        o && (o.textContent = "Sale Ended"))
+      : t === "show_custom" && e
+        ? ((i.style.display = "block"), n && (n.style.display = "none"), o && (o.textContent = e))
+        : ((i.style.display = "none"), h());
+  }
+  function I(t) {
+    if (document.getElementById("cdb-spacer")) return;
+    const e = document.createElement("div");
+    ((e.id = "cdb-spacer"),
+      (e.style.height = i.offsetHeight + "px"),
+      (e.style.flexShrink = "0"),
+      t === "bottom"
+        ? document.body.appendChild(e)
+        : document.body.insertBefore(e, document.body.firstChild));
+  }
+  function h() {
+    const t = document.getElementById("cdb-spacer");
+    t && t.remove();
+  }
+  function Z(t, e, n, o) {
+    const c = document.getElementById("cdb-days"),
+      d = document.getElementById("cdb-hours"),
+      a = document.getElementById("cdb-mins"),
+      r = document.getElementById("cdb-secs"),
+      u = i.querySelector(".cdb__sr-timer");
+    let s = -1,
+      k = -1,
+      B = !1;
+    function w() {
+      if (B) return;
+      const D = t - Date.now();
+      if (D <= 0) {
+        ((B = !0),
+          l && (cancelAnimationFrame(l), (l = null)),
+          x(e, n),
+          e !== "show_ended" && e !== "show_custom" ? h() : I(o));
         return;
       }
-
-      const totalSecs = Math.floor(dist / 1000);
-
-      // Only update DOM when the second changes (avoid thrashing)
-      if (totalSecs !== lastSec) {
-        lastSec = totalSecs;
-
-        const days = Math.floor(totalSecs / 86400);
-        const hours = Math.floor((totalSecs % 86400) / 3600);
-        const mins = Math.floor((totalSecs % 3600) / 60);
-        const secs = totalSecs % 60;
-
-        updateDigit(daysEl, pad(days));
-        updateDigit(hoursEl, pad(hours));
-        updateDigit(minsEl, pad(mins));
-        updateDigit(secsEl, pad(secs));
-
-        // Announce to screen reader once per minute
-        const minuteBucket = Math.floor(totalSecs / 60);
-        if (srEl && minuteBucket !== lastSrAnnounce) {
-          lastSrAnnounce = minuteBucket;
-          srEl.textContent =
-            "Sale ends in " +
-            (days > 0 ? days + " days, " : "") +
-            hours +
-            " hours, " +
-            mins +
-            " minutes.";
-        }
+      const f = Math.floor(D / 1e3);
+      if (f !== s) {
+        s = f;
+        const E = Math.floor(f / 86400),
+          F = Math.floor((f % 86400) / 3600),
+          M = Math.floor((f % 3600) / 60),
+          J = f % 60;
+        (y(c, g(E)), y(d, g(F)), y(a, g(M)), y(r, g(J)));
+        const A = Math.floor(f / 60);
+        u &&
+          A !== k &&
+          ((k = A),
+          (u.textContent =
+            "Sale ends in " + (E > 0 ? E + " days, " : "") + F + " hours, " + M + " minutes."));
       }
-
-      rafId = requestAnimationFrame(tick);
+      l = requestAnimationFrame(w);
     }
-
-    function handleEnd() {
-      if (rafId) cancelAnimationFrame(rafId);
-      if (endAction === "hide") {
-        bar.style.display = "none";
-      } else if (endAction === "show_ended") {
-        if (timerEl) timerEl.style.display = "none";
-        if (msgEl) msgEl.textContent = "Sale Ended";
-      } else if (endAction === "show_custom" && customMsg) {
-        if (timerEl) timerEl.style.display = "none";
-        if (msgEl) msgEl.textContent = customMsg;
-      } else {
-        bar.style.display = "none";
-      }
-    }
-
-    // Respect prefers-reduced-motion — show static time, no animation
-    const prefersReducedMotion =
-      window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (prefersReducedMotion) {
-      // Run once synchronously, no rAF loop
-      tick();
-    } else {
-      rafId = requestAnimationFrame(tick);
-    }
-
-    // Cleanup on page unload
-    window.addEventListener("pagehide", function () {
-      if (rafId) cancelAnimationFrame(rafId);
-    });
+    (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? w()
+      : (l = requestAnimationFrame(w)),
+      window.addEventListener("pagehide", function () {
+        l && cancelAnimationFrame(l);
+      }));
   }
-
-  // --- Analytics tracking (fire-and-forget, no blocking) ---
-  function fireTrack(event) {
+  function C(t) {
     try {
-      // Using sendBeacon for reliability on page unload events (close/impression)
-      const payload = JSON.stringify({ shop: shop, event: event });
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon("/apps/countdown/track", payload);
-      } else {
-        fetch("/apps/countdown/track", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: payload,
-          keepalive: true,
-        }).catch(function () {});
-      }
-    } catch (e) {
-      // Tracking must never break the storefront
-    }
+      const e = (b || "") + "/apps/countdown/track",
+        n = JSON.stringify({ shop: m, event: t, campaignId: S, type: "bar" });
+      navigator.sendBeacon
+        ? navigator.sendBeacon(e, n)
+        : fetch(e, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: n,
+            keepalive: !0,
+          }).catch(function () {});
+    } catch (e) {}
   }
-
-  // Update a digit element with optional animation
-  function updateDigit(el, newValue) {
-    if (!el || el.textContent === newValue) return;
-    el.textContent = newValue;
-
-    const anim = bar.dataset.animation;
-    if (anim && anim !== "none") {
-      el.classList.remove("cdb__value--fade", "cdb__value--slide");
-      void el.offsetWidth; // force reflow to restart animation
-      el.classList.add("cdb__value--" + anim);
-    }
+  function y(t, e) {
+    if (!t || t.textContent === e) return;
+    t.textContent = e;
+    const n = i.dataset.animation;
+    n &&
+      n !== "none" &&
+      (t.classList.remove(
+        "cdb__value--fade",
+        "cdb__value--slide",
+        "cdb__value--flip",
+        "cdb__value--bounce",
+        "cdb__value--pulse",
+        "cdb__value--scale"
+      ),
+      t.offsetWidth,
+      t.classList.add("cdb__value--" + n));
   }
-
-  function pad(n) {
-    return n < 10 ? "0" + n : String(n);
+  function g(t) {
+    return t < 10 ? "0" + t : String(t);
   }
 })();

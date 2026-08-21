@@ -58,7 +58,8 @@ describe("canCreateCampaign", () => {
     };
     const result = await canCreateCampaign(mockBilling, 1);
     expect(result.allowed).toBe(false);
-    expect(result.reason).toContain("Free plan");
+    expect(result.reason).toContain("allows 1 active campaign");
+    expect(result.reason).toContain("Upgrade to Pro");
   });
 
   it("allows creation on pro plan with many campaigns", async () => {

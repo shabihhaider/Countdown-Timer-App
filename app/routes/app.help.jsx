@@ -1,6 +1,16 @@
-import { Page, Card, BlockStack, Text, Collapsible } from "@shopify/polaris";
+import {
+  Page,
+  Layout,
+  Card,
+  BlockStack,
+  Text,
+  Button,
+  Banner,
+  Collapsible,
+} from "@shopify/polaris";
 import { useState, useCallback } from "react";
 import { json } from "@remix-run/node";
+import { useRouteError } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 import { TitleBar } from "@shopify/app-bridge-react";
 
@@ -88,7 +98,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: "What does the Pro plan include?",
-        a: "Unlimited active campaigns, full analytics (impressions, clicks, CTR, dismissals), campaign scheduling with timezone support, all design customization, discount code display, page targeting, and priority support. $6.99/month with a 7-day free trial.",
+        a: "Unlimited active campaigns, full analytics (impressions, clicks, CTR, dismissals), campaign scheduling with timezone support, all design customization, discount code display, page targeting, and priority support. $6.99/month with a 14-day free trial.",
       },
     ],
   },
@@ -149,6 +159,26 @@ function FAQItem({ question, answer }) {
         </div>
       </Collapsible>
     </div>
+  );
+}
+
+export function ErrorBoundary() {
+  useRouteError();
+  return (
+    <Page title="Error">
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="300">
+              <Banner tone="critical">
+                <p>Something went wrong loading this page. Please try again.</p>
+              </Banner>
+              <Button onClick={() => window.location.reload()}>Try again</Button>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
   );
 }
 

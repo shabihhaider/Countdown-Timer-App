@@ -11,10 +11,11 @@ import {
   Select,
   Modal,
   Button,
+  Banner,
 } from "@shopify/polaris";
 import { useState } from "react";
 import { json } from "@remix-run/node";
-import { useLoaderData, useSearchParams, useNavigate } from "@remix-run/react";
+import { useLoaderData, useSearchParams, useNavigate, useRouteError } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 import { getCampaignStatus } from "../utils/campaign";
 import { TitleBar } from "@shopify/app-bridge-react";
@@ -151,6 +152,7 @@ export async function loader({ request }) {
 function AreaChart({ data, dataKey, color, height = 140, showGrid = true, showYAxis = true }) {
   if (!data || data.length === 0) return null;
 
+  // eslint-disable-next-line security/detect-object-injection -- dataKey is a component-internal literal prop, never user input
   const values = data.map((d) => d[dataKey]);
   const max = Math.max(...values, 1);
   const width = 600;
@@ -191,9 +193,9 @@ function AreaChart({ data, dataKey, color, height = 140, showGrid = true, showYA
       const q1 = Math.floor(data.length / 4);
       const mid = Math.floor(data.length / 2);
       const q3 = Math.floor((data.length * 3) / 4);
-      xLabels.push({ x: getX(q1), text: fmt(data[q1].date), anchor: "middle" });
-      xLabels.push({ x: getX(mid), text: fmt(data[mid].date), anchor: "middle" });
-      xLabels.push({ x: getX(q3), text: fmt(data[q3].date), anchor: "middle" });
+      xLabels.push({ x: getX(q1), text: fmt(data.at(q1).date), anchor: "middle" });
+      xLabels.push({ x: getX(mid), text: fmt(data.at(mid).date), anchor: "middle" });
+      xLabels.push({ x: getX(q3), text: fmt(data.at(q3).date), anchor: "middle" });
     }
     xLabels.push({ x: leftPad + chartW, text: fmt(data[data.length - 1].date), anchor: "end" });
   }
@@ -272,6 +274,7 @@ function AreaChart({ data, dataKey, color, height = 140, showGrid = true, showYA
 function MiniSparkline({ data, dataKey, color, width = 80, height = 28 }) {
   if (!data || data.length < 2) return <span style={{ width, display: "inline-block" }} />;
 
+  // eslint-disable-next-line security/detect-object-injection -- dataKey is a component-internal literal prop, never user input
   const values = data.map((d) => d[dataKey]);
   const max = Math.max(...values, 1);
   const points = values
@@ -412,6 +415,26 @@ function CampaignRow({ campaign, onViewDetails }) {
         </Button>
       </div>
     </div>
+  );
+}
+
+export function ErrorBoundary() {
+  useRouteError();
+  return (
+    <Page title="Error">
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="300">
+              <Banner tone="critical">
+                <p>Something went wrong loading this page. Please try again.</p>
+              </Banner>
+              <Button onClick={() => window.location.reload()}>Try again</Button>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
   );
 }
 

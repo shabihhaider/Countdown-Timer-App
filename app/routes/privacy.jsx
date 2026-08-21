@@ -61,7 +61,9 @@ export default function Privacy() {
       </ul>
       <p style={styles.p}>
         We do <strong>not</strong> collect, store, or process any of your customers&rsquo; personal
-        information. The countdown bar displayed on your storefront does not collect visitor data.
+        information. The countdown bar records aggregate analytics (total impressions, clicks, and
+        dismissals per campaign per day) without collecting visitor IP addresses, cookies, or any
+        personally identifiable information.
       </p>
 
       <h2 style={styles.h2}>3. How We Use Information</h2>
