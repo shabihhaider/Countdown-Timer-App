@@ -24,6 +24,9 @@ model Session {
   locale        String?
   collaborator  Boolean?  @default(false)
   emailVerified Boolean?  @default(false)
+  // Added by @shopify/shopify-app-session-storage-prisma v10 (SDK v5)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
 }
 
 // Legacy table — kept for backwards compatibility during migration.
