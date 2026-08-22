@@ -22,6 +22,8 @@ import {
   PRODUCT_TIMER_DEFAULTS,
   BAR_DEFAULTS,
   getDefaultsForType,
+  getContrastRatio,
+  hasPoorContrast,
 } from "../../../app/utils/campaign";
 
 describe("campaignToFormValues", () => {
@@ -773,6 +775,33 @@ describe("validateCampaignForm gradient colors", () => {
       gradientColor1: "not-hex",
     });
     expect(errors.gradientColor1).toBeUndefined();
+  });
+});
+
+describe("contrast utilities", () => {
+  it("black on white is maximum contrast (21)", () => {
+    expect(getContrastRatio("#000000", "#ffffff")).toBeCloseTo(21, 0);
+  });
+
+  it("identical colors have ratio 1", () => {
+    expect(getContrastRatio("#dc2626", "#dc2626")).toBeCloseTo(1, 5);
+  });
+
+  it("flags red digits on a red background (the invisible-timer bug)", () => {
+    expect(hasPoorContrast("#dc2626", "#dc2626")).toBe(true);
+  });
+
+  it("accepts white text on the brand green", () => {
+    expect(hasPoorContrast("#ffffff", "#288d40")).toBe(false);
+  });
+
+  it("supports 3-digit hex shorthand", () => {
+    expect(getContrastRatio("#fff", "#000")).toBeCloseTo(21, 0);
+  });
+
+  it("never flags when either color is missing", () => {
+    expect(hasPoorContrast("", "#ffffff")).toBe(false);
+    expect(hasPoorContrast("#ffffff", undefined)).toBe(false);
   });
 });
 

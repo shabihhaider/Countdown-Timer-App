@@ -653,6 +653,49 @@ export function hexToHsb(hex) {
   return { hue, saturation: max === 0 ? 0 : d / max, brightness: max };
 }
 
+/**
+ * WCAG relative luminance contrast ratio between two hex colors (1–21).
+ * @param {string} hexA
+ * @param {string} hexB
+ * @returns {number}
+ */
+export function getContrastRatio(hexA, hexB) {
+  const luminance = (hex) => {
+    const c = (hex || "#000000").replace("#", "");
+    const full =
+      c.length === 3
+        ? c
+            .split("")
+            .map((ch) => ch + ch)
+            .join("")
+        : c;
+    const channel = (i) => {
+      const v = (parseInt(full.substring(i, i + 2), 16) || 0) / 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
+  };
+  const la = luminance(hexA);
+  const lb = luminance(hexB);
+  const [light, dark] = la >= lb ? [la, lb] : [lb, la];
+  return (light + 0.05) / (dark + 0.05);
+}
+
+/** Contrast below this reads as "barely visible" — used for form warnings only. */
+export const LOW_CONTRAST_THRESHOLD = 2;
+
+/**
+ * True when two colors are too close to read against each other
+ * (e.g. red digits on a red background).
+ * @param {string} foreground
+ * @param {string} background
+ * @returns {boolean}
+ */
+export function hasPoorContrast(foreground, background) {
+  if (!foreground || !background) return false;
+  return getContrastRatio(foreground, background) < LOW_CONTRAST_THRESHOLD;
+}
+
 export function isLightColor(hex) {
   if (!hex || hex.length < 4) return true;
   const c = hex.replace("#", "");

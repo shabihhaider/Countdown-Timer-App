@@ -1,4 +1,4 @@
-import { Card, FormLayout, TextField, Text, BlockStack, Select } from "@shopify/polaris";
+import { Card, FormLayout, TextField, Text, BlockStack, Select, Banner } from "@shopify/polaris";
 import {
   TIMEZONE_OPTIONS,
   ICON_OPTIONS,
@@ -7,10 +7,29 @@ import {
   GRADIENT_DIRECTIONS,
   PAGE_TARGETING_MODES,
   TARGET_TYPE_OPTIONS,
+  hasPoorContrast,
 } from "../utils/campaign";
 import { ColorPickerField } from "./ColorPickerField";
 import { TemplateSelector } from "./TemplateSelector";
 import { ProductTemplateSelector } from "./ProductTemplateSelector";
+
+/**
+ * Non-blocking warning when a foreground/background pair is unreadable
+ * (e.g. red digits on a red background). Storefront preview shows the same
+ * result, but this catches it even when the merchant doesn't look closely.
+ */
+function ContrastWarning({ pairs }) {
+  const bad = pairs.filter(([fg, bg]) => hasPoorContrast(fg, bg));
+  if (!bad.length) return null;
+  return (
+    <Banner tone="warning" title="Low color contrast">
+      <p>
+        Some of your colors are very close to their background, so parts of the timer may be hard to
+        read on your storefront. Check the preview and pick a lighter or darker shade.
+      </p>
+    </Banner>
+  );
+}
 
 export function TimerScheduleSection({ formState, handleChange, fieldErrors = {} }) {
   return (
@@ -329,12 +348,20 @@ export function PageTargetingSection({ formState, handleChange }) {
 }
 
 export function BarDesignSection({ formState, handleChange }) {
+  const contrastPairs =
+    (formState.bgType || "solid") === "solid"
+      ? [
+          [formState.textColor, formState.barColor],
+          [formState.buttonTextColor, formState.buttonBgColor],
+        ]
+      : [[formState.buttonTextColor, formState.buttonBgColor]];
   return (
     <Card>
       <BlockStack gap="400">
         <Text variant="headingMd" as="h2">
           Bar Design
         </Text>
+        <ContrastWarning pairs={contrastPairs} />
         <TemplateSelector
           onSelect={(t) => {
             handleChange("barColor", t.barColor);
@@ -506,12 +533,19 @@ export function BarContentSection({ formState, handleChange, fieldErrors = {} })
 }
 
 export function ProductTimerDesignSection({ formState, handleChange }) {
+  const contrastPairs = formState.barColor
+    ? [
+        [formState.accentColor, formState.barColor],
+        [formState.textColor, formState.barColor],
+      ]
+    : [];
   return (
     <Card>
       <BlockStack gap="400">
         <Text variant="headingMd" as="h2">
           Timer Design
         </Text>
+        <ContrastWarning pairs={contrastPairs} />
         <ProductTemplateSelector
           onSelect={(t) => {
             handleChange("productStyle", t.productStyle);

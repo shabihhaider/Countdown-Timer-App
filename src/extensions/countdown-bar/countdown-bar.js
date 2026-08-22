@@ -12,6 +12,23 @@
   const CK = "cdb_closed_" + shop;
   if (sessionStorage.getItem(CK) === "1") return;
 
+  // Reserve the last-known bar height BEFORE fetching settings so repeat page
+  // views don't shift content when the bar arrives (keeps CLS near zero).
+  const HK = "cdb_h_" + shop;
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(HK) || "null");
+    if (cached && cached.h > 0) {
+      const early = document.createElement("div");
+      early.id = "cdb-spacer";
+      early.style.flexShrink = "0";
+      early.style.height = cached.h + "px";
+      if (cached.pos === "bottom") document.body.appendChild(early);
+      else document.body.insertBefore(early, document.body.firstChild);
+    }
+  } catch (e) {
+    /* reservation is best-effort */
+  }
+
   let activeRaf = null;
   let activeCampaignId = null;
 
@@ -43,8 +60,11 @@
     })
     .then(function (d) {
       if (d.success && d.settings) apply(d.settings);
+      else removeSpacer();
     })
-    .catch(function () {});
+    .catch(function () {
+      removeSpacer();
+    });
 
   function localToUtcMs(localStr, timezone) {
     try {
@@ -282,7 +302,10 @@
   }
 
   function apply(s) {
-    if (!pageMatch(s)) return;
+    if (!pageMatch(s)) {
+      removeSpacer();
+      return;
+    }
     activeCampaignId = s.id || null;
 
     const pos = s.barPosition || "top";
@@ -327,21 +350,35 @@
   }
 
   function addSpacer(pos) {
-    if (document.getElementById("cdb-spacer")) return;
-    const spacer = document.createElement("div");
-    spacer.id = "cdb-spacer";
+    let spacer = document.getElementById("cdb-spacer");
+    if (!spacer) {
+      spacer = document.createElement("div");
+      spacer.id = "cdb-spacer";
+      spacer.style.flexShrink = "0";
+    }
     spacer.style.height = bar.offsetHeight + "px";
-    spacer.style.flexShrink = "0";
+    // appendChild / insertBefore MOVE an existing node, so this also corrects
+    // the position when a pre-reserved spacer was placed for the other edge.
     if (pos === "bottom") {
       document.body.appendChild(spacer);
     } else {
       document.body.insertBefore(spacer, document.body.firstChild);
     }
+    try {
+      sessionStorage.setItem(HK, JSON.stringify({ h: bar.offsetHeight, pos: pos }));
+    } catch (e) {
+      /* caching is best-effort */
+    }
   }
 
   function removeSpacer() {
-    const sp = document.getElementById("cdb-spacer");
-    if (sp) sp.remove();
+    const spacer = document.getElementById("cdb-spacer");
+    if (spacer) spacer.remove();
+    try {
+      sessionStorage.removeItem(HK);
+    } catch (e) {
+      /* best-effort */
+    }
   }
 
   function countdown(end, ea, cm, pos) {
