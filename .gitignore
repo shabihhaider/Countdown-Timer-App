@@ -39,3 +39,4 @@ database.sqlite
 # ── Lighthouse CI ─────────────────────────────────────────────────────────────
 .lighthouseci/screenshots/
 test-report.html
+storefront-harness-tmp.html
