@@ -4,6 +4,64 @@
  * can apply with one click, then customize further.
  */
 
+export const PRODUCT_TIMER_TEMPLATES = [
+  {
+    id: "urgency-red",
+    name: "Urgency Red",
+    description: "Bold red badge",
+    productStyle: "badge",
+    textColor: "#ffffff",
+    accentColor: "#ffffff",
+    bgColor: "#dc2626",
+    labelText: "Ends in",
+    barIcon: "🔥",
+  },
+  {
+    id: "minimal-dark",
+    name: "Minimal Dark",
+    description: "Clean text-only",
+    productStyle: "minimal",
+    textColor: "#1a1a1a",
+    accentColor: "#dc2626",
+    bgColor: "",
+    labelText: "Sale ends in",
+    barIcon: "",
+  },
+  {
+    id: "card-clean",
+    name: "Card Clean",
+    description: "Bordered card style",
+    productStyle: "card",
+    textColor: "#374151",
+    accentColor: "#2563eb",
+    bgColor: "#f0f9ff",
+    labelText: "Limited time offer",
+    barIcon: "⏰",
+  },
+  {
+    id: "floating-alert",
+    name: "Floating Alert",
+    description: "Sticky attention-grab",
+    productStyle: "floating",
+    textColor: "#92400e",
+    accentColor: "#d97706",
+    bgColor: "#fffbeb",
+    labelText: "Don't miss out!",
+    barIcon: "⚡",
+  },
+  {
+    id: "banner-elegant",
+    name: "Elegant Banner",
+    description: "Full-width with accent",
+    productStyle: "banner",
+    textColor: "#1e293b",
+    accentColor: "#7c3aed",
+    bgColor: "#f5f3ff",
+    labelText: "Exclusive deal ends in",
+    barIcon: "",
+  },
+];
+
 export const TIMER_TEMPLATES = [
   {
     id: "classic",

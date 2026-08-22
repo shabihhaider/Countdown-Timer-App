@@ -6,6 +6,7 @@
  * disabled (safe for local development).
  */
 import * as Sentry from "@sentry/remix";
+import { logger } from "./utils/logger.server";
 
 let initialized = false;
 
@@ -20,11 +21,9 @@ export function initSentry() {
 
   const dsn = process.env.SENTRY_DSN;
   if (!dsn) {
-    console.log("[Sentry] SENTRY_DSN not set — error tracking disabled");
+    logger.info("sentry.disabled — SENTRY_DSN not set");
     return;
   }
-
-  console.log("[Sentry] Initializing with DSN:", dsn.slice(0, 30) + "...");
 
   Sentry.init({
     dsn,
@@ -40,7 +39,7 @@ export function initSentry() {
     },
   });
 
-  console.log("[Sentry] Initialized successfully");
+  logger.info("sentry.initialized");
 }
 
 export { Sentry };

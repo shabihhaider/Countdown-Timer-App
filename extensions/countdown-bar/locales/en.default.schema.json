@@ -1,0 +1,13 @@
+{
+  "settings": {
+    "font_size": {
+      "label": "Font size"
+    },
+    "show_close": {
+      "label": "Show close button"
+    },
+    "bar_padding": {
+      "label": "Bar padding"
+    }
+  }
+}

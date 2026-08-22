@@ -44,10 +44,124 @@
   }
 }
 
+/* ---- Digit Animations ---- */
+
+.cdb__value--fade {
+  animation: cdb-fade-digit 0.4s ease-out;
+}
+
+.cdb__value--slide {
+  animation: cdb-slide-digit 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cdb__value--flip {
+  animation: cdb-flip-digit 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center bottom;
+  backface-visibility: hidden;
+}
+
+.cdb__value--bounce {
+  animation: cdb-bounce-digit 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cdb__value--pulse {
+  animation: cdb-pulse-digit 0.6s ease-out;
+}
+
+.cdb__value--scale {
+  animation: cdb-scale-digit 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cdb-fade-digit {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes cdb-slide-digit {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes cdb-flip-digit {
+  0% {
+    transform: perspective(400px) rotateX(-90deg);
+    opacity: 0;
+  }
+  40% {
+    transform: perspective(400px) rotateX(10deg);
+    opacity: 1;
+  }
+  70% {
+    transform: perspective(400px) rotateX(-5deg);
+  }
+  100% {
+    transform: perspective(400px) rotateX(0);
+  }
+}
+
+@keyframes cdb-bounce-digit {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.12);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes cdb-pulse-digit {
+  0% {
+    transform: scale(1);
+    text-shadow: 0 0 0 transparent;
+  }
+  30% {
+    transform: scale(1.15);
+    text-shadow: 0 0 12px currentColor;
+  }
+  100% {
+    transform: scale(1);
+    text-shadow: 0 0 0 transparent;
+  }
+}
+
+@keyframes cdb-scale-digit {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Disable animation for users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .cdb--top,
-  .cdb--bottom {
+  .cdb--bottom,
+  .cdb__value--fade,
+  .cdb__value--slide,
+  .cdb__value--flip,
+  .cdb__value--bounce,
+  .cdb__value--pulse,
+  .cdb__value--scale {
     animation: none;
   }
 }
@@ -71,12 +185,27 @@
   flex: 1;
 }
 
+/* ---- Icon ---- */
+
+.cdb__icon {
+  font-size: 1.3em;
+  line-height: 1;
+  margin-right: 6px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 /* ---- Message ---- */
 
 .cdb__message {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.2px;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* ---- Timer digits ---- */

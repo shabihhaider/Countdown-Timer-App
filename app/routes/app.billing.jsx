@@ -12,10 +12,17 @@ import {
   Banner,
 } from "@shopify/polaris";
 import { json } from "@remix-run/node";
-import { useLoaderData, useActionData, useSubmit, useNavigation } from "@remix-run/react";
+import {
+  useLoaderData,
+  useActionData,
+  useSubmit,
+  useNavigation,
+  useRouteError,
+} from "@remix-run/react";
 import { authenticate, PLAN_PRO } from "../shopify.server";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { getPlanInfo } from "../utils/billing.server";
+import { logger } from "../utils/logger.server";
 
 export const loader = async ({ request }) => {
   const { billing } = await authenticate.admin(request);
@@ -23,8 +30,28 @@ export const loader = async ({ request }) => {
   return json({ planInfo });
 };
 
+/**
+ * Development stores can only approve test charges. Shopify reviewers test on
+ * dev stores, so a real-charge request there would block app review.
+ */
+async function isTestCharge(admin) {
+  if (process.env.NODE_ENV !== "production") return true;
+  try {
+    const response = await admin.graphql(
+      `#graphql
+      query shopPlan {
+        shop { plan { partnerDevelopment } }
+      }`
+    );
+    const data = await response.json();
+    return Boolean(data?.data?.shop?.plan?.partnerDevelopment);
+  } catch {
+    return false;
+  }
+}
+
 export const action = async ({ request }) => {
-  const { billing, session } = await authenticate.admin(request);
+  const { billing, session, admin } = await authenticate.admin(request);
   const formData = await request.formData();
   const intent = formData.get("intent");
 
@@ -34,10 +61,9 @@ export const action = async ({ request }) => {
 
       // billing.request() makes a GraphQL call to create the subscription,
       // then throws a Response (302 redirect) to Shopify's billing approval page.
-      // On dev apps, the API rejects with "public distribution" error.
       await billing.request({
         plan: PLAN_PRO,
-        isTest: process.env.NODE_ENV !== "production",
+        isTest: await isTestCharge(admin),
         returnUrl,
       });
 
@@ -49,11 +75,31 @@ export const action = async ({ request }) => {
         throw error;
       }
 
-      // Failure case: Shopify API error (e.g., app not publicly distributed)
+      logger.error(
+        {
+          shop: session.shop,
+          error: error?.message || String(error),
+          errorName: error?.name,
+          errorDetail: error?.errorData ?? null,
+        },
+        "billing.upgrade_failed"
+      );
+
+      // Unpublished apps can't use the Billing API — only show the development
+      // explanation for that specific rejection, never for real merchant errors.
+      const message = String(error?.message || "");
+      // BillingError buries the GraphQL userErrors in errorData, so check both
+      const detail = JSON.stringify(error?.errorData ?? "");
+      const isDistributionError =
+        message.includes("public distribution") ||
+        message.includes("not approved") ||
+        detail.includes("public distribution");
+
       return json({
         success: false,
-        billingError:
-          "Billing is not available during development. The Shopify Billing API requires the app to be publicly listed on the App Store. Once published, this button will redirect to Shopify's payment confirmation page.",
+        billingError: isDistributionError
+          ? "Billing is not available during development. The Shopify Billing API requires the app to be publicly listed on the App Store. Once published, this button will redirect to Shopify's payment confirmation page."
+          : "We couldn't start your upgrade. Please try again in a moment, or contact support if the problem persists.",
       });
     }
   }
@@ -90,7 +136,7 @@ function PlanCard({ name, price, features, current, onUpgrade, loading }) {
 
         {!isCurrent && onUpgrade && (
           <Button variant="primary" size="large" onClick={onUpgrade} loading={loading}>
-            Start 7-day free trial
+            Start 14-day free trial
           </Button>
         )}
 
@@ -101,6 +147,26 @@ function PlanCard({ name, price, features, current, onUpgrade, loading }) {
         )}
       </BlockStack>
     </Card>
+  );
+}
+
+export function ErrorBoundary() {
+  useRouteError();
+  return (
+    <Page title="Error">
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="300">
+              <Banner tone="critical">
+                <p>Something went wrong loading this page. Please try again.</p>
+              </Banner>
+              <Button onClick={() => window.location.reload()}>Try again</Button>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
   );
 }
 
@@ -143,11 +209,11 @@ export default function BillingPage() {
               current={!planInfo.isPro}
               features={[
                 "1 active campaign",
-                "Announcement bar timer",
-                "Basic analytics (impressions)",
-                "Color customization",
-                "Close button",
-                "Mobile responsive",
+                "All timer types: announcement bar, product page, cart",
+                "Honest server-side timers — never reset on refresh",
+                "All templates and full design customization",
+                "Impressions analytics",
+                "No traffic or view limits, ever",
               ]}
             />
           </Layout.Section>
@@ -160,12 +226,12 @@ export default function BillingPage() {
               onUpgrade={handleUpgrade}
               loading={isUpgrading}
               features={[
+                "Everything in Free, plus:",
                 "Unlimited active campaigns",
                 "Full analytics (impressions, clicks, CTR)",
-                "Campaign scheduling (start/end dates)",
-                "All color customization options",
-                "Priority support",
-                "7-day free trial",
+                "Run bar + product + cart timers simultaneously",
+                "Priority email support",
+                "14-day free trial — cancel anytime",
               ]}
             />
           </Layout.Section>

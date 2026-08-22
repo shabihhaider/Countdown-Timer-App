@@ -1,7 +1,8 @@
 import { json } from "@remix-run/node";
-import { useLoaderData, useActionData, useNavigation, Form } from "@remix-run/react";
+import { useLoaderData, useNavigation, Form, useRouteError } from "@remix-run/react";
 import {
   Page,
+  Layout,
   Card,
   BlockStack,
   InlineStack,
@@ -110,9 +111,28 @@ function StepIcon({ complete }) {
   );
 }
 
+export function ErrorBoundary() {
+  useRouteError();
+  return (
+    <Page title="Error">
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="300">
+              <Banner tone="critical">
+                <p>Something went wrong loading this page. Please try again.</p>
+              </Banner>
+              <Button onClick={() => window.location.reload()}>Try again</Button>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
+  );
+}
+
 export default function OnboardingPage() {
   const { shop, onboarding } = useLoaderData();
-  const actionData = useActionData();
   const navigation = useNavigation();
 
   const isSubmitting = navigation.state === "submitting";
@@ -135,13 +155,13 @@ export default function OnboardingPage() {
             title="Your countdown timer is live!"
             tone="success"
             action={{
-              content: "Go to Settings",
-              url: "/app",
+              content: "Manage campaigns",
+              url: "/app/campaigns",
             }}
           >
             <p>
               All setup steps are complete. Your countdown timer is active on your storefront. Head
-              to settings to manage your campaigns.
+              to Campaigns to manage and schedule your timers.
             </p>
           </Banner>
         )}

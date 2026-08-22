@@ -1,4 +1,5 @@
 import { authenticate } from "../shopify.server";
+import { logger } from "../utils/logger.server";
 
 /**
  * Shopify mandatory GDPR webhook: customers/redact
@@ -12,7 +13,7 @@ import { authenticate } from "../shopify.server";
  */
 export const action = async ({ request }) => {
   const { topic, shop } = await authenticate.webhook(request);
-  console.log(`[Webhook] ${topic} received for ${shop} — no customer data to redact`);
+  logger.info({ topic, shop }, "webhook.gdpr.customers_redact");
 
   return new Response(null, { status: 200 });
 };

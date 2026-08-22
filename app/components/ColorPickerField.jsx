@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { BlockStack, InlineStack, Text, TextField, ColorPicker } from "@shopify/polaris";
 import { hexToHsb, hsbToHex, isValidHex } from "../utils/campaign";
 
@@ -8,12 +8,17 @@ import { hexToHsb, hsbToHex, isValidHex } from "../utils/campaign";
  * @param {{ label: string, value: string, onChange: (hex: string) => void, name: string }} props
  */
 export function ColorPickerField({ label, value, onChange, name }) {
-  const [hexInput, setHexInput] = useState(value);
+  const stripHash = (v) => (v || "").replace(/^#/, "");
+  const [hexInput, setHexInput] = useState(stripHash(value));
+
+  useEffect(() => {
+    setHexInput(stripHash(value));
+  }, [value]);
 
   const handlePickerChange = useCallback(
     (hsb) => {
       const hex = hsbToHex(hsb);
-      setHexInput(hex);
+      setHexInput(stripHash(hex));
       onChange(hex);
     },
     [onChange]
@@ -47,7 +52,7 @@ export function ColorPickerField({ label, value, onChange, name }) {
             prefix="#"
             placeholder="000000"
             monospaced
-            maxLength={7}
+            maxLength={6}
           />
           <div
             style={{

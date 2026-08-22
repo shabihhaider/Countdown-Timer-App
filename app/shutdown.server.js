@@ -1,4 +1,5 @@
 // app/shutdown.server.js
+/* eslint-disable no-console -- console is intentional here: the pino transport may already be torn down during process shutdown */
 // Graceful shutdown handlers for SIGTERM/SIGINT.
 // Imported by entry.server.jsx to ensure cleanup on process exit.
 
