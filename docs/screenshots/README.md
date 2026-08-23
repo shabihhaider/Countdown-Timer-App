@@ -49,5 +49,19 @@ Edit copy/layout in `gallery/slide-*.html`; shared styling in `gallery/frame.css
 - `gallery/assets/adm-*.png` — admin captures with dev chrome cropped
 - `listing/bar-{black,green,crimson}.png` — real single-bar renders
 - `demo-storefront.html` — storefront capture harness (product/cart via `?view=`)
-- `listing-*.png`, `05-black-friday-showcase.png` — earlier explorations,
-  **superseded** by the `gallery-*` set; kept for reference only.
+- `listing-*.png` — earlier explorations, **superseded** by the `gallery-*` set;
+  kept for reference only.
+
+## Promotional collage — "every major sale, one app"
+
+`occasions-showcase.png` (1600×900 @2x) — a tilted masonry of the **same widget
+the app actually renders**, themed for the biggest shopping moments of the year:
+Black Friday, Cyber Monday, Christmas, New Year, Valentine's, Halloween, Summer,
+Back to School, and a free-shipping bar. Every tile is faithful to the real
+extension anatomy (icon + message · 4-unit `DD:HH:MM:SS` with labels · dashed
+discount chip + Copy · CTA button · ✕ close; plus one product-page banner) — no
+invented layouts or fake digit styles. Source: `bf-showcase.html`; regenerate with:
+
+```shell
+node docs/screenshots/capture-bf.mjs        # → occasions-showcase.png
+```

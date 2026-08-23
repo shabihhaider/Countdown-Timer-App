@@ -2,241 +2,240 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Black Friday showcase — listing hero</title>
+<title>Countdown Timer — every major sale, one app</title>
 <!--
-  Marketing hero collage for the App Store listing (first promo image style).
-  A tilted masonry of Black Friday timer-bar and timer-card designs the app
-  can produce. Static by design — capture at 1280x800 @2x via capture-bf.mjs.
+  Marketing collage for the App Store listing: a tilted masonry of the SAME
+  widget the app actually renders, themed for the biggest shopping moments of
+  the year (Black Friday, Cyber Monday, Christmas, New Year, Valentine's,
+  Halloween, Summer, Back to School, free-shipping).
+
+  Every tile is faithful to the real extension anatomy — see
+  extensions/countdown-bar/assets/countdown-bar.css & countdown-product.css:
+    bar     = [icon + message] · [4 units DD:HH:MM:SS w/ labels + ":" seps]
+              · [dashed code chip + Copy] · [CTA button] · [✕ close circle]
+    product = border-left banner with "label + inline d/h/m/s"
+  No invented layouts, no fake digit styles. Capture 1600x900 @2x.
 -->
 <style>
   * { box-sizing: border-box; margin: 0; }
-  html, body { width: 1280px; height: 800px; overflow: hidden; }
+  html, body { width: 1600px; height: 900px; overflow: hidden; }
   body {
-    font-family: "Segoe UI", -apple-system, system-ui, sans-serif;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, system-ui, sans-serif;
     background:
-      radial-gradient(90% 120% at 8% 0%, #3a1010 0%, transparent 55%),
-      radial-gradient(100% 130% at 100% 100%, #2c1c02 0%, transparent 55%),
-      linear-gradient(150deg, #1c0f08 0%, #120c14 48%, #0b0b0f 100%);
+      radial-gradient(85% 120% at 4% -8%, #2c1011 0%, transparent 50%),
+      radial-gradient(85% 120% at 100% 108%, #241809 0%, transparent 50%),
+      radial-gradient(70% 90% at 52% 42%, #16131f 0%, transparent 60%),
+      linear-gradient(150deg, #14100b 0%, #0e0b12 50%, #08080b 100%);
     position: relative;
   }
-  body::after { /* soft vignette + grain-ish glow */
+  body::after {
     content: ""; position: absolute; inset: 0; pointer-events: none;
     background:
-      radial-gradient(60% 60% at 50% 42%, rgba(245,197,24,0.10), transparent 70%),
-      radial-gradient(120% 120% at 50% 50%, transparent 60%, rgba(0,0,0,0.55) 100%);
+      radial-gradient(52% 52% at 50% 46%, rgba(245,197,24,0.09), transparent 70%),
+      radial-gradient(125% 125% at 50% 50%, transparent 56%, rgba(0,0,0,0.62) 100%);
   }
 
   .plane {
     position: absolute; left: 50%; top: 50%;
-    width: 1560px;
-    transform: translate(-50%, -50%) rotate(-7deg);
-    display: flex; flex-direction: column; gap: 26px;
+    transform: translate(-50%, -52%) rotate(-3.5deg);
+    display: flex; flex-direction: column; gap: 30px;
+    align-items: center;
   }
-  .row { display: flex; gap: 26px; align-items: stretch; }
-  .row.shift-l { margin-left: -70px; }
-  .row.shift-r { margin-left: -10px; }
+  .row { display: flex; gap: 26px; align-items: center; }
 
-  .tile { border-radius: 14px; overflow: hidden; flex-shrink: 0;
-    box-shadow: 0 30px 60px -25px rgba(0,0,0,0.65); position: relative; }
+  /* ── Faithful widget shell ─────────────────────────────────────────── */
+  .tile {
+    border-radius: 14px; flex-shrink: 0; position: relative;
+    box-shadow: 0 34px 70px -30px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.05);
+  }
 
-  /* ── shared timer atoms ─────────────────────────────── */
-  .digits { display: flex; align-items: baseline; gap: 10px; }
-  .digits .sep { font-weight: 800; opacity: 0.55; }
-  .unit { text-align: center; }
-  .unit b { display: block; font-size: 34px; font-weight: 800; letter-spacing: 0.01em;
-    font-variant-numeric: tabular-nums; line-height: 1; }
-  .unit small { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.16em;
-    text-transform: uppercase; opacity: 0.72; margin-top: 5px; }
+  /* Announcement bar (.cdb) — the primary surface */
+  .bar {
+    background: var(--bg); color: var(--fg);
+    padding: 17px 20px 17px 26px;
+    display: flex; align-items: center; gap: 18px; width: fit-content;
+  }
+  .bar .content { display: flex; align-items: center; gap: 18px; }
+  .msg { font-size: 16px; font-weight: 600; letter-spacing: 0.2px; white-space: nowrap; display: inline-flex; align-items: center; }
+  .msg .ic { font-size: 1.3em; line-height: 1; margin-right: 8px; }
 
-  .chips { display: flex; gap: 9px; }
-  .chip { border-radius: 9px; padding: 10px 0 8px; width: 58px; text-align: center; }
-  .chip b { display: block; font-size: 23px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-  .chip small { display: block; font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px; opacity: 0.75; }
+  .timer { display: flex; align-items: flex-start; gap: 6px; }
+  .u { display: flex; flex-direction: column; align-items: center; min-width: 44px; }
+  .u b { font-size: 24px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: var(--acc, var(--fg)); }
+  .u small { font-size: 9.5px; text-transform: uppercase; margin-top: 3px; opacity: 0.85; font-weight: 500; letter-spacing: 0.5px; }
+  .sep { font-size: 18px; font-weight: 700; opacity: 0.6; margin-top: 2px; }
 
-  .btn { display: inline-block; padding: 12px 26px; border-radius: 8px; font-weight: 800;
-    font-size: 13.5px; letter-spacing: 0.07em; text-transform: uppercase; }
+  .code { display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.15); border: 1px dashed rgba(255,255,255,0.5);
+    border-radius: 6px; padding: 5px 6px 5px 11px; font-size: 13px; }
+  .code .t { font-weight: 700; letter-spacing: 1px; font-family: Consolas, monospace; }
+  .code .c { background: rgba(255,255,255,0.25); border-radius: 4px; padding: 4px 9px; font-size: 11px; font-weight: 600; }
 
-  /* ── Row 1 ─────────────────────────────────────────── */
-  .bar-red { background: linear-gradient(90deg, #a80f16, #d3232b); color: #fff;
-    display: flex; align-items: center; gap: 34px; padding: 24px 40px 24px 280px; width: 860px; }
-  .bar-red .headline b { display: block; font-size: 25px; font-weight: 800; letter-spacing: 0.01em; }
-  .bar-red .headline span { font-size: 13px; opacity: 0.85; }
-  .bar-red .unit b { color: #ffe600; }
-  .bar-red .btn { background: #ffe600; color: #1a1200; margin-left: auto; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
+    padding: 11px 22px; border-radius: 6px; font-weight: 600; font-size: 14px;
+    background: var(--btn-bg, #fff); color: var(--btn-fg, #111); }
 
-  .card-cream { background: #f4ecdd; color: #171310; width: 330px; padding: 28px 30px; }
-  .card-cream .kick { font-size: 11px; font-weight: 700; letter-spacing: 0.26em; color: #a8131a; margin-bottom: 6px; }
-  .card-cream h3 { font-size: 31px; font-weight: 900; letter-spacing: 0.02em; margin-bottom: 16px; }
-  .card-cream .chip { background: #171310; color: #f4ecdd; }
-  .card-cream .chip b { color: #f5c518; }
+  .close { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; color: var(--fg); }
+  .bar.light .code { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.28); }
+  .bar.light .close { background: rgba(0,0,0,0.12); }
 
-  .tile-gold { background: linear-gradient(160deg, #f5c518, #e8a90c); color: #191100;
-    width: 440px; padding: 26px 30px; display: flex; flex-direction: column; justify-content: space-between; }
-  .tile-gold h3 { font-size: 34px; font-weight: 900; letter-spacing: -0.01em; line-height: 1.02; }
-  .tile-gold p { font-size: 13px; font-weight: 600; margin-top: 6px; opacity: 0.8; }
-  .tile-gold .foot { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
-  .tile-gold .digits b { font-size: 27px; }
-  .tile-gold .btn { background: #171004; color: #f5c518; }
+  /* Product-page inline timer (.cdp--banner) */
+  .prod { background: var(--bg); color: var(--fg); border-left: 4px solid var(--acc);
+    border-radius: 10px; padding: 15px 20px; display: flex; flex-direction: column; gap: 6px; width: fit-content; }
+  .prod .plabel { font-size: 13px; font-weight: 600; opacity: 0.82; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .prod .plabel .ic { font-size: 1.25em; }
+  .prod .pdig { display: inline-flex; align-items: baseline; gap: 5px; font-variant-numeric: tabular-nums; }
+  .prod .pdig .pv { font-size: 28px; font-weight: 800; color: var(--acc); line-height: 1; }
+  .prod .pdig .pu { font-size: 15px; font-weight: 700; color: var(--acc); opacity: 0.85; margin-right: 5px; }
 
-  /* ── Row 2 ─────────────────────────────────────────── */
-  .card-lux { background:
-      radial-gradient(120% 100% at 85% 0%, #2c1a06 0%, transparent 60%),
-      linear-gradient(155deg, #191512, #0c0a09 70%);
-    color: #e9dbb8; width: 560px; padding: 34px 38px; border: 1px solid rgba(212,175,55,0.35); }
-  .card-lux .kick { font-family: Georgia, serif; font-style: italic; font-size: 16px; color: #d4af37; margin-bottom: 4px; }
-  .card-lux h3 { font-family: Georgia, serif; font-size: 40px; font-weight: 700; letter-spacing: 0.05em; color: #f3e5c0; }
-  .card-lux .digits { margin-top: 20px; }
-  .card-lux .unit b { font-family: Georgia, serif; font-size: 52px; font-weight: 700; color: #f5c518; }
-  .card-lux .sep { font-family: Georgia, serif; font-size: 40px; color: #d4af37; }
-  .card-lux .rule { height: 1px; background: linear-gradient(90deg, transparent, #d4af37, transparent); margin: 22px 0 14px; }
-  .card-lux .foot { display: flex; justify-content: space-between; font-size: 11.5px; letter-spacing: 0.22em; text-transform: uppercase; color: #9d8b60; }
-
-  .tile-spot { width: 560px; background:
-      linear-gradient(115deg, transparent 42%, rgba(245,197,24,0.09) 47%, transparent 55%),
-      radial-gradient(85% 100% at 65% 22%, #57400f 0%, #241a08 46%, #0d0a05 100%);
-    color: #fff; padding: 30px 38px 34px; display: flex; flex-direction: column; justify-content: space-between; }
-  .tile-spot .badge { align-self: flex-start; font-size: 10.5px; font-weight: 800; letter-spacing: 0.22em;
-    color: #f5c518; border: 1px solid rgba(245,197,24,0.55); border-radius: 999px; padding: 7px 14px; }
-  .tile-spot h3 { font-size: 44px; font-weight: 900; letter-spacing: -0.015em; line-height: 1.0;
-    text-shadow: 0 6px 30px rgba(0,0,0,0.6); }
-  .tile-spot h3 em { font-style: normal; color: #f5c518; }
-  .tile-spot .chips { margin-top: 18px; }
-  .tile-spot .chip { background: rgba(255,255,255,0.10); backdrop-filter: blur(2px);
-    border: 1px solid rgba(255,255,255,0.22); color: #fff; width: 54px; }
-
-  .card-code { background: #101014; color: #fff; width: 430px; padding: 28px 30px;
-    border: 1px solid #26262e; }
-  .card-code .kick { font-size: 11px; font-weight: 700; letter-spacing: 0.24em; color: #f5c518; margin-bottom: 8px; }
-  .card-code h3 { font-size: 27px; font-weight: 800; margin-bottom: 16px; }
-  .card-code .code { display: inline-flex; align-items: center; border: 1.5px dashed #f5c518; border-radius: 9px; overflow: hidden; margin-bottom: 18px; }
-  .card-code .code span { padding: 9px 16px; font-family: Consolas, monospace; font-weight: 700; letter-spacing: 0.14em; color: #f5c518; }
-  .card-code .code b { padding: 9px 16px; background: #f5c518; color: #191100; font-size: 12.5px; }
-  .card-code .digits b { font-size: 25px; color: #fff; }
-
-  /* ── Row 3 ─────────────────────────────────────────── */
-  .bar-ticking { background: linear-gradient(90deg, #170f20, #2e1650); color: #fff;
-    display: flex; align-items: center; gap: 36px; padding: 26px 42px 26px 300px; width: 950px; }
-  .bar-ticking .headline b { display: block; font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: 0.01em; color: #ffe600; }
-  .bar-ticking .headline span { font-size: 13px; opacity: 0.8; }
-  .bar-ticking .unit b { font-size: 38px; color: #ffe600; }
-  .bar-ticking .sep { font-size: 34px; color: #ffe600; }
-
-  .strip-gold { background: linear-gradient(90deg, #f5c518, #eda60e); color: #191100;
-    display: flex; align-items: center; gap: 26px; padding: 24px 38px; width: 820px; }
-  .strip-gold b { font-size: 22px; font-weight: 900; }
-  .strip-gold span { font-size: 13px; font-weight: 600; opacity: 0.8; }
-  .strip-gold .digits { margin-left: auto; }
-  .strip-gold .unit b { font-size: 26px; }
-
-  .bar-dark { background: #0d0d0f; color: #fff; border: 1px solid #232327;
-    display: flex; align-items: center; gap: 24px; padding: 22px 30px; width: 470px; }
-  .bar-dark .msg { font-size: 16.5px; font-weight: 700; }
-  .bar-dark .msg i { font-style: normal; margin-right: 9px; }
-  .bar-dark .chips { margin-left: auto; }
-  .bar-dark .chip { background: #1d1d22; color: #fff; width: 48px; padding: 8px 0 7px; }
-  .bar-dark .chip b { font-size: 19px; color: #f5c518; }
-  .bar-dark .btn { background: #fff; color: #111; padding: 10px 20px; font-size: 12px; }
+  .tag { position: absolute; top: -11px; left: 20px; z-index: 3;
+    font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 999px; background: #0c0c0f; color: #cbd5c8;
+    border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 6px 16px -8px rgba(0,0,0,0.85); }
 </style>
 </head>
 <body>
   <div class="plane">
 
-    <div class="row shift-l">
-      <div class="tile bar-red">
-        <div class="headline"><b>Final Hours</b><span>Last chance to order</span></div>
-        <div class="digits">
-          <span class="unit"><b>08</b><small>Hours</small></span><span class="sep">:</span>
-          <span class="unit"><b>16</b><small>Mins</small></span><span class="sep">:</span>
-          <span class="unit"><b>24</b><small>Sec</small></span>
-        </div>
-        <span class="btn">Shop now</span>
-      </div>
-      <div class="tile card-cream">
-        <div class="kick">November 28 only</div>
-        <h3>BLACK FRIDAY</h3>
-        <div class="chips">
-          <span class="chip"><b>02</b><small>Days</small></span>
-          <span class="chip"><b>23</b><small>Hours</small></span>
-          <span class="chip"><b>59</b><small>Mins</small></span>
-          <span class="chip"><b>41</b><small>Sec</small></span>
-        </div>
-      </div>
-      <div class="tile tile-gold">
-        <div><h3>Doorbusters<br>up to 70% off</h3><p>While stock lasts — no restocks</p></div>
-        <div class="foot">
-          <div class="digits">
-            <span class="unit"><b>11</b><small>Hrs</small></span><span class="sep">:</span>
-            <span class="unit"><b>42</b><small>Min</small></span><span class="sep">:</span>
-            <span class="unit"><b>08</b><small>Sec</small></span>
+    <!-- Row 1 — hero bar + a product-page surface -->
+    <div class="row" style="margin-left:-30px">
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#0b0b0d,#1c1c22); --fg:#fff; --acc:#f5c518; --btn-bg:#f5c518; --btn-fg:#1a1200;">
+        <span class="tag">Black Friday</span>
+        <div class="content">
+          <span class="msg"><span class="ic">🔥</span>Black Friday — 40% off sitewide</span>
+          <div class="timer">
+            <span class="u"><b>02</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>11</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>19</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>30</b><small>Secs</small></span>
           </div>
-          <span class="btn">Shop now</span>
+          <span class="code"><span class="t">BF40</span><span class="c">Copy</span></span>
+          <a class="btn">Shop the Sale</a>
+        </div>
+        <button class="close"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      </div>
+
+      <div class="tile prod" style="--bg:linear-gradient(150deg,#1d1109,#120b06); --fg:#ffedd5; --acc:#fb923c;">
+        <span class="tag">Halloween · product page</span>
+        <span class="plabel"><span class="ic">🎃</span>Halloween deal ends in</span>
+        <span class="pdig">
+          <span class="pv">02</span><span class="pu">d</span>
+          <span class="pv">08</span><span class="pu">h</span>
+          <span class="pv">16</span><span class="pu">m</span>
+          <span class="pv">24</span><span class="pu">s</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="row" style="margin-left:70px">
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#1b1350,#0e6f8c); --fg:#fff; --acc:#5eead4;">
+        <span class="tag">Cyber Monday</span>
+        <div class="content">
+          <span class="msg"><span class="ic">💻</span>Cyber Monday · today only</span>
+          <div class="timer">
+            <span class="u"><b>00</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>23</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>42</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>08</b><small>Secs</small></span>
+          </div>
+          <span class="code"><span class="t">CYBER30</span><span class="c">Copy</span></span>
+        </div>
+      </div>
+
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#0b1030,#1a2260); --fg:#fff; --acc:#f5c518;">
+        <span class="tag">New Year</span>
+        <div class="content">
+          <span class="msg"><span class="ic">🎉</span>New Year — save 25%</span>
+          <div class="timer">
+            <span class="u"><b>02</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>23</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>59</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>38</b><small>Secs</small></span>
+          </div>
+          <span class="code"><span class="t">NY25</span><span class="c">Copy</span></span>
         </div>
       </div>
     </div>
 
-    <div class="row shift-r">
-      <div class="tile card-lux">
-        <div class="kick">The annual event</div>
-        <h3>BLACK FRIDAY</h3>
-        <div class="digits">
-          <span class="unit"><b>02</b><small>Days</small></span><span class="sep">:</span>
-          <span class="unit"><b>23</b><small>Hours</small></span><span class="sep">:</span>
-          <span class="unit"><b>54</b><small>Minutes</small></span><span class="sep">:</span>
-          <span class="unit"><b>28</b><small>Seconds</small></span>
+    <!-- Row 3 -->
+    <div class="row" style="margin-left:-60px">
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#7d0f18,#5b0a10); --fg:#fff; --acc:#ffd79a; --btn-bg:#f6ecd8; --btn-fg:#5b0a10;">
+        <span class="tag">Christmas</span>
+        <div class="content">
+          <span class="msg"><span class="ic">🎄</span>Holiday Sale — free gift wrap</span>
+          <div class="timer">
+            <span class="u"><b>05</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>23</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>54</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>28</b><small>Secs</small></span>
+          </div>
+          <a class="btn">Shop gifts</a>
         </div>
-        <div class="rule"></div>
-        <div class="foot"><span>Members early access</span><span>Shop the edit →</span></div>
+        <button class="close"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
       </div>
-      <div class="tile tile-spot">
-        <span class="badge">BFCM WEEKEND</span>
-        <div>
-        <h3>The sale is <em>now</em></h3>
-        <div class="chips">
-          <span class="chip"><b>2</b><small>Days</small></span>
-          <span class="chip"><b>8</b><small>Hrs</small></span>
-          <span class="chip"><b>16</b><small>Min</small></span>
-          <span class="chip"><b>24</b><small>Sec</small></span>
-        </div>
-        </div>
-      </div>
-      <div class="tile card-code">
-        <div class="kick">Extra 30% off sitewide</div>
-        <h3>Stack the code</h3>
-        <div class="code"><span>BF30</span><b>COPY</b></div>
-        <div class="digits">
-          <span class="unit"><b>06</b><small>Hours</small></span><span class="sep">:</span>
-          <span class="unit"><b>39</b><small>Mins</small></span><span class="sep">:</span>
-          <span class="unit"><b>36</b><small>Sec</small></span>
+
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#be123c,#9d174d); --fg:#fff; --acc:#fecdd3;">
+        <span class="tag">Valentine's Day</span>
+        <div class="content">
+          <span class="msg"><span class="ic">💝</span>Valentine's — 15% off gifts</span>
+          <div class="timer">
+            <span class="u"><b>01</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>08</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>12</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>45</b><small>Secs</small></span>
+          </div>
+          <span class="code"><span class="t">LOVE15</span><span class="c">Copy</span></span>
         </div>
       </div>
     </div>
 
-    <div class="row" style="margin-left:-95px">
-      <div class="tile bar-ticking">
-        <div class="headline"><b>Time is ticking</b><span>Black Friday ends in:</span></div>
-        <div class="digits">
-          <span class="unit"><b>02</b><small>Days</small></span><span class="sep">:</span>
-          <span class="unit"><b>23</b><small>Hours</small></span><span class="sep">:</span>
-          <span class="unit"><b>59</b><small>Minutes</small></span><span class="sep">:</span>
-          <span class="unit"><b>38</b><small>Seconds</small></span>
+    <!-- Row 4 -->
+    <div class="row" style="margin-left:40px">
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#ea580c,#f59e0b); --fg:#fff; --acc:#fff7ed; --btn-bg:#fff; --btn-fg:#9a3412;">
+        <span class="tag">Summer Sale</span>
+        <div class="content">
+          <span class="msg"><span class="ic">☀️</span>Summer Flash Sale — ends today</span>
+          <div class="timer">
+            <span class="u"><b>00</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>06</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>39</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>36</b><small>Secs</small></span>
+          </div>
+          <a class="btn">Shop now</a>
         </div>
       </div>
-      <div class="tile bar-dark">
-        <div class="msg"><i>🔥</i>Black Friday early access</div>
-        <div class="chips">
-          <span class="chip"><b>16</b><small>Min</small></span>
-          <span class="chip"><b>24</b><small>Sec</small></span>
+
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#1e3a8a,#1d4ed8); --fg:#fff; --acc:#bfdbfe;">
+        <span class="tag">Back to School</span>
+        <div class="content">
+          <span class="msg"><span class="ic">🎒</span>Back to School — save 10%</span>
+          <div class="timer">
+            <span class="u"><b>03</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>12</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>45</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>10</b><small>Secs</small></span>
+          </div>
+          <span class="code"><span class="t">SCHOOL10</span><span class="c">Copy</span></span>
         </div>
       </div>
     </div>
 
-    <div class="row" style="margin-left:660px">
-      <div class="tile strip-gold">
-        <b>Ends tonight</b><span>Free shipping on every Black Friday order over $75</span>
-        <div class="digits">
-          <span class="unit"><b>05</b><small>Hrs</small></span><span class="sep">:</span>
-          <span class="unit"><b>12</b><small>Min</small></span>
+    <!-- Row 5 — light bar (dark text), free-shipping use case -->
+    <div class="row" style="margin-left:-20px">
+      <div class="tile bar light" style="--bg:linear-gradient(90deg,#f5c518,#eab308); --fg:#1a1200; --acc:#1a1200;">
+        <span class="tag">Free shipping</span>
+        <div class="content">
+          <span class="msg"><span class="ic">🚚</span>Free shipping over $75 — ends tonight</span>
+          <div class="timer">
+            <span class="u"><b>00</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>05</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>12</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>40</b><small>Secs</small></span>
+          </div>
         </div>
+        <button class="close"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
       </div>
     </div>
 
