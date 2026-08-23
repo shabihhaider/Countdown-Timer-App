@@ -1,8 +1,17 @@
+> ⚠️ **Historical snapshot (August 2026) — archived, not authoritative.**
+> This was the pre-launch v1 product/market audit. It is kept for record only.
+> Some details (pricing, trial length, surface count, test numbers, remaining
+> blockers) were superseded by the shipped product. For current information see
+> [`../PRD.md`](../PRD.md), [`../PRICING.md`](../PRICING.md), and the
+> [docs index](../README.md). Do not treat anything below as current.
+
+---
+
 # Countdown Timer Bar — Product Audit & v1 PRD
 
 **Date:** August 7, 2026 (initial) | **Updated:** August 9, 2026 (post-implementation re-audit)
 **Author:** Product Audit (AI-Assisted)
-**Status:** Post-Implementation Re-Audit
+**Status:** Post-Implementation Re-Audit — **ARCHIVED / superseded**
 
 ---
 

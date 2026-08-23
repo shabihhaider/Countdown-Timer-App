@@ -2,7 +2,7 @@
 
 > **Version:** 2.0
 > **Last Updated:** August 11, 2026
-> **Environment:** Docker (Node 20 + PostgreSQL 16 + Redis 7) or `shopify app dev`
+> **Environment:** Docker (Node >=22 + PostgreSQL 16 + Redis 7) or `shopify app dev`
 > **Prerequisite:** A Shopify Partner account with a development store
 
 ---
@@ -147,12 +147,12 @@ The CLI creates a Cloudflare tunnel and opens the app in your store's admin.
 
 ### TEST 5.1: First Install Flow
 
-| Step | Action                                   | Expected Result                           |
-| ---- | ---------------------------------------- | ----------------------------------------- |
-| 1    | Open the app URL in your dev store admin | Shopify OAuth screen appears              |
-| 2    | Click "Install app"                      | App installs successfully                 |
-| 3    | Check scopes requested                   | Only `write_themes` — no `write_products` |
-| 4    | App redirects to...                      | The home/dashboard page (`/app`)          |
+| Step | Action                                   | Expected Result                                        |
+| ---- | ---------------------------------------- | ------------------------------------------------------ |
+| 1    | Open the app URL in your dev store admin | Shopify OAuth screen appears                           |
+| 2    | Click "Install app"                      | App installs successfully                              |
+| 3    | Check scopes requested                   | No admin API scopes requested (scopes are empty, `""`) |
+| 4    | App redirects to...                      | The home/dashboard page (`/app`)                       |
 
 ### TEST 5.2: Session Persistence
 
@@ -1185,22 +1185,26 @@ npx vitest run
 **Expected output:**
 
 ```
-Test Files  8 passed (8)
-     Tests  147 passed (147)
+Test Files  9 passed (9)
+     Tests  231 passed (231)
 ```
+
+The unit suite is **231 unit tests (Vitest, 9 files)**; the E2E suite is
+**26 E2E tests (Playwright, 5 files)** run via `npm run test:e2e`.
 
 **Covered test files:**
 
-| File                                  | Tests | Coverage Areas                                             |
-| ------------------------------------- | ----- | ---------------------------------------------------------- |
-| `tests/unit/utils/campaign.test.js`   | 41    | Form mapping, status, formatting, fonts, icons, animations |
-| `tests/unit/utils/validation.test.js` | 40    | Shop regex, URL validation, event types, form validation   |
-| `tests/unit/utils/countdown.test.js`  | 16    | pad(), time decomposition, UTC dates, screen reader        |
-| `tests/unit/utils/color.test.js`      | 9     | hexToHsb conversion and edge cases                         |
-| `tests/unit/redis.test.js`            | 5     | Rate limiter in-memory fallback                            |
-| `tests/unit/utils/billing.test.js`    | 6     | Plan detection, campaign limits                            |
-| `tests/unit/utils/logger.test.js`     | 4     | Logger instance, request logger                            |
-| `tests/unit/routes/settings.test.js`  | 26    | Settings API response and validation                       |
+| File                                         | Tests | Coverage Areas                                             |
+| -------------------------------------------- | ----- | ---------------------------------------------------------- |
+| `tests/unit/utils/campaign.test.js`          | 97    | Form mapping, status, formatting, fonts, icons, animations |
+| `tests/unit/utils/validation.test.js`        | 57    | Shop regex, URL validation, event types, form validation   |
+| `tests/unit/utils/campaign-matching.test.js` | 22    | Targeting rules and campaign matching                      |
+| `tests/unit/utils/countdown.test.js`         | 16    | pad(), time decomposition, UTC dates, screen reader        |
+| `tests/unit/utils/color.test.js`             | 14    | hexToHsb conversion and edge cases                         |
+| `tests/unit/utils/billing.test.js`           | 8     | Plan detection, campaign limits                            |
+| `tests/unit/utils/templates.test.js`         | 8     | Template presets                                           |
+| `tests/unit/redis.test.js`                   | 5     | Rate limiter in-memory fallback                            |
+| `tests/unit/utils/logger.test.js`            | 4     | Logger instance, request logger                            |
 
 ### 26.2: Run Full CI Pipeline
 
@@ -1291,7 +1295,7 @@ Custom End Msg:    "Sale has ended — follow us for the next one!"
 ### Infrastructure
 
 - [ ] All services healthy (health endpoint, DB, Redis)
-- [ ] `npx vitest run` passes all 147 tests
+- [ ] `npx vitest run` passes all 231 unit tests (9 files); `npm run test:e2e` passes all 26 E2E tests (5 files)
 - [ ] `make ci` passes full pipeline (lint + types + tests)
 
 ### Landing & Legal Pages

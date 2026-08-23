@@ -18,7 +18,7 @@ Shopify merchants running time-limited sales (BFCM, seasonal events, flash sales
 
 ## Value Proposition
 
-> "The only countdown timer app that shows you if it's actually increasing conversions."
+> "A countdown timer app that shows you whether it's actually increasing conversions."
 
 Three pillars:
 
@@ -31,24 +31,24 @@ Three pillars:
 ### In Scope
 
 - [ ] Countdown bar (announcement bar with timer, message, CTA button)
+- [ ] Product-page timer (app block)
+- [ ] Cart reservation timer (app block)
 - [ ] Admin settings form with live preview
 - [ ] 3-step onboarding wizard with extension installation verification
 - [ ] Analytics dashboard (impressions, clicks, CTR per campaign)
-- [ ] Multiple campaigns (up to 5 on free, unlimited on paid)
+- [ ] Multiple campaigns (Free = 1 active campaign, Pro = unlimited — see [PRICING.md](./PRICING.md) for the source of truth)
 - [ ] UTC-aware end dates with timezone selector
 - [ ] Server-side settings served to storefront via App Proxy
 - [ ] Theme App Block (OS 2.0 compatible)
 - [ ] Privacy Policy + Terms of Service
-- [ ] Webhook handlers: app/uninstalled, app/scopes_update
+- [ ] Webhook handlers: app/uninstalled, app/scopes_update, customers/data_request, customers/redact, shop/redact
 
 ### Out of Scope (v1.1+)
 
-- Cart countdown timer (Shopify UI Extension)
 - Stock counter widget
 - A/B testing
 - Email timer integration
 - Shopify Markets / multi-language support
-- Checkout extension (cart reservation)
 
 ## Success Metrics
 

@@ -14,8 +14,8 @@ Semantic versioning: `MAJOR.MINOR.PATCH`
 
 ### Before Every Release
 
-- [ ] All tests pass: `npm run test`
-- [ ] No TypeScript errors: `npm run typecheck` (after TS migration)
+- [ ] All tests pass: `npm run test` (231 unit) and `npm run test:e2e` (26 E2E)
+- [ ] No TypeScript errors: `npm run typecheck`
 - [ ] ESLint clean: `npm run lint`
 - [ ] Build succeeds: `npm run build`
 - [ ] Prisma migrations in sync: `npx prisma migrate status`
@@ -53,7 +53,7 @@ After deployment:
 ## Changelog Format
 
 ```markdown
-## [1.1.0] — 2024-11-01
+## [1.1.0] — 2026-08-23
 
 ### Added
 
@@ -72,15 +72,13 @@ After deployment:
 
 ## Rollback Plan
 
-If a production bug is found:
-
-1. Identify last good commit: `git log --oneline`
-2. Revert: `git revert HEAD` or deploy previous Vercel deployment
-3. If DB migration is involved: restore from backup before reverting
+See [docs/ROLLBACK.md](ROLLBACK.md) for the full rollback procedure.
 
 ## Version History
 
-| Version | Date       | Description                                           |
-| ------- | ---------- | ----------------------------------------------------- |
-| 0.1.0   | 2024-08-01 | Initial MVP with countdown bar                        |
-| 1.0.0   | 2024-11-01 | Launch: onboarding, analytics, UTC timers, validation |
+> Update this table as releases ship. Dates use `YYYY-MM-DD`.
+
+| Version | Date         | Description                                           |
+| ------- | ------------ | ----------------------------------------------------- |
+| 0.1.0   | _YYYY-MM-DD_ | Initial MVP with countdown bar                        |
+| 1.0.0   | _YYYY-MM-DD_ | Launch: onboarding, analytics, UTC timers, validation |

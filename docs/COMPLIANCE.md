@@ -16,7 +16,7 @@
 
 - [x] Privacy Policy publicly accessible at `/privacy`
 - [x] Data collection described in plain language
-- [x] Right to erasure: handled by `app/uninstalled` webhook (cascades all deletions)
+- [x] Right to erasure: handled by the GDPR compliance webhooks `customers/redact` and `shop/redact`, plus `app/uninstalled` (cascades all deletions)
 - [x] Data portability: can be requested via support email
 - [x] No third-party data processors used (analytics are self-hosted)
 - [x] No cookies set on merchant storefronts
@@ -33,7 +33,7 @@
 
 - [x] OAuth implemented with `@shopify/shopify-app-remix`
 - [x] Sessions stored via Prisma session storage adapter
-- [x] Webhooks: `app/uninstalled` and `app/scopes_update` handled
+- [x] Webhooks: `app/uninstalled`, `app/scopes_update`, and the GDPR compliance topics `customers/data_request`, `customers/redact`, `shop/redact` handled
 - [x] Polaris v12 used throughout admin UI
 - [x] App Bridge v4 used
 - [x] Theme App Block (OS 2.0 compatible)
@@ -42,11 +42,13 @@
 
 ### Scopes
 
-Current: `write_themes`
+Current: `scopes = ""` (empty — no admin API scopes)
 
-- `write_themes`: Required to install theme app extensions
+The app requires no admin scopes. All functionality is delivered through a
+theme app extension plus shop metafield writes (`metafieldsSet` on the Shop,
+which requires no scope) and the app proxy.
 
-No other scopes are requested. This is the minimum necessary.
+No scopes are requested. This is the minimum necessary.
 
 ### Sensitive Data Handling
 
