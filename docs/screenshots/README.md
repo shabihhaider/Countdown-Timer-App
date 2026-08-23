@@ -17,11 +17,16 @@ slide, benefit-first headlines, no arrows or callouts. Real product UI only.
 | 6   | `gallery-06.png` | Live in two minutes              | Campaign builder with live preview               |
 | 7   | `gallery-07.png` | Flawless on mobile, too          | Responsive storefront on a phone                 |
 
-**Accuracy:** every frame is real product UI. Slides 1–3 & 7 embed live
-storefront-widget captures; slides 4 & 6 use live admin captures (real seeded
-data — 37,271 impressions · 1,926 clicks · 5.2% CTR) with dev-mode chrome
-cropped out; slide 5 stacks three genuine live bar renders. No mockups, no
-invented features, no arrows/callouts.
+**Accuracy:** every frame is real product UI. Slides 1–2 & 7 embed live
+storefront-widget captures; slides 3, 4 & 6 use live admin captures (real
+seeded data — 37,271 impressions · 1,926 clicks · 5.2% CTR) with dev-mode
+chrome cropped out; slide 5 stacks three genuine live bar renders. No mockups,
+no invented features, no arrows/callouts.
+
+> The app also ships a **cart reservation timer**, but it is intentionally
+> **not** featured as a dedicated slide: it was verified at the widget-code and
+> block-install level but not observed end-to-end on a live store cart with
+> items, so it was left out rather than shown on a claim not fully tested.
 
 ### Regenerating the gallery
 

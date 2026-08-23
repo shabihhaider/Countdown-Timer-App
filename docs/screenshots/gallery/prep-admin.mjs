@@ -9,6 +9,7 @@ const shots = [
   ["admin/05-campaigns-list.jpg", "gallery/assets/adm-campaigns.png"],
   ["admin/06-plan-pro.jpg", "gallery/assets/adm-plan.png"],
   ["admin/07-campaign-builder.jpg", "gallery/assets/adm-builder.png"],
+  ["admin/08-targeting.jpg", "gallery/assets/adm-targeting.png"],
 ];
 const TOP = 56, BOTTOM = 34;
 const browser = await chromium.launch();
