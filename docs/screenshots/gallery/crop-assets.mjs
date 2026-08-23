@@ -6,7 +6,7 @@ import { resolve } from "path";
 // region out of a real capture — no fabrication, just framing.
 const jobs = [
   {
-    src: "02-storefront-product-timer.png",
+    src: "gallery/assets/storefront-product.png",
     out: "gallery/assets/product-result-crop.png",
     // right product column: title, price, and the live "Flash sale ends in" timer
     clip: { x: 1340, y: 352, width: 1140, height: 632 },

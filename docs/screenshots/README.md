@@ -1,11 +1,12 @@
 # App Store screenshots
 
-## ▶ SUBMISSION SET — upload these, in order (`gallery-01…08.png`)
+## ▶ Submission set — upload these, in order (`gallery-01…08.png`)
 
-The final Shopify App Store gallery. 1600×900 (Shopify's recommended ratio),
-captured @2x (3200×1800). One design system (`gallery/frame.css`): dark premium
-ground, brand-green accent, a recurring browser/phone frame, one benefit per
-slide, benefit-first headlines, no arrows or callouts. Real product UI only.
+The final Shopify App Store gallery: eight slides at 1600×900 (Shopify's
+recommended ratio), captured @2x (3200×1800). One design system
+(`gallery/frame.css`): dark premium ground, brand-green accent, a recurring
+browser/phone frame, one benefit per slide, benefit-first headlines, no arrows
+or callouts. Real product UI only.
 
 | #   | File             | Benefit (headline)            | Visual                                                      |
 | --- | ---------------- | ----------------------------- | ----------------------------------------------------------- |
@@ -18,54 +19,63 @@ slide, benefit-first headlines, no arrows or callouts. Real product UI only.
 | 7   | `gallery-07.png` | Flawless on mobile, too       | Responsive storefront on a phone                            |
 | 8   | `gallery-08.png` | Built for every big sale      | Occasion collage — 9 events, all real widget renders        |
 
-**Accuracy:** every frame is real product UI. Slides 1–2 & 7 embed live
+**Accuracy.** Every frame is real product UI. Slides 1–2 & 7 embed live
 storefront-widget captures; slide 3 pairs a live admin capture (the targeting
 rule) with the live storefront result (the timer on the product page); slides 4
 & 6 use live admin captures (real seeded data — 37,271 impressions · 1,926
 clicks · 5.2% CTR) with dev-mode chrome cropped out; slide 5 stacks three
-genuine live bar renders; slide 8 is the occasions collage (see below) — every
-tile faithful to the real widget anatomy, themed for 9 major sale events. No
-mockups, no invented features, no arrows/callouts.
+genuine bar renders; slide 8 is the occasions collage — every tile faithful to
+the real widget anatomy, themed for nine major sale events. No mockups, no
+invented features, no arrows or callouts.
 
 > The app also ships a **cart reservation timer**, but it is intentionally
 > **not** featured as a dedicated slide: it was verified at the widget-code and
-> block-install level but not observed end-to-end on a live store cart with
-> items, so it was left out rather than shown on a claim not fully tested.
+> block-install level, but not observed end-to-end on a live store cart with
+> items — so it was left out rather than shown on a claim not fully tested.
 
-### Regenerating the gallery
+## Layout
 
-```shell
-PORT=3100 npm run start                 # app API
-python -m http.server 8899              # serve repo root
-node docs/screenshots/gallery/prep-admin.mjs     # clean dev chrome from admin/*
-node docs/screenshots/gallery/crop-assets.mjs    # slide insets (product result, clean targeting)
-node docs/screenshots/listing/capture-bars.mjs   # real bar variants (bar-*.png)
-node docs/screenshots/capture-bf.mjs             # occasions-showcase.png (embedded by slide 8)
-node docs/screenshots/gallery/capture.mjs        # → gallery-01…08.png
+Everything the gallery needs is self-contained under `gallery/` — the eight
+`gallery-0N.png` outputs render entirely from committed assets, no running app
+required.
+
+```
+docs/screenshots/
+├── gallery-01…08.png          # the submission set (outputs — upload these)
+├── admin/                     # raw admin captures (source for the cropped adm-*.png)
+└── gallery/
+    ├── frame.css              # shared design system for every slide
+    ├── slide-1…8.html         # one file per slide
+    ├── capture.mjs            # renders slide-*.html → ../gallery-0N.png
+    ├── prep-admin.mjs         # ../admin/*.jpg → assets/adm-*.png (crops dev chrome)
+    ├── crop-assets.mjs        # slide insets (product result crop, clean targeting)
+    ├── occasions.html         # source for the slide-8 collage (self-contained)
+    ├── capture-occasions.mjs  # occasions.html → assets/occasions-showcase.png
+    └── assets/                # every image the slides embed
+        ├── storefront-bar.png / storefront-product.png / storefront-mobile.png
+        ├── bar-black.png / bar-green.png / bar-crimson.png
+        ├── adm-*.png / product-result-crop.png / adm-targeting-clean.png
+        └── occasions-showcase.png
 ```
 
-Edit copy/layout in `gallery/slide-*.html`; shared styling in `gallery/frame.css`.
+## Regenerating
 
-## Source & raw assets (not for direct upload)
-
-- `01`–`04-storefront-*.png` — raw full-page storefront widget captures
-- `admin/*.jpg` — raw live admin captures (carry dev-mode chrome)
-- `gallery/assets/adm-*.png` — admin captures with dev chrome cropped
-- `listing/bar-{black,green,crimson}.png` — real single-bar renders
-- `demo-storefront.html` — storefront capture harness (product/cart via `?view=`)
-- `listing-*.png` — earlier explorations, **superseded** by the `gallery-*` set;
-  kept for reference only.
-
-## Promotional collage — "every major sale, one app"
-
-`occasions-showcase.png` (1600×900 @2x) — a tilted masonry of the **same widget
-the app actually renders**, themed for the biggest shopping moments of the year:
-Black Friday, Cyber Monday, Christmas, New Year, Valentine's, Halloween, Summer,
-Back to School, and a free-shipping bar. Every tile is faithful to the real
-extension anatomy (icon + message · 4-unit `DD:HH:MM:SS` with labels · dashed
-discount chip + Copy · CTA button · ✕ close; plus one product-page banner) — no
-invented layouts or fake digit styles. Source: `bf-showcase.html`; regenerate with:
+Slide rendering is self-contained (no app or DB needed):
 
 ```shell
-node docs/screenshots/capture-bf.mjs        # → occasions-showcase.png
+python -m http.server 8899                          # serve repo root (run from repo root)
+node docs/screenshots/gallery/capture-occasions.mjs # (only if slide 8 changed)
+node docs/screenshots/gallery/capture.mjs           # → gallery-01…08.png
 ```
+
+Regenerate derived assets only when their sources change:
+
+```shell
+node docs/screenshots/gallery/prep-admin.mjs        # after re-capturing admin/*.jpg
+node docs/screenshots/gallery/crop-assets.mjs        # after changing the product/targeting sources
+```
+
+Edit copy and layout in `gallery/slide-*.html`; shared styling lives in
+`gallery/frame.css`. The `assets/storefront-*.png`, `bar-*.png`, and `admin/*.jpg`
+files are committed captures from the development store; re-capturing raw imagery
+from a live store is outside this folder's scope.
