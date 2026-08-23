@@ -9,14 +9,14 @@ import { PLAN_PRO } from "../shopify.server";
 const FREE_LIMITS = {
   maxActiveCampaigns: 1,
   analyticsClicksEnabled: false,
-  analyticsCtREnabled: false,
+  analyticsCtrEnabled: false,
 };
 
 /** Pro plan limits */
 const PRO_LIMITS = {
   maxActiveCampaigns: Infinity,
   analyticsClicksEnabled: true,
-  analyticsCtREnabled: true,
+  analyticsCtrEnabled: true,
 };
 
 /**
@@ -26,10 +26,20 @@ const PRO_LIMITS = {
  * @returns {Promise<{ isPro: boolean, limits: typeof FREE_LIMITS }>}
  */
 export async function getPlanInfo(billing) {
+  // ── Dev override: set FORCE_PRO_PLAN=true in .env to test Pro features while
+  // the app is unpublished (unpublished apps can't use the Billing API at all).
+  // Hard-gated to non-production so it can never grant free Pro to real merchants.
+  if (process.env.NODE_ENV !== "production" && process.env.FORCE_PRO_PLAN === "true") {
+    return { isPro: true, plan: "Pro", limits: PRO_LIMITS };
+  }
+
   try {
+    // isTest: true means test subscriptions COUNT as valid (real ones always do).
+    // Required so dev stores — including Shopify app reviewers — get Pro access
+    // after approving a test charge.
     const { hasActivePayment } = await billing.check({
       plans: [PLAN_PRO],
-      isTest: process.env.NODE_ENV !== "production",
+      isTest: true,
     });
 
     return {
@@ -60,7 +70,7 @@ export async function canCreateCampaign(billing, currentActiveCampaigns) {
   if (currentActiveCampaigns >= limits.maxActiveCampaigns) {
     return {
       allowed: false,
-      reason: `Free plan allows ${limits.maxActiveCampaigns} active campaign. Upgrade to Pro for unlimited campaigns.`,
+      reason: `Your plan allows ${limits.maxActiveCampaigns} active ${limits.maxActiveCampaigns === 1 ? "campaign" : "campaigns"}. Upgrade to Pro for unlimited campaigns.`,
       isPro,
     };
   }

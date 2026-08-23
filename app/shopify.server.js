@@ -16,7 +16,7 @@ export const PLAN_PRO = "Pro";
 const shopify = shopifyApp({
   apiKey: env.SHOPIFY_API_KEY,
   apiSecretKey: env.SHOPIFY_API_SECRET || "",
-  apiVersion: ApiVersion.January25,
+  apiVersion: ApiVersion.July26,
   scopes: env.SCOPES?.split(","),
   appUrl: env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
@@ -27,18 +27,14 @@ const shopify = shopifyApp({
       amount: 6.99,
       currencyCode: "USD",
       interval: BillingInterval.Every30Days,
-      trialDays: 7,
+      trialDays: 14,
     },
-  },
-  future: {
-    unstable_newEmbeddedAuthStrategy: true,
-    removeRest: true,
   },
   ...(env.SHOP_CUSTOM_DOMAIN ? { customShopDomains: [env.SHOP_CUSTOM_DOMAIN] } : {}),
 });
 
 export default shopify;
-export const apiVersion = ApiVersion.January25;
+export const apiVersion = ApiVersion.July26;
 export const addDocumentResponseHeaders = shopify.addDocumentResponseHeaders;
 export const authenticate = shopify.authenticate;
 export const unauthenticated = shopify.unauthenticated;

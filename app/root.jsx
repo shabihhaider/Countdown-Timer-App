@@ -3,8 +3,9 @@ import { json } from "@remix-run/node";
 import { captureRemixErrorBoundaryError } from "@sentry/remix";
 
 export const loader = async () => {
+  // Only expose NODE_ENV to client. SENTRY_DSN stays server-side only
+  // to prevent quota abuse via fake error injection.
   return json({
-    sentryDsn: process.env.SENTRY_DSN || "",
     sentryEnv: process.env.NODE_ENV || "development",
   });
 };

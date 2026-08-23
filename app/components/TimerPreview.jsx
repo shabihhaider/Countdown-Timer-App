@@ -1,11 +1,78 @@
 import { Card, Text, BlockStack } from "@shopify/polaris";
+import { useState, useEffect } from "react";
+import { GOOGLE_FONT_FAMILIES } from "../utils/campaign";
 
-/**
- * Live preview of the countdown bar that updates in real-time as the merchant
- * changes settings. Mirrors the HTML structure from the storefront extension.
- *
- * @param {{ formState: Record<string, string> }} props
- */
+function computePreviewDigits(formState) {
+  const timerType = formState.timerType || "one_time";
+
+  if (timerType === "evergreen") {
+    const mins = parseInt(formState.evergreenMinutes, 10) || 30;
+    const totalSecs = mins * 60;
+    const d = Math.floor(totalSecs / 86400);
+    const h = Math.floor((totalSecs % 86400) / 3600);
+    const m = Math.floor((totalSecs % 3600) / 60);
+    const s = totalSecs % 60;
+    return { d, h, m, s };
+  }
+
+  if (timerType === "daily") {
+    const resetTime = formState.dailyResetTime || "00:00";
+    const [rh, rm] = resetTime.split(":").map(Number);
+    const now = new Date();
+    const tz = formState.timezone || "UTC";
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).formatToParts(now);
+      const get = (type) => parseInt(parts.find((p) => p.type === type)?.value || "0", 10);
+      const nowSecs = get("hour") * 3600 + get("minute") * 60 + get("second");
+      const resetSecs = rh * 3600 + rm * 60;
+      const diff = resetSecs > nowSecs ? resetSecs - nowSecs : 86400 - nowSecs + resetSecs;
+      return {
+        d: Math.floor(diff / 86400),
+        h: Math.floor((diff % 86400) / 3600),
+        m: Math.floor((diff % 3600) / 60),
+        s: diff % 60,
+      };
+    } catch {
+      return { d: 0, h: 23, m: 59, s: 59 };
+    }
+  }
+
+  if (timerType === "one_time" && formState.endDate) {
+    const tz = formState.timezone || "UTC";
+    try {
+      const [datePart, timePart] = formState.endDate.split("T");
+      const [year, month, day] = datePart.split("-").map(Number);
+      const [hour, minute] = timePart.split(":").map(Number);
+      const tempDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+      const utcString = tempDate.toLocaleString("en-US", { timeZone: "UTC" });
+      const tzString = tempDate.toLocaleString("en-US", { timeZone: tz });
+      const offsetMs = new Date(tzString).getTime() - new Date(utcString).getTime();
+      const endUtcMs = tempDate.getTime() - offsetMs;
+      const diff = Math.max(0, Math.floor((endUtcMs - Date.now()) / 1000));
+      return {
+        d: Math.floor(diff / 86400),
+        h: Math.floor((diff % 86400) / 3600),
+        m: Math.floor((diff % 3600) / 60),
+        s: diff % 60,
+      };
+    } catch {
+      return { d: 0, h: 0, m: 0, s: 0 };
+    }
+  }
+
+  return { d: 0, h: 0, m: 0, s: 0 };
+}
+
+function pad(n) {
+  return n < 10 ? "0" + n : String(n);
+}
+
 export function TimerPreview({ formState }) {
   const bgColor = formState.barColor || "#288d40";
   const txtColor = formState.textColor || "#ffffff";
@@ -15,7 +82,38 @@ export function TimerPreview({ formState }) {
   const buttonText = formState.buttonText || "";
   const discountCode = formState.discountCode || "";
   const fontFamily = formState.fontFamily || "system";
+  const barIcon = formState.barIcon || "";
   const position = formState.barPosition || "top";
+
+  const [digits, setDigits] = useState(() => computePreviewDigits(formState));
+
+  useEffect(() => {
+    setDigits(computePreviewDigits(formState));
+    const id = setInterval(() => setDigits(computePreviewDigits(formState)), 1000);
+    return () => clearInterval(id);
+  }, [
+    formState.timerType,
+    formState.evergreenMinutes,
+    formState.endDate,
+    formState.dailyResetTime,
+    formState.timezone,
+  ]);
+
+  const isGoogleFont =
+    fontFamily &&
+    !["system", "inherit"].includes(fontFamily) &&
+    !fontFamily.includes(",") &&
+    GOOGLE_FONT_FAMILIES.includes(fontFamily);
+  const googleFontUrl = isGoogleFont
+    ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@400;600;700&display=swap`
+    : null;
+
+  const barBackground =
+    formState.bgType === "gradient"
+      ? {
+          background: `linear-gradient(${formState.gradientDirection || "to right"}, ${formState.gradientColor1 || "#667eea"}, ${formState.gradientColor2 || "#764ba2"})`,
+        }
+      : { backgroundColor: bgColor };
 
   return (
     <Card>
@@ -27,7 +125,8 @@ export function TimerPreview({ formState }) {
           This is how your countdown bar will appear on your storefront.
         </Text>
 
-        {/* Preview container */}
+        {googleFontUrl && <link rel="stylesheet" href={googleFontUrl} />}
+
         <div
           style={{
             borderRadius: "8px",
@@ -40,7 +139,6 @@ export function TimerPreview({ formState }) {
             justifyContent: position === "bottom" ? "flex-end" : "flex-start",
           }}
         >
-          {/* Simulated page content */}
           {position === "bottom" && (
             <div style={{ padding: "20px", textAlign: "center", flex: 1 }}>
               <div
@@ -64,15 +162,14 @@ export function TimerPreview({ formState }) {
             </div>
           )}
 
-          {/* The actual bar preview */}
           <div
             style={{
-              backgroundColor: bgColor,
+              ...barBackground,
               color: txtColor,
               padding: "10px 16px",
               fontFamily:
                 fontFamily === "system"
-                  ? "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                  ? "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif"
                   : fontFamily === "inherit"
                     ? "inherit"
                     : fontFamily,
@@ -83,39 +180,37 @@ export function TimerPreview({ formState }) {
               flexWrap: "wrap",
             }}
           >
-            {/* Message */}
             <span
               style={{
                 fontSize: "14px",
                 fontWeight: 600,
                 letterSpacing: "0.2px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
               }}
             >
+              {barIcon && (
+                <span style={{ fontSize: "18px", lineHeight: 1 }} aria-hidden="true">
+                  {barIcon}
+                </span>
+              )}
               {message}
             </span>
 
-            {/* Timer digits */}
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
               {[
-                { value: "02", label: "Days" },
-                { value: "14", label: "Hours" },
-                { value: "33", label: "Mins" },
-                { value: "07", label: "Secs" },
+                { value: pad(digits.d), label: "Days" },
+                { value: pad(digits.h), label: "Hours" },
+                { value: pad(digits.m), label: "Mins" },
+                { value: pad(digits.s), label: "Secs" },
               ].map((unit, i) => (
                 <span
                   key={unit.label}
                   style={{ display: "flex", alignItems: "center", gap: "4px" }}
                 >
                   {i > 0 && (
-                    <span
-                      style={{
-                        fontSize: "16px",
-                        fontWeight: 700,
-                        opacity: 0.65,
-                      }}
-                    >
-                      :
-                    </span>
+                    <span style={{ fontSize: "16px", fontWeight: 700, opacity: 0.65 }}>:</span>
                   )}
                   <span
                     style={{
@@ -152,7 +247,6 @@ export function TimerPreview({ formState }) {
               ))}
             </div>
 
-            {/* Discount Code */}
             {discountCode && (
               <span
                 style={{
@@ -183,21 +277,20 @@ export function TimerPreview({ formState }) {
               </span>
             )}
 
-            {/* CTA Button */}
             {buttonText && (
               <span
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  minHeight: "36px",
-                  padding: "8px 20px",
+                  minHeight: "44px",
+                  padding: "10px 24px",
                   backgroundColor: btnBgColor,
                   color: btnTxtColor,
                   borderRadius: "6px",
                   textDecoration: "none",
                   fontWeight: 600,
-                  fontSize: "13px",
+                  fontSize: "14px",
                   whiteSpace: "nowrap",
                   cursor: "default",
                 }}
@@ -206,11 +299,10 @@ export function TimerPreview({ formState }) {
               </span>
             )}
 
-            {/* Close button */}
             <span
               style={{
-                width: "32px",
-                height: "32px",
+                width: "44px",
+                height: "44px",
                 borderRadius: "50%",
                 background: "rgba(255,255,255,0.2)",
                 display: "flex",
@@ -218,9 +310,10 @@ export function TimerPreview({ formState }) {
                 justifyContent: "center",
                 flexShrink: 0,
                 cursor: "default",
+                color: "#ffffff",
               }}
             >
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path
                   d="M12 4L4 12M4 4L12 12"
                   stroke="currentColor"
@@ -231,7 +324,6 @@ export function TimerPreview({ formState }) {
             </span>
           </div>
 
-          {/* Simulated page content */}
           {position === "top" && (
             <div style={{ padding: "20px", textAlign: "center", flex: 1 }}>
               <div

@@ -80,8 +80,14 @@ export async function isRateLimited(key, maxRequests, windowSeconds) {
   return entry.count > max;
 }
 
+const MAX_FALLBACK_ENTRIES = 10000;
+
 // Periodically clean up the fallback map to prevent unbounded growth
 setInterval(() => {
+  if (fallbackMap.size > MAX_FALLBACK_ENTRIES) {
+    fallbackMap.clear();
+    return;
+  }
   const now = Date.now();
   const windowMs = RATE_LIMIT_WINDOW_SEC * 1000 * 2;
   for (const [key, entry] of fallbackMap.entries()) {

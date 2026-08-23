@@ -10,32 +10,34 @@ handle = "countdown-timer-app-20"
 automatically_update_urls_on_dev = true
 
 [webhooks]
-api_version = "2025-07"
-
-  [[webhooks.subscriptions]]
-  uri = "/webhooks/app/uninstalled"
-  topics = [ "app/uninstalled" ]
+api_version = "2026-07"
 
   [[webhooks.subscriptions]]
   uri = "/webhooks/app/scopes_update"
   topics = [ "app/scopes_update" ]
 
-  # GDPR mandatory webhooks (required for App Store submission)
   [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = [ "app/uninstalled" ]
+
+  # Mandatory privacy-law compliance webhooks (required for public App Store apps)
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request" ]
   uri = "/webhooks/customers/data_request"
-  topics = [ "customers/data_request" ]
 
   [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/redact" ]
   uri = "/webhooks/customers/redact"
-  topics = [ "customers/redact" ]
 
   [[webhooks.subscriptions]]
+  compliance_topics = [ "shop/redact" ]
   uri = "/webhooks/shop/redact"
-  topics = [ "shop/redact" ]
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_themes"
+# No admin scopes needed: theme app extension + shop metafield writes (metafieldsSet
+# on Shop requires no scope) + app proxy cover all functionality.
+scopes = ""
 
 [auth]
 redirect_urls = [

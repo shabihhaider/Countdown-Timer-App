@@ -8,7 +8,7 @@ Rules: Descriptive, keyword-rich, no superlatives ("best", "only", "#1").
 
 ## Tagline
 
-"Real countdown timers that show you exactly how many sales they drive."
+"Real countdown timers with built-in analytics — see the clicks they drive."
 
 ## Short Description (≤80 chars)
 
@@ -28,7 +28,7 @@ All screenshots: 1280×800 (or 2560×1600 for retina). Show real UI, no mockups.
 
 | #   | Screen                                                  | Caption                                                 |
 | --- | ------------------------------------------------------- | ------------------------------------------------------- |
-| 1   | Analytics dashboard with metrics                        | "See exactly how many conversions your timer drives"    |
+| 1   | Analytics dashboard with metrics                        | "See impressions, clicks, and CTR for every campaign"   |
 | 2   | Countdown bar on a live storefront (Dawn theme, mobile) | "Beautiful on every device and theme"                   |
 | 3   | Settings form with live preview                         | "Customize everything in real time"                     |
 | 4   | Onboarding wizard step 3 complete                       | "Live in under 2 minutes"                               |
@@ -51,7 +51,7 @@ Marketing → Conversion optimization
 
 ## Pricing Summary (in listing)
 
-"Free plan available. Growth from $12.99/month with 14-day free trial."
+"Free plan available. Pro from $6.99/month with 14-day free trial."
 
 ## Support Info
 

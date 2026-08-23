@@ -1,4 +1,4 @@
-import { BlockStack, InlineStack, Text } from "@shopify/polaris";
+import { BlockStack, Text } from "@shopify/polaris";
 import { useCallback } from "react";
 import { TIMER_TEMPLATES } from "../utils/templates";
 

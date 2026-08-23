@@ -13,7 +13,7 @@ import {
   ResourceItem,
 } from "@shopify/polaris";
 import { json } from "@remix-run/node";
-import { useLoaderData, useNavigate } from "@remix-run/react";
+import { useLoaderData, useNavigate, useRouteError } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 import { TitleBar } from "@shopify/app-bridge-react";
 import db from "../db.server";
@@ -123,6 +123,26 @@ function formatEndDate(date, timezone) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+export function ErrorBoundary() {
+  useRouteError();
+  return (
+    <Page title="Error">
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="300">
+              <Banner tone="critical">
+                <p>Something went wrong loading this page. Please try again.</p>
+              </Banner>
+              <Button onClick={() => window.location.reload()}>Try again</Button>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
+  );
 }
 
 export default function DashboardPage() {

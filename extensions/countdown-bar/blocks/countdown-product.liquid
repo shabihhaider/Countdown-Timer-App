@@ -1,18 +1,25 @@
 <div class="cdp"
      data-shop="{{ shop.permanent_domain }}"
-     data-style="{{ block.settings.style }}"
-     data-text-color="{{ block.settings.text_color }}"
-     data-accent-color="{{ block.settings.accent_color }}"
-     data-bg-color="{{ block.settings.bg_color }}"
+     data-api-url="{{ shop.metafields.countdown_timer.api_url.value }}"
      data-font-size="{{ block.settings.font_size }}"
+     data-border-radius="{{ block.settings.border_radius }}"
+     data-padding="{{ block.settings.padding }}"
+     data-alignment="{{ block.settings.alignment }}"
      data-show-label="{{ block.settings.show_label }}"
-     data-label-text="{{ block.settings.label_text }}"
+     data-show-icon="{{ block.settings.show_icon }}"
+     data-product-handle="{{ product.handle }}"
+     data-collection-handles="{{ product.collections | map: 'handle' | join: ',' }}"
+     data-product-tags="{{ product.tags | join: ',' }}"
      style="display: none;"
      role="timer"
      aria-label="Countdown timer">
 
+  {% if block.settings.show_icon %}
+  <span class="cdp__icon" aria-hidden="true" style="display:none;"></span>
+  {% endif %}
+
   {% if block.settings.show_label %}
-  <span class="cdp__label">{{ block.settings.label_text }}</span>
+  <span class="cdp__label"></span>
   {% endif %}
 
   <span class="cdp__digits">
@@ -39,6 +46,36 @@
 
   <!-- Screen reader announcement -->
   <span class="cdp__sr" aria-live="polite" aria-atomic="true"></span>
+
+  {% if block.settings.show_stock_alert %}
+    {% assign current_variant = product.selected_or_first_available_variant %}
+    {% assign qty = current_variant.inventory_quantity %}
+    {% assign threshold = block.settings.low_stock_threshold %}
+
+    {% if current_variant.inventory_management == 'shopify'
+       and current_variant.inventory_policy == 'deny'
+       and qty > 0
+       and qty <= threshold %}
+      <div class="cdp__stock-alert" style="color: {{ block.settings.stock_alert_color }};">
+        <span class="cdp__stock-icon" aria-hidden="true">⚠</span>
+        <span class="cdp__stock-text">
+          {%- assign count_placeholder = '{count}' -%}
+          {{ block.settings.stock_message | replace: count_placeholder, qty }}
+        </span>
+        {% if block.settings.show_stock_bar %}
+          <div class="cdp__stock-bar" role="progressbar"
+               aria-label="Stock level"
+               aria-valuenow="{{ qty }}" aria-valuemin="0"
+               aria-valuemax="{{ threshold }}">
+            <div class="cdp__stock-bar-fill"
+                 style="width: {{ qty | times: 100 | divided_by: threshold | at_most: 100 }}%;
+                        background-color: {{ block.settings.stock_alert_color }};">
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% endif %}
 </div>
 
 {% schema %}
@@ -52,54 +89,107 @@
   },
   "settings": [
     {
-      "type": "select",
-      "id": "style",
-      "label": "Timer style",
-      "options": [
-        { "value": "minimal", "label": "Minimal (text only)" },
-        { "value": "card", "label": "Card (bordered box)" },
-        { "value": "badge", "label": "Badge (colored pill)" }
-      ],
-      "default": "minimal"
-    },
-    {
-      "type": "color",
-      "id": "text_color",
-      "label": "Text color",
-      "default": "#333333"
-    },
-    {
-      "type": "color",
-      "id": "accent_color",
-      "label": "Digit color",
-      "default": "#dc2626"
-    },
-    {
-      "type": "color",
-      "id": "bg_color",
-      "label": "Background color"
+      "type": "header",
+      "content": "Layout & Display"
     },
     {
       "type": "range",
       "id": "font_size",
       "label": "Font size",
-      "min": 12,
+      "min": 10,
       "max": 24,
       "step": 1,
       "unit": "px",
       "default": 14
     },
     {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Corner radius",
+      "min": 0,
+      "max": 16,
+      "step": 1,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "padding",
+      "label": "Inner padding",
+      "min": 4,
+      "max": 24,
+      "step": 2,
+      "unit": "px",
+      "default": 10
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
       "type": "checkbox",
       "id": "show_label",
       "label": "Show label text",
-      "default": true
+      "default": true,
+      "info": "Label text, colors, and style are set in the app admin"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_icon",
+      "label": "Show timer icon",
+      "default": true,
+      "info": "Icon is set in the app admin campaign settings"
+    },
+    {
+      "type": "header",
+      "content": "Low Stock Alert"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_stock_alert",
+      "label": "Show low stock alert",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "low_stock_threshold",
+      "label": "Low stock threshold",
+      "min": 1,
+      "max": 50,
+      "step": 1,
+      "default": 5,
+      "info": "Show alert when inventory is at or below this number"
     },
     {
       "type": "text",
-      "id": "label_text",
-      "label": "Label text",
-      "default": "Sale ends in"
+      "id": "stock_message",
+      "label": "Stock message",
+      "default": "Only {count} left in stock!",
+      "info": "Use {count} for the inventory number"
+    },
+    {
+      "type": "color",
+      "id": "stock_alert_color",
+      "label": "Alert text color",
+      "default": "#dc2626"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_stock_bar",
+      "label": "Show stock level bar",
+      "default": true,
+      "info": "Visual bar showing remaining stock"
     }
   ]
 }

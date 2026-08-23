@@ -198,6 +198,45 @@ describe("validateCampaignForm", () => {
     });
     expect(errors.customEndMessage).toBeDefined();
   });
+
+  it("does not require endDate for daily timer type", () => {
+    const errors = validateCampaignForm({ ...validForm, timerType: "daily", endDate: "" });
+    expect(errors.endDate).toBeUndefined();
+  });
+
+  it("does not require endDate for evergreen timer type", () => {
+    const errors = validateCampaignForm({ ...validForm, timerType: "evergreen", endDate: "" });
+    expect(errors.endDate).toBeUndefined();
+  });
+
+  it("uses timezone when validating endDate in the future", () => {
+    // A datetime-local that's in the past in UTC but in the future in a far-ahead timezone
+    // would have been wrongly rejected before the timezone fix
+    const futureLocal = new Date(Date.now() + 86400000).toISOString().slice(0, 16);
+    const errors = validateCampaignForm({
+      ...validForm,
+      endDate: futureLocal,
+      timezone: "America/New_York",
+    });
+    expect(errors.endDate).toBeUndefined();
+  });
+
+  it("rejects endDate in the past regardless of timezone", () => {
+    const errors = validateCampaignForm({
+      ...validForm,
+      endDate: "2020-01-01T00:00",
+      timezone: "Pacific/Auckland",
+    });
+    expect(errors.endDate).toContain("future");
+  });
+
+  it("rejects invalid endAction enum", () => {
+    const errors = validateCampaignForm({
+      ...validForm,
+      endAction: "evil_action",
+    });
+    expect(errors.endAction).toBeDefined();
+  });
 });
 
 describe("VALID_EVENTS", () => {

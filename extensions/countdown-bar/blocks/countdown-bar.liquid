@@ -1,12 +1,8 @@
 <div id="cdb-bar"
-     class="cdb cdb--{{ block.settings.position }}"
+     class="cdb cdb--top"
      data-shop="{{ shop.permanent_domain }}"
-     data-bg-color="{{ block.settings.bg_color }}"
-     data-text-color="{{ block.settings.text_color }}"
-     data-accent-color="{{ block.settings.accent_color }}"
-     data-position="{{ block.settings.position }}"
+     data-api-url="{{ shop.metafields.countdown_timer.api_url.value }}"
      data-font-size="{{ block.settings.font_size }}"
-     data-show-close="{{ block.settings.show_close }}"
      data-bar-padding="{{ block.settings.bar_padding }}"
      style="display: none;"
      role="region"
@@ -71,34 +67,6 @@
   "stylesheet": "countdown-bar.css",
   "javascript": "countdown-bar.js",
   "settings": [
-    {
-      "type": "color",
-      "id": "bg_color",
-      "label": "t:settings.bg_color.label",
-      "default": "#288d40"
-    },
-    {
-      "type": "color",
-      "id": "text_color",
-      "label": "t:settings.text_color.label",
-      "default": "#ffffff"
-    },
-    {
-      "type": "color",
-      "id": "accent_color",
-      "label": "t:settings.accent_color.label",
-      "default": "#ffffff"
-    },
-    {
-      "type": "select",
-      "id": "position",
-      "label": "t:settings.position.label",
-      "options": [
-        { "value": "top", "label": "t:settings.position.options.top" },
-        { "value": "bottom", "label": "t:settings.position.options.bottom" }
-      ],
-      "default": "top"
-    },
     {
       "type": "range",
       "id": "font_size",
