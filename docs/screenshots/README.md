@@ -1,46 +1,55 @@
 # App Store listing screenshots
 
-Raw captures for the listing design (see `docs/APP_LISTING.md` for the
-screenshot plan and caption rules). All desktop shots are **2560×1600**
-(Shopify's 1280×800 retina spec) — real widget code rendered against the real
-API, not mockups.
+All images are **2560×1600** (Shopify's 1280×800 retina listing spec).
 
-| File                                 | Shows                                                                                       | Suggested caption (from APP_LISTING.md)                  |
-| ------------------------------------ | ------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `01-storefront-bar-black-friday.png` | Announcement bar: dark BFCM theme, live countdown, BF40 copy-code chip, CTA                 | "Grab shoppers' attention with a bold announcement bar"  |
-| `02-storefront-product-timer.png`    | Product-page timer (card style) above Add to cart                                           | "Urgency right where customers decide"                   |
-| `03-storefront-cart-timer.png`       | Cart reservation timer over a 2-item cart                                                   | "Recover carts with a reservation countdown"             |
-| `04-storefront-mobile.png`           | Mobile product page (390×844 @3x), bar + timer stacked                                      | "Beautiful on every device and theme"                    |
-| `05-black-friday-showcase.png`       | Hero collage: tilted masonry of Black Friday bar/card designs (marketing-style promo image) | Use as the first/promo image — style variety at a glance |
+## ▶ Submission set — use these (`listing-*.png`)
+
+Six slides rendered through one shared design system (`listing/frame.css`):
+consistent dark ground, brand-green accent, a recurring browser-frame motif,
+identical headline band, numbered feature callouts with connector lines, and a
+footer wordmark on every slide. This is the set to upload, in order.
+
+| #   | File                              | Headline                           | Feature callouts                                             |
+| --- | --------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
+| 1   | `listing-01-announcement-bar.png` | Real urgency, honest timers        | Server-side countdown · one-tap discount code · built-in CTA |
+| 2   | `listing-02-product-timer.png`    | Urgency where they decide          | Five display styles · smart targeting                        |
+| 3   | `listing-03-cart-timer.png`       | Rescue abandoned carts             | Reserved-cart countdown · rules on expiry                    |
+| 4   | `listing-04-analytics.png`        | See what your timers actually earn | Impressions/clicks/CTR · 30-day trends                       |
+| 5   | `listing-05-campaign-builder.png` | Launch a campaign in two minutes   | Live preview · templates & scheduling                        |
+| 6   | `listing-06-every-look.png`       | One app, every look                | Three real widget renders (BFCM / brand / final-hours)       |
+
+**What's real vs. designed:** Slides 1–3 and 6 embed genuine captures of the
+live widget (real extension code against the running app). Slides 4–5 are
+Polaris-faithful renders of the admin UI built from the **real seeded data**
+(92,838 impressions · 4,716 clicks · 5.1% CTR — the actual analytics values).
+Swap in pixel-exact admin captures from a logged-in session anytime; see below.
+
+## Source captures (`01`–`05`, kept for reference / reuse)
+
+`01`–`04` are the raw full-page storefront captures embedded inside slides 1–3
+and the mobile shot. `05-black-friday-showcase.png` is the earlier standalone
+BF collage (superseded by `listing-06` for consistency, kept as an alt promo).
 
 ## Regenerating
 
 ```shell
-# 1. App API running locally (any port; update data-api-url in the HTML if not 3100)
-PORT=3100 npm run start
-# 2. Serve the repo root so the demo page can load the built widget assets
-python -m http.server 8899
-# 3. Seed the demo campaigns (Black Friday bar + flash-sale product timer,
-#    30 days of analytics) — see the seed block in git history, or create
-#    equivalent campaigns for shop demo-store.myshopify.com
-# 4. Capture
-node docs/screenshots/capture.mjs
+PORT=3100 npm run start                 # app API (any port; matches data-api-url)
+python -m http.server 8899              # serve repo root
+# seed demo campaigns + 30d analytics for demo-store.myshopify.com (see git history)
+node docs/screenshots/capture.mjs               # raw storefront 01-04
+node docs/screenshots/listing/capture-bars.mjs  # real bar variants for slide 6
+node docs/screenshots/listing/capture-listing.mjs  # the six listing-*.png slides
 ```
 
-`bf-showcase.html` is the hero-collage source (static, hand-designed;
-capture with `node docs/screenshots/capture-bf.mjs`). `demo-storefront.html` is the harness — a realistic storefront page (product +
-cart views via `?view=`) that loads the real extension assets from
-`extensions/countdown-bar/assets/`. Set the bar campaign's animation to
-`none` before capturing so digits are never mid-flip.
+- `listing/frame.css` — shared design system for all slides
+- `listing/slide-*.html` — one file per slide (edit copy/callouts here)
+- `demo-storefront.html` — realistic storefront harness (product/cart via `?view=`)
+- Set the bar campaign's animation to `none` before capturing so digits are crisp.
 
-## Still to capture (requires a logged-in Shopify admin session)
+## Optional: pixel-exact admin captures
 
-Admin shots for the listing — the demo shop is pre-seeded with 30 days of
-rich analytics (≈90K impressions, 5.2% CTR) so these look great with zero
-setup. With `FORCE_PRO_PLAN=true` in `.env` (Pro UI, no locks), capture at a
-1280×800 browser viewport:
-
-1. **Dashboard** (`/app`) — metric cards + campaign list
-2. **Analytics** (`/app/analytics`) — the charts are the differentiator shot
-3. **Campaign editor** (`/app/campaigns/new/bar`) — form + live preview panel
-4. **Campaigns list** (`/app/campaigns`) — type badges, active/inactive mix
+To replace the slide 4–5 admin renders with real screenshots, open the app on a
+dev store with `FORCE_PRO_PLAN=true` (Pro UI, no locks) and capture at a
+1280×800 viewport: Dashboard (`/app`), Analytics (`/app/analytics`),
+Campaign editor (`/app/campaigns/new/bar`), Campaigns list (`/app/campaigns`).
+Drop them into the `.viewport` of the matching slide and re-run the capture.

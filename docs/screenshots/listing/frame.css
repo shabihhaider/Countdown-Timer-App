@@ -1,0 +1,386 @@
+/* ==========================================================================
+   Shared App Store listing frame — one design system for every slide.
+   Canvas: 1280x800 (captured @2x = 2560x1600, Shopify's retina listing spec).
+   Identity: dark editorial ground, brand-green accent, one recurring browser
+   frame motif, consistent headline band + feature callouts on every slide.
+   ========================================================================== */
+
+:root {
+  --ink: #0b0e0d;
+  --panel: #121614;
+  --line: #23302a;
+  --green: #2fb865; /* brand green, brightened for on-dark legibility */
+  --green-soft: #1c3a2a;
+  --text: #eaf2ee;
+  --muted: #8ba296;
+  --white: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html,
+body {
+  width: 1280px;
+  height: 800px;
+  overflow: hidden;
+}
+
+body {
+  font-family:
+    "Segoe UI",
+    -apple-system,
+    system-ui,
+    Roboto,
+    sans-serif;
+  color: var(--text);
+  position: relative;
+  background:
+    radial-gradient(80% 90% at 82% -10%, rgba(47, 184, 101, 0.16) 0%, transparent 55%),
+    radial-gradient(70% 80% at 6% 106%, rgba(47, 184, 101, 0.1) 0%, transparent 55%),
+    linear-gradient(160deg, #0e1311 0%, #0a0d0c 55%, #080a09 100%);
+}
+/* fine dot grid + vignette */
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(120% 120% at 50% 40%, #000 55%, transparent 100%);
+}
+body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(130% 120% at 50% 45%, transparent 62%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* ── Headline band (identical placement on every slide) ─────────────────── */
+.band {
+  position: absolute;
+  top: 62px;
+  left: 76px;
+  right: 76px;
+  z-index: 5;
+}
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 16px;
+}
+.eyebrow::before {
+  content: "";
+  width: 26px;
+  height: 2px;
+  background: var(--green);
+  border-radius: 2px;
+}
+h1 {
+  font-size: 44px;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--white);
+  max-width: 20ch;
+}
+h1 em {
+  font-style: normal;
+  color: var(--green);
+}
+.sub {
+  margin-top: 14px;
+  font-size: 16.5px;
+  color: var(--muted);
+  max-width: 52ch;
+  line-height: 1.5;
+}
+
+/* ── Recurring browser frame that holds the UI ──────────────────────────── */
+.browser {
+  position: absolute;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 50px 90px -35px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.browser .chrome {
+  height: 44px;
+  background: #101a15;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  border-bottom: 1px solid #1b2a22;
+}
+.dots {
+  display: flex;
+  gap: 8px;
+}
+.dots i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: block;
+}
+.dots i:nth-child(1) {
+  background: #ff5f57;
+}
+.dots i:nth-child(2) {
+  background: #febc2e;
+}
+.dots i:nth-child(3) {
+  background: #28c840;
+}
+.url {
+  flex: 1;
+  height: 26px;
+  border-radius: 7px;
+  background: #0a120e;
+  border: 1px solid #22332a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  color: #7f978a;
+  font-family: Consolas, monospace;
+}
+.url .lock {
+  color: var(--green);
+  font-size: 11px;
+}
+.viewport {
+  background: #fff;
+}
+
+/* ── Feature callouts (consistent everywhere) ───────────────────────────── */
+.callout {
+  position: absolute;
+  z-index: 8;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(11, 14, 13, 0.82);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--green-soft);
+  border-left: 3px solid var(--green);
+  border-radius: 10px;
+  padding: 11px 15px;
+  max-width: 260px;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.7);
+}
+.callout .num {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #04140b;
+  font-size: 12.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.callout b {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.25;
+}
+.callout span {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+/* connector: thin line + target dot, drawn with an SVG overlay */
+.connectors {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+.connectors line {
+  stroke: var(--green);
+  stroke-width: 2;
+  stroke-dasharray: 3 4;
+  opacity: 0.85;
+}
+.connectors circle {
+  fill: var(--green);
+}
+
+/* ── Footer wordmark (identical on every slide) ─────────────────────────── */
+.wordmark {
+  position: absolute;
+  left: 76px;
+  bottom: 40px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 14px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+.wordmark .mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  background: linear-gradient(145deg, var(--green), #1f8f4c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+.wordmark b {
+  color: var(--white);
+  font-weight: 700;
+}
+.pageno {
+  position: absolute;
+  right: 76px;
+  bottom: 40px;
+  z-index: 5;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1em;
+}
+
+/* ── Faithful Shopify-admin (Polaris) render primitives ─────────────────── */
+.adm {
+  background: #f6f6f7;
+  color: #202223;
+  width: 100%;
+  height: 100%;
+  font-size: 14px;
+  display: flex;
+}
+.adm-nav {
+  width: 210px;
+  background: #1a1c1d;
+  color: #e3e3e3;
+  padding: 16px 0;
+  flex-shrink: 0;
+}
+.adm-nav .store {
+  padding: 6px 18px 16px;
+  font-weight: 600;
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.adm-nav .store i {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: linear-gradient(145deg, #2fb865, #1f8f4c);
+}
+.adm-nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px;
+  color: #b5b5b5;
+  font-size: 13.5px;
+}
+.adm-nav a.on {
+  background: #2b2d2e;
+  color: #fff;
+  box-shadow: inset 3px 0 0 #2fb865;
+}
+.adm-nav a .ic {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: #4a4d4f;
+}
+.adm-nav a.on .ic {
+  background: #2fb865;
+}
+.adm-nav .sec {
+  padding: 14px 18px 6px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7c7f81;
+}
+.adm-main {
+  flex: 1;
+  padding: 24px 28px;
+  overflow: hidden;
+}
+.adm-h {
+  font-size: 20px;
+  font-weight: 650;
+  margin-bottom: 18px;
+  color: #202223;
+}
+.card {
+  background: #fff;
+  border: 1px solid #e1e3e5;
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(22, 29, 37, 0.05);
+}
+.metric {
+  padding: 18px 20px;
+}
+.metric .lbl {
+  font-size: 13px;
+  color: #6d7175;
+}
+.metric .val {
+  font-size: 30px;
+  font-weight: 700;
+  margin-top: 6px;
+  letter-spacing: -0.01em;
+}
+.metric .val.g {
+  color: #197a3e;
+}
+.metric .delta {
+  font-size: 12.5px;
+  color: #197a3e;
+  margin-top: 6px;
+  font-weight: 600;
+}
+.pill {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+.pill.ok {
+  background: #e3f1e6;
+  color: #197a3e;
+}
+.pill.off {
+  background: #ebebeb;
+  color: #6d7175;
+}
+.pill.type {
+  background: #eaf0fb;
+  color: #2c5ecc;
+}

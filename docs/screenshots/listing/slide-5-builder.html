@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Listing 5 — Campaign builder</title>
+<link rel="stylesheet" href="frame.css">
+<style>
+  .browser { top: 214px; left: 76px; width: 1128px; height: 520px; }
+  .viewport { height: 476px; }
+  .builder { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12.5px; color: #6d7175; margin-bottom: 6px; }
+  .input { border: 1px solid #c9cccf; border-radius: 8px; padding: 9px 12px; font-size: 13.5px; color: #202223; background: #fff; }
+  .input.full { display: block; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .swatches { display: flex; gap: 8px; margin-top: 2px; }
+  .sw { width: 30px; height: 30px; border-radius: 7px; border: 2px solid transparent; }
+  .sw.on { border-color: #202223; }
+  .preview-panel { background: #f1f2f3; border: 1px solid #e1e3e5; border-radius: 12px; padding: 16px; }
+  .preview-panel .pt { font-size: 12px; color: #6d7175; margin-bottom: 12px; font-weight: 600; letter-spacing: 0.02em; }
+  /* mini live-bar preview */
+  .mini-bar { background: #111; color: #fff; border-radius: 9px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .mini-bar .m { font-size: 13px; font-weight: 700; }
+  .mini-bar .m i { margin-right: 6px; }
+  .mini-digits { display: flex; gap: 8px; }
+  .mini-digits div { background: #1e1e1e; border-radius: 6px; padding: 6px 0; width: 40px; text-align: center; }
+  .mini-digits b { display: block; font-size: 16px; font-weight: 800; color: #f5c518; line-height: 1; }
+  .mini-digits small { font-size: 7.5px; letter-spacing: 0.1em; color: #9a9a9a; }
+  .mini-cta { align-self: flex-start; background: #f5c518; color: #111; font-size: 11px; font-weight: 800; padding: 7px 14px; border-radius: 6px; }
+  .adm-h .save { float: right; background: #197a3e; color: #fff; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 8px; }
+  .tmpl { display: flex; gap: 8px; margin-top: 4px; }
+  .tmpl div { flex: 1; height: 30px; border-radius: 6px; }
+</style></head>
+<body>
+  <div class="band" style="top: 54px;">
+    <span class="eyebrow">Campaign builder</span>
+    <h1>Launch a campaign <em>in two minutes.</em></h1>
+  </div>
+
+  <div class="browser">
+    <div class="chrome"><div class="dots"><i></i><i></i><i></i></div>
+      <div class="url"><span class="lock">🔒</span>admin.shopify.com/store/aurora-co/apps/countdown-timer-bar/campaigns/new</div></div>
+    <div class="viewport">
+      <div class="adm">
+        <div class="adm-nav">
+          <div class="store"><i></i> Aurora &amp; Co</div>
+          <a><span class="ic"></span> Home</a>
+          <a><span class="ic"></span> Orders</a>
+          <a><span class="ic"></span> Products</a>
+          <div class="sec">Countdown Timer Bar</div>
+          <a><span class="ic"></span> Dashboard</a>
+          <a class="on"><span class="ic"></span> Campaigns</a>
+          <a><span class="ic"></span> Analytics</a>
+          <a><span class="ic"></span> Plan</a>
+        </div>
+        <div class="adm-main">
+          <div class="adm-h">New announcement bar <span class="save">Create campaign</span></div>
+          <div class="builder">
+            <div>
+              <div class="card" style="padding:16px 18px; margin-bottom:14px;">
+                <div class="field"><label>Bar message</label><div class="input full">Black Friday Early Access — up to 40% off sitewide</div></div>
+                <div class="row2">
+                  <div class="field"><label>Discount code</label><div class="input">BF40</div></div>
+                  <div class="field"><label>Button text</label><div class="input">Shop the Sale</div></div>
+                </div>
+              </div>
+              <div class="card" style="padding:16px 18px; margin-bottom:14px;">
+                <div class="field" style="margin-bottom:10px;"><label>Quick-start template</label>
+                  <div class="tmpl">
+                    <div style="background:#111"></div><div style="background:#a80f16"></div>
+                    <div style="background:#288d40"></div><div style="background:#1e3a8a"></div>
+                    <div style="background:linear-gradient(90deg,#f5c518,#e8a90c)"></div>
+                  </div>
+                </div>
+                <div class="field" style="margin-bottom:0;"><label>Bar color</label>
+                  <div class="swatches">
+                    <span class="sw on" style="background:#111"></span>
+                    <span class="sw" style="background:#a80f16"></span>
+                    <span class="sw" style="background:#288d40"></span>
+                    <span class="sw" style="background:#1e3a8a"></span>
+                    <span class="sw" style="background:#6d28d9"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="card" style="padding:16px 18px;">
+                <div class="row2">
+                  <div class="field" style="margin-bottom:0;"><label>Timer type</label><div class="input">One-time countdown ▾</div></div>
+                  <div class="field" style="margin-bottom:0;"><label>Ends</label><div class="input">Nov 28, 2026 · 23:59</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="preview-panel">
+              <div class="pt">LIVE PREVIEW</div>
+              <div class="mini-bar">
+                <div class="m"><i>🔥</i>Black Friday Early Access — up to 40% off</div>
+                <div class="mini-digits">
+                  <div><b>02</b><small>DAYS</small></div><div><b>11</b><small>HRS</small></div>
+                  <div><b>23</b><small>MIN</small></div><div><b>47</b><small>SEC</small></div>
+                </div>
+                <span class="mini-cta">SHOP THE SALE</span>
+              </div>
+              <div style="font-size:11.5px;color:#6d7175;margin-top:12px;line-height:1.5;">Updates as you type — exactly how it appears on your storefront.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <svg class="connectors" width="1280" height="800">
+    <line x1="196" y1="648" x2="980" y2="470"></line><circle cx="980" cy="470" r="4"></circle>
+    <line x1="1084" y1="360" x2="470" y2="430"></line><circle cx="470" cy="430" r="4"></circle>
+  </svg>
+
+  <div class="callout" style="top: 624px; left: 76px;">
+    <span class="num">1</span><div><b>Live preview</b><span>See the exact storefront result while you edit — no guessing</span></div>
+  </div>
+  <div class="callout" style="top: 336px; left: 1000px;">
+    <span class="num">2</span><div><b>Templates &amp; scheduling</b><span>Start from a preset, set start/end dates in any timezone</span></div>
+  </div>
+
+  <div class="wordmark"><span class="mark">⏱</span><span><b>Countdown Timer Bar</b> · Honest urgency for Shopify</span></div>
+  <div class="pageno">05 / 06</div>
+</body></html>
