@@ -1,55 +1,46 @@
-# App Store listing screenshots
+# App Store screenshots
 
-All images are **2560×1600** (Shopify's 1280×800 retina listing spec).
+## ▶ SUBMISSION SET — upload these, in order (`gallery-01…07.png`)
 
-## ▶ Submission set — use these (`listing-*.png`)
+The final Shopify App Store gallery. 1600×900 (Shopify's recommended ratio),
+captured @2x (3200×1800). One design system (`gallery/frame.css`): dark premium
+ground, brand-green accent, a recurring browser/phone frame, one benefit per
+slide, benefit-first headlines, no arrows or callouts. Real product UI only.
 
-Six slides rendered through one shared design system (`listing/frame.css`):
-consistent dark ground, brand-green accent, a recurring browser-frame motif,
-identical headline band, numbered feature callouts with connector lines, and a
-footer wordmark on every slide. This is the set to upload, in order.
+| #   | File             | Benefit (headline)               | Visual                                           |
+| --- | ---------------- | -------------------------------- | ------------------------------------------------ |
+| 1   | `gallery-01.png` | Honest urgency that converts     | Announcement bar live on a store                 |
+| 2   | `gallery-02.png` | Urgency where they decide        | Product-page timer above Add to Cart             |
+| 3   | `gallery-03.png` | Rescue carts before they're gone | Cart reservation countdown                       |
+| 4   | `gallery-04.png` | Proof, not guesswork             | Built-in analytics — real impressions/clicks/CTR |
+| 5   | `gallery-05.png` | Matches your brand in seconds    | Three real bar renders (one widget, three looks) |
+| 6   | `gallery-06.png` | Live in two minutes              | Campaign builder with live preview               |
+| 7   | `gallery-07.png` | Flawless on mobile, too          | Responsive storefront on a phone                 |
 
-| #   | File                              | Headline                           | Feature callouts                                             |
-| --- | --------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
-| 1   | `listing-01-announcement-bar.png` | Real urgency, honest timers        | Server-side countdown · one-tap discount code · built-in CTA |
-| 2   | `listing-02-product-timer.png`    | Urgency where they decide          | Five display styles · smart targeting                        |
-| 3   | `listing-03-cart-timer.png`       | Rescue abandoned carts             | Reserved-cart countdown · rules on expiry                    |
-| 4   | `listing-04-analytics.png`        | See what your timers actually earn | Impressions/clicks/CTR · 30-day trends                       |
-| 5   | `listing-05-campaign-builder.png` | Launch a campaign in two minutes   | Live preview · templates & scheduling                        |
-| 6   | `listing-06-every-look.png`       | One app, every look                | Three real widget renders (BFCM / brand / final-hours)       |
+**Accuracy:** every frame is real product UI. Slides 1–3 & 7 embed live
+storefront-widget captures; slides 4 & 6 use live admin captures (real seeded
+data — 37,271 impressions · 1,926 clicks · 5.2% CTR) with dev-mode chrome
+cropped out; slide 5 stacks three genuine live bar renders. No mockups, no
+invented features, no arrows/callouts.
 
-**What's real vs. designed:** Slides 1–3 and 6 embed genuine captures of the
-live widget (real extension code against the running app). Slides 4–5 are
-Polaris-faithful renders of the admin UI built from the **real seeded data**
-(92,838 impressions · 4,716 clicks · 5.1% CTR — the actual analytics values).
-Swap in pixel-exact admin captures from a logged-in session anytime; see below.
-
-## Source captures (`01`–`05`, kept for reference / reuse)
-
-`01`–`04` are the raw full-page storefront captures embedded inside slides 1–3
-and the mobile shot. `05-black-friday-showcase.png` is the earlier standalone
-BF collage (superseded by `listing-06` for consistency, kept as an alt promo).
-
-## Regenerating
+### Regenerating the gallery
 
 ```shell
-PORT=3100 npm run start                 # app API (any port; matches data-api-url)
+PORT=3100 npm run start                 # app API
 python -m http.server 8899              # serve repo root
-# seed demo campaigns + 30d analytics for demo-store.myshopify.com (see git history)
-node docs/screenshots/capture.mjs               # raw storefront 01-04
-node docs/screenshots/listing/capture-bars.mjs  # real bar variants for slide 6
-node docs/screenshots/listing/capture-listing.mjs  # the six listing-*.png slides
+node docs/screenshots/gallery/prep-admin.mjs     # clean dev chrome from admin/*
+node docs/screenshots/listing/capture-bars.mjs   # real bar variants (bar-*.png)
+node docs/screenshots/gallery/capture.mjs        # → gallery-01…07.png
 ```
 
-- `listing/frame.css` — shared design system for all slides
-- `listing/slide-*.html` — one file per slide (edit copy/callouts here)
-- `demo-storefront.html` — realistic storefront harness (product/cart via `?view=`)
-- Set the bar campaign's animation to `none` before capturing so digits are crisp.
+Edit copy/layout in `gallery/slide-*.html`; shared styling in `gallery/frame.css`.
 
-## Optional: pixel-exact admin captures
+## Source & raw assets (not for direct upload)
 
-To replace the slide 4–5 admin renders with real screenshots, open the app on a
-dev store with `FORCE_PRO_PLAN=true` (Pro UI, no locks) and capture at a
-1280×800 viewport: Dashboard (`/app`), Analytics (`/app/analytics`),
-Campaign editor (`/app/campaigns/new/bar`), Campaigns list (`/app/campaigns`).
-Drop them into the `.viewport` of the matching slide and re-run the capture.
+- `01`–`04-storefront-*.png` — raw full-page storefront widget captures
+- `admin/*.jpg` — raw live admin captures (carry dev-mode chrome)
+- `gallery/assets/adm-*.png` — admin captures with dev chrome cropped
+- `listing/bar-{black,green,crimson}.png` — real single-bar renders
+- `demo-storefront.html` — storefront capture harness (product/cart via `?view=`)
+- `listing-*.png`, `05-black-friday-showcase.png` — earlier explorations,
+  **superseded** by the `gallery-*` set; kept for reference only.

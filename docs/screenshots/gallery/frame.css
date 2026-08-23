@@ -1,0 +1,242 @@
+/* ============================================================================
+   Shopify App Store gallery — shared design system.
+   Canvas 1600×900 (Shopify's recommended screenshot ratio), captured @2x.
+   One benefit per slide · no arrows/callouts · real product UI only.
+   Cohesion: identical ground, type scale, accent, framing, wordmark.
+   ============================================================================ */
+
+:root {
+  --bg-0: #0a0f0d;
+  --accent: #35c26e; /* brand green, tuned for on-dark legibility */
+  --accent-deep: #1f8f4c;
+  --ink: #f3f7f5;
+  --muted: #9db2a8;
+  --hair: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html,
+body {
+  width: 1600px;
+  height: 900px;
+  overflow: hidden;
+}
+
+body {
+  position: relative;
+  font-family:
+    "Segoe UI",
+    -apple-system,
+    system-ui,
+    Roboto,
+    Helvetica,
+    sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(70% 80% at 88% -8%, rgba(53, 194, 110, 0.18) 0%, transparent 55%),
+    radial-gradient(60% 70% at -5% 110%, rgba(53, 194, 110, 0.1) 0%, transparent 55%),
+    linear-gradient(158deg, #0d1411 0%, #0a0e0c 58%, #070a09 100%);
+}
+body::before {
+  /* faint grid, masked to center */
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  -webkit-mask-image: radial-gradient(120% 120% at 55% 45%, #000 50%, transparent 100%);
+  mask-image: radial-gradient(120% 120% at 55% 45%, #000 50%, transparent 100%);
+}
+body::after {
+  /* vignette for depth */
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(135% 130% at 60% 45%, transparent 60%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+/* ── Copy column (identical placement every slide) ───────────────────────── */
+.copy {
+  position: absolute;
+  left: 100px;
+  top: 0;
+  bottom: 0;
+  width: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 5;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.eyebrow::before {
+  content: "";
+  width: 30px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+h1 {
+  font-size: 60px;
+  line-height: 1.03;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+.sub {
+  margin-top: 22px;
+  font-size: 20px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 27ch;
+}
+
+/* ── Wordmark + counter (identical every slide) ──────────────────────────── */
+.wordmark {
+  position: absolute;
+  left: 100px;
+  bottom: 54px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wordmark .mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  background: linear-gradient(145deg, var(--accent), var(--accent-deep));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  box-shadow: 0 6px 18px -6px rgba(53, 194, 110, 0.6);
+}
+.wordmark .wm-txt b {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+}
+.wordmark .wm-txt span {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.counter {
+  position: absolute;
+  right: 60px;
+  bottom: 56px;
+  z-index: 5;
+  font-size: 14px;
+  letter-spacing: 0.28em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.counter b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* ── Screen frame (browser) that holds real UI ───────────────────────────── */
+.stage {
+  position: absolute;
+  z-index: 3;
+}
+.screen {
+  border-radius: 18px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--hair);
+  box-shadow:
+    0 60px 120px -40px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 0 90px -30px rgba(53, 194, 110, 0.22);
+}
+.chrome {
+  height: 42px;
+  background: #0e1512;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px;
+  border-bottom: 1px solid #17211c;
+}
+.chrome .dots {
+  display: flex;
+  gap: 8px;
+}
+.chrome .dots i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: block;
+}
+.chrome .dots i:nth-child(1) {
+  background: #ff5f57;
+}
+.chrome .dots i:nth-child(2) {
+  background: #febc2e;
+}
+.chrome .dots i:nth-child(3) {
+  background: #28c840;
+}
+.chrome .url {
+  flex: 1;
+  height: 25px;
+  border-radius: 7px;
+  background: #08100c;
+  border: 1px solid #1c2a23;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  font:
+    12.5px Consolas,
+    monospace;
+  color: #7f978a;
+}
+.chrome .url .lk {
+  color: var(--accent);
+  font-size: 10.5px;
+}
+.shot {
+  display: block;
+  width: 100%;
+}
+.shot.cover {
+  object-fit: cover;
+}
+
+/* soft green key-light behind the framed UI */
+.glow {
+  position: absolute;
+  z-index: 2;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(53, 194, 110, 0.3) 0%, transparent 70%);
+  filter: blur(30px);
+  pointer-events: none;
+}
