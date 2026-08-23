@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Black Friday showcase — listing hero</title>
+<!--
+  Marketing hero collage for the App Store listing (first promo image style).
+  A tilted masonry of Black Friday timer-bar and timer-card designs the app
+  can produce. Static by design — capture at 1280x800 @2x via capture-bf.mjs.
+-->
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1280px; height: 800px; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", -apple-system, system-ui, sans-serif;
+    background:
+      radial-gradient(90% 120% at 8% 0%, #3a1010 0%, transparent 55%),
+      radial-gradient(100% 130% at 100% 100%, #2c1c02 0%, transparent 55%),
+      linear-gradient(150deg, #1c0f08 0%, #120c14 48%, #0b0b0f 100%);
+    position: relative;
+  }
+  body::after { /* soft vignette + grain-ish glow */
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(60% 60% at 50% 42%, rgba(245,197,24,0.10), transparent 70%),
+      radial-gradient(120% 120% at 50% 50%, transparent 60%, rgba(0,0,0,0.55) 100%);
+  }
+
+  .plane {
+    position: absolute; left: 50%; top: 50%;
+    width: 1560px;
+    transform: translate(-50%, -50%) rotate(-7deg);
+    display: flex; flex-direction: column; gap: 26px;
+  }
+  .row { display: flex; gap: 26px; align-items: stretch; }
+  .row.shift-l { margin-left: -70px; }
+  .row.shift-r { margin-left: -10px; }
+
+  .tile { border-radius: 14px; overflow: hidden; flex-shrink: 0;
+    box-shadow: 0 30px 60px -25px rgba(0,0,0,0.65); position: relative; }
+
+  /* ── shared timer atoms ─────────────────────────────── */
+  .digits { display: flex; align-items: baseline; gap: 10px; }
+  .digits .sep { font-weight: 800; opacity: 0.55; }
+  .unit { text-align: center; }
+  .unit b { display: block; font-size: 34px; font-weight: 800; letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums; line-height: 1; }
+  .unit small { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; opacity: 0.72; margin-top: 5px; }
+
+  .chips { display: flex; gap: 9px; }
+  .chip { border-radius: 9px; padding: 10px 0 8px; width: 58px; text-align: center; }
+  .chip b { display: block; font-size: 23px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  .chip small { display: block; font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px; opacity: 0.75; }
+
+  .btn { display: inline-block; padding: 12px 26px; border-radius: 8px; font-weight: 800;
+    font-size: 13.5px; letter-spacing: 0.07em; text-transform: uppercase; }
+
+  /* ── Row 1 ─────────────────────────────────────────── */
+  .bar-red { background: linear-gradient(90deg, #a80f16, #d3232b); color: #fff;
+    display: flex; align-items: center; gap: 34px; padding: 24px 40px 24px 280px; width: 860px; }
+  .bar-red .headline b { display: block; font-size: 25px; font-weight: 800; letter-spacing: 0.01em; }
+  .bar-red .headline span { font-size: 13px; opacity: 0.85; }
+  .bar-red .unit b { color: #ffe600; }
+  .bar-red .btn { background: #ffe600; color: #1a1200; margin-left: auto; }
+
+  .card-cream { background: #f4ecdd; color: #171310; width: 330px; padding: 28px 30px; }
+  .card-cream .kick { font-size: 11px; font-weight: 700; letter-spacing: 0.26em; color: #a8131a; margin-bottom: 6px; }
+  .card-cream h3 { font-size: 31px; font-weight: 900; letter-spacing: 0.02em; margin-bottom: 16px; }
+  .card-cream .chip { background: #171310; color: #f4ecdd; }
+  .card-cream .chip b { color: #f5c518; }
+
+  .tile-gold { background: linear-gradient(160deg, #f5c518, #e8a90c); color: #191100;
+    width: 440px; padding: 26px 30px; display: flex; flex-direction: column; justify-content: space-between; }
+  .tile-gold h3 { font-size: 34px; font-weight: 900; letter-spacing: -0.01em; line-height: 1.02; }
+  .tile-gold p { font-size: 13px; font-weight: 600; margin-top: 6px; opacity: 0.8; }
+  .tile-gold .foot { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
+  .tile-gold .digits b { font-size: 27px; }
+  .tile-gold .btn { background: #171004; color: #f5c518; }
+
+  /* ── Row 2 ─────────────────────────────────────────── */
+  .card-lux { background:
+      radial-gradient(120% 100% at 85% 0%, #2c1a06 0%, transparent 60%),
+      linear-gradient(155deg, #191512, #0c0a09 70%);
+    color: #e9dbb8; width: 560px; padding: 34px 38px; border: 1px solid rgba(212,175,55,0.35); }
+  .card-lux .kick { font-family: Georgia, serif; font-style: italic; font-size: 16px; color: #d4af37; margin-bottom: 4px; }
+  .card-lux h3 { font-family: Georgia, serif; font-size: 40px; font-weight: 700; letter-spacing: 0.05em; color: #f3e5c0; }
+  .card-lux .digits { margin-top: 20px; }
+  .card-lux .unit b { font-family: Georgia, serif; font-size: 52px; font-weight: 700; color: #f5c518; }
+  .card-lux .sep { font-family: Georgia, serif; font-size: 40px; color: #d4af37; }
+  .card-lux .rule { height: 1px; background: linear-gradient(90deg, transparent, #d4af37, transparent); margin: 22px 0 14px; }
+  .card-lux .foot { display: flex; justify-content: space-between; font-size: 11.5px; letter-spacing: 0.22em; text-transform: uppercase; color: #9d8b60; }
+
+  .tile-spot { width: 560px; background:
+      linear-gradient(115deg, transparent 42%, rgba(245,197,24,0.09) 47%, transparent 55%),
+      radial-gradient(85% 100% at 65% 22%, #57400f 0%, #241a08 46%, #0d0a05 100%);
+    color: #fff; padding: 30px 38px 34px; display: flex; flex-direction: column; justify-content: space-between; }
+  .tile-spot .badge { align-self: flex-start; font-size: 10.5px; font-weight: 800; letter-spacing: 0.22em;
+    color: #f5c518; border: 1px solid rgba(245,197,24,0.55); border-radius: 999px; padding: 7px 14px; }
+  .tile-spot h3 { font-size: 44px; font-weight: 900; letter-spacing: -0.015em; line-height: 1.0;
+    text-shadow: 0 6px 30px rgba(0,0,0,0.6); }
+  .tile-spot h3 em { font-style: normal; color: #f5c518; }
+  .tile-spot .chips { margin-top: 18px; }
+  .tile-spot .chip { background: rgba(255,255,255,0.10); backdrop-filter: blur(2px);
+    border: 1px solid rgba(255,255,255,0.22); color: #fff; width: 54px; }
+
+  .card-code { background: #101014; color: #fff; width: 430px; padding: 28px 30px;
+    border: 1px solid #26262e; }
+  .card-code .kick { font-size: 11px; font-weight: 700; letter-spacing: 0.24em; color: #f5c518; margin-bottom: 8px; }
+  .card-code h3 { font-size: 27px; font-weight: 800; margin-bottom: 16px; }
+  .card-code .code { display: inline-flex; align-items: center; border: 1.5px dashed #f5c518; border-radius: 9px; overflow: hidden; margin-bottom: 18px; }
+  .card-code .code span { padding: 9px 16px; font-family: Consolas, monospace; font-weight: 700; letter-spacing: 0.14em; color: #f5c518; }
+  .card-code .code b { padding: 9px 16px; background: #f5c518; color: #191100; font-size: 12.5px; }
+  .card-code .digits b { font-size: 25px; color: #fff; }
+
+  /* ── Row 3 ─────────────────────────────────────────── */
+  .bar-ticking { background: linear-gradient(90deg, #170f20, #2e1650); color: #fff;
+    display: flex; align-items: center; gap: 36px; padding: 26px 42px 26px 300px; width: 950px; }
+  .bar-ticking .headline b { display: block; font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: 0.01em; color: #ffe600; }
+  .bar-ticking .headline span { font-size: 13px; opacity: 0.8; }
+  .bar-ticking .unit b { font-size: 38px; color: #ffe600; }
+  .bar-ticking .sep { font-size: 34px; color: #ffe600; }
+
+  .strip-gold { background: linear-gradient(90deg, #f5c518, #eda60e); color: #191100;
+    display: flex; align-items: center; gap: 26px; padding: 24px 38px; width: 820px; }
+  .strip-gold b { font-size: 22px; font-weight: 900; }
+  .strip-gold span { font-size: 13px; font-weight: 600; opacity: 0.8; }
+  .strip-gold .digits { margin-left: auto; }
+  .strip-gold .unit b { font-size: 26px; }
+
+  .bar-dark { background: #0d0d0f; color: #fff; border: 1px solid #232327;
+    display: flex; align-items: center; gap: 24px; padding: 22px 30px; width: 470px; }
+  .bar-dark .msg { font-size: 16.5px; font-weight: 700; }
+  .bar-dark .msg i { font-style: normal; margin-right: 9px; }
+  .bar-dark .chips { margin-left: auto; }
+  .bar-dark .chip { background: #1d1d22; color: #fff; width: 48px; padding: 8px 0 7px; }
+  .bar-dark .chip b { font-size: 19px; color: #f5c518; }
+  .bar-dark .btn { background: #fff; color: #111; padding: 10px 20px; font-size: 12px; }
+</style>
+</head>
+<body>
+  <div class="plane">
+
+    <div class="row shift-l">
+      <div class="tile bar-red">
+        <div class="headline"><b>Final Hours</b><span>Last chance to order</span></div>
+        <div class="digits">
+          <span class="unit"><b>08</b><small>Hours</small></span><span class="sep">:</span>
+          <span class="unit"><b>16</b><small>Mins</small></span><span class="sep">:</span>
+          <span class="unit"><b>24</b><small>Sec</small></span>
+        </div>
+        <span class="btn">Shop now</span>
+      </div>
+      <div class="tile card-cream">
+        <div class="kick">November 28 only</div>
+        <h3>BLACK FRIDAY</h3>
+        <div class="chips">
+          <span class="chip"><b>02</b><small>Days</small></span>
+          <span class="chip"><b>23</b><small>Hours</small></span>
+          <span class="chip"><b>59</b><small>Mins</small></span>
+          <span class="chip"><b>41</b><small>Sec</small></span>
+        </div>
+      </div>
+      <div class="tile tile-gold">
+        <div><h3>Doorbusters<br>up to 70% off</h3><p>While stock lasts — no restocks</p></div>
+        <div class="foot">
+          <div class="digits">
+            <span class="unit"><b>11</b><small>Hrs</small></span><span class="sep">:</span>
+            <span class="unit"><b>42</b><small>Min</small></span><span class="sep">:</span>
+            <span class="unit"><b>08</b><small>Sec</small></span>
+          </div>
+          <span class="btn">Shop now</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row shift-r">
+      <div class="tile card-lux">
+        <div class="kick">The annual event</div>
+        <h3>BLACK FRIDAY</h3>
+        <div class="digits">
+          <span class="unit"><b>02</b><small>Days</small></span><span class="sep">:</span>
+          <span class="unit"><b>23</b><small>Hours</small></span><span class="sep">:</span>
+          <span class="unit"><b>54</b><small>Minutes</small></span><span class="sep">:</span>
+          <span class="unit"><b>28</b><small>Seconds</small></span>
+        </div>
+        <div class="rule"></div>
+        <div class="foot"><span>Members early access</span><span>Shop the edit →</span></div>
+      </div>
+      <div class="tile tile-spot">
+        <span class="badge">BFCM WEEKEND</span>
+        <div>
+        <h3>The sale is <em>now</em></h3>
+        <div class="chips">
+          <span class="chip"><b>2</b><small>Days</small></span>
+          <span class="chip"><b>8</b><small>Hrs</small></span>
+          <span class="chip"><b>16</b><small>Min</small></span>
+          <span class="chip"><b>24</b><small>Sec</small></span>
+        </div>
+        </div>
+      </div>
+      <div class="tile card-code">
+        <div class="kick">Extra 30% off sitewide</div>
+        <h3>Stack the code</h3>
+        <div class="code"><span>BF30</span><b>COPY</b></div>
+        <div class="digits">
+          <span class="unit"><b>06</b><small>Hours</small></span><span class="sep">:</span>
+          <span class="unit"><b>39</b><small>Mins</small></span><span class="sep">:</span>
+          <span class="unit"><b>36</b><small>Sec</small></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-left:-95px">
+      <div class="tile bar-ticking">
+        <div class="headline"><b>Time is ticking</b><span>Black Friday ends in:</span></div>
+        <div class="digits">
+          <span class="unit"><b>02</b><small>Days</small></span><span class="sep">:</span>
+          <span class="unit"><b>23</b><small>Hours</small></span><span class="sep">:</span>
+          <span class="unit"><b>59</b><small>Minutes</small></span><span class="sep">:</span>
+          <span class="unit"><b>38</b><small>Seconds</small></span>
+        </div>
+      </div>
+      <div class="tile bar-dark">
+        <div class="msg"><i>🔥</i>Black Friday early access</div>
+        <div class="chips">
+          <span class="chip"><b>16</b><small>Min</small></span>
+          <span class="chip"><b>24</b><small>Sec</small></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-left:660px">
+      <div class="tile strip-gold">
+        <b>Ends tonight</b><span>Free shipping on every Black Friday order over $75</span>
+        <div class="digits">
+          <span class="unit"><b>05</b><small>Hrs</small></span><span class="sep">:</span>
+          <span class="unit"><b>12</b><small>Min</small></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

@@ -5,12 +5,13 @@ screenshot plan and caption rules). All desktop shots are **2560×1600**
 (Shopify's 1280×800 retina spec) — real widget code rendered against the real
 API, not mockups.
 
-| File                                 | Shows                                                                       | Suggested caption (from APP_LISTING.md)                 |
-| ------------------------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `01-storefront-bar-black-friday.png` | Announcement bar: dark BFCM theme, live countdown, BF40 copy-code chip, CTA | "Grab shoppers' attention with a bold announcement bar" |
-| `02-storefront-product-timer.png`    | Product-page timer (card style) above Add to cart                           | "Urgency right where customers decide"                  |
-| `03-storefront-cart-timer.png`       | Cart reservation timer over a 2-item cart                                   | "Recover carts with a reservation countdown"            |
-| `04-storefront-mobile.png`           | Mobile product page (390×844 @3x), bar + timer stacked                      | "Beautiful on every device and theme"                   |
+| File                                 | Shows                                                                                       | Suggested caption (from APP_LISTING.md)                  |
+| ------------------------------------ | ------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `01-storefront-bar-black-friday.png` | Announcement bar: dark BFCM theme, live countdown, BF40 copy-code chip, CTA                 | "Grab shoppers' attention with a bold announcement bar"  |
+| `02-storefront-product-timer.png`    | Product-page timer (card style) above Add to cart                                           | "Urgency right where customers decide"                   |
+| `03-storefront-cart-timer.png`       | Cart reservation timer over a 2-item cart                                                   | "Recover carts with a reservation countdown"             |
+| `04-storefront-mobile.png`           | Mobile product page (390×844 @3x), bar + timer stacked                                      | "Beautiful on every device and theme"                    |
+| `05-black-friday-showcase.png`       | Hero collage: tilted masonry of Black Friday bar/card designs (marketing-style promo image) | Use as the first/promo image — style variety at a glance |
 
 ## Regenerating
 
@@ -26,7 +27,8 @@ python -m http.server 8899
 node docs/screenshots/capture.mjs
 ```
 
-`demo-storefront.html` is the harness — a realistic storefront page (product +
+`bf-showcase.html` is the hero-collage source (static, hand-designed;
+capture with `node docs/screenshots/capture-bf.mjs`). `demo-storefront.html` is the harness — a realistic storefront page (product +
 cart views via `?view=`) that loads the real extension assets from
 `extensions/countdown-bar/assets/`. Set the bar campaign's animation to
 `none` before capturing so digits are never mid-flip.
