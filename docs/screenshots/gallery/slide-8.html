@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>8</title><link rel="stylesheet" href="frame.css">
+<style>
+  /* Full-bleed occasions collage (rendered separately) + gallery chrome for set cohesion. */
+  .bleed { position: absolute; inset: 0; z-index: 1; }
+  .bleed img { width: 1600px; height: 900px; display: block; }
+  /* top scrim keeps the headline legible without touching the first tile row */
+  .scrim-top { position: absolute; left: 0; top: 0; right: 0; height: 168px; z-index: 2;
+    background: linear-gradient(180deg, rgba(4,6,5,0.86) 0%, rgba(4,6,5,0.5) 55%, transparent 100%); pointer-events: none; }
+  .scrim-bl { position: absolute; left: 0; bottom: 0; width: 560px; height: 150px; z-index: 2;
+    background: radial-gradient(120% 130% at 0% 100%, rgba(4,6,5,0.8) 0%, transparent 70%); pointer-events: none; }
+  .scrim-br { position: absolute; right: 0; bottom: 0; width: 360px; height: 130px; z-index: 2;
+    background: radial-gradient(120% 130% at 100% 100%, rgba(4,6,5,0.7) 0%, transparent 70%); pointer-events: none; }
+
+  .copy8 { position: absolute; left: 100px; top: 50px; z-index: 5; width: 1000px; }
+  .copy8 h1 { font-size: 46px; line-height: 1.0; }
+</style></head><body>
+  <div class="bleed"><img src="../occasions-showcase.png" alt=""></div>
+  <div class="scrim-top"></div>
+  <div class="scrim-bl"></div>
+  <div class="scrim-br"></div>
+
+  <div class="copy8">
+    <div class="eyebrow">For every occasion</div>
+    <h1>One widget for every <em>big sale.</em></h1>
+  </div>
+
+  <div class="wordmark"><span class="mark">⏱</span><span class="wm-txt"><b>Countdown Timer Bar</b><span>Honest urgency for Shopify</span></span></div>
+  <div class="counter"><b>08</b> — 08</div>
+</body></html>
