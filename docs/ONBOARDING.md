@@ -10,7 +10,7 @@ The onboarding wizard appears immediately after a merchant installs the app. It 
 
 **Goal:** Merchant sets up their first sale event with a real end date.
 
-**UI:** Link to `/app` (settings page). Steps 1 and 2 are completed together.
+**UI:** Link to `/app/campaigns/new` (campaign creation). Steps 1 and 2 are completed together.
 
 **Completion trigger:** When merchant saves their first valid campaign with a future end date, `OnboardingState.step1Complete` and `step2Complete` are set to `true`.
 
@@ -24,7 +24,7 @@ The onboarding wizard appears immediately after a merchant installs the app. It 
 
 **Goal:** Merchant customizes colors and position.
 
-**UI:** Part of the settings page (same form as Step 1). Completed simultaneously with Step 1.
+**UI:** Part of the campaign creation form (same form as Step 1). Completed simultaneously with Step 1.
 
 **Completion trigger:** Same as Step 1.
 
@@ -45,7 +45,7 @@ The onboarding wizard appears immediately after a merchant installs the app. It 
 When all 3 steps are complete:
 
 - Show success Banner: "Your countdown timer is live!"
-- Show "View Settings" CTA
+- Show "Go to Dashboard" CTA (→ `/app`)
 - `OnboardingState.completedAt` stamped with current timestamp
 
 ## Re-entry
@@ -54,7 +54,7 @@ If merchant leaves the wizard incomplete, they see the wizard again on next visi
 
 ## Post-Onboarding
 
-After onboarding is complete, the wizard route redirects to `/app/analytics` so merchants immediately see their (initially empty) analytics dashboard.
+After onboarding is complete, the wizard route redirects to `/app` (the dashboard) so merchants land on their campaign overview.
 
 ## Psychology Notes
 

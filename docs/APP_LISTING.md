@@ -22,18 +22,20 @@ Rules: Descriptive, keyword-rich, no superlatives ("best", "only", "#1").
 - **Works on all themes.** Built on Shopify's Theme App Blocks — no code injected into your theme files.
 - **Fully customizable.** Choose colors, position (top or bottom), message, and what happens when the timer ends.
 
-## Screenshots Plan
+## Screenshots
 
-All screenshots: 1280×800 (or 2560×1600 for retina). Show real UI, no mockups.
+The submission set is the shipped 8-slide gallery (`gallery-01…08.png`, 1600×900
+@2x, real product UI only). See [`docs/screenshots/README.md`](./screenshots/README.md)
+for the authoritative list, captions, and regeneration steps. Upload the slides in order:
 
-| #   | Screen                                                  | Caption                                                 |
-| --- | ------------------------------------------------------- | ------------------------------------------------------- |
-| 1   | Analytics dashboard with metrics                        | "See impressions, clicks, and CTR for every campaign"   |
-| 2   | Countdown bar on a live storefront (Dawn theme, mobile) | "Beautiful on every device and theme"                   |
-| 3   | Settings form with live preview                         | "Customize everything in real time"                     |
-| 4   | Onboarding wizard step 3 complete                       | "Live in under 2 minutes"                               |
-| 5   | Campaigns list with active/paused states                | "Manage multiple sale campaigns"                        |
-| 6   | Countdown bar on desktop storefront                     | "Grab shoppers' attention with a bold announcement bar" |
+1. Honest urgency that converts — announcement bar live on a store
+2. Urgency where they decide — product-page timer above Add to Cart
+3. Show timers where you want — targeting rule (admin) → the timer live on the product page
+4. Proof, not guesswork — built-in analytics (real impressions/clicks/CTR)
+5. Matches your brand in seconds — three real bar renders (one widget, three looks)
+6. Live in two minutes — campaign builder with live preview
+7. Flawless on mobile, too — responsive storefront on a phone
+8. Built for every big sale — occasion collage of nine real widget renders
 
 ## Preview Video (60 seconds)
 

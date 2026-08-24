@@ -85,9 +85,12 @@ Shopify Billing API. See [docs/PRICING.md](docs/PRICING.md) for strategy and
 
 ## Docs
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system design
-- [docs/QA-TESTING-GUIDE.md](docs/QA-TESTING-GUIDE.md) — full manual QA checklist
-- [docs/APP_LISTING.md](docs/APP_LISTING.md) — App Store listing plan
-- [docs/COMPLIANCE.md](docs/COMPLIANCE.md) — GDPR / protected data handling
-- [docs/SECURITY.md](docs/SECURITY.md) — security posture
+Full index: **[docs/README.md](docs/README.md)**. Highlights:
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — system design & data flow
+- [docs/DEVELOPER.md](docs/DEVELOPER.md) — local setup, structure, scripts
+- [docs/PRICING.md](docs/PRICING.md) — pricing strategy (source of truth)
+- [docs/QA-TESTING-GUIDE.md](docs/QA-TESTING-GUIDE.md) — full manual QA runbook
+- [docs/SECURITY.md](docs/SECURITY.md) / [docs/COMPLIANCE.md](docs/COMPLIANCE.md) — security & GDPR posture
 - [docs/RELEASE.md](docs/RELEASE.md) / [docs/ROLLBACK.md](docs/ROLLBACK.md) — ship & unship
+- [docs/screenshots/README.md](docs/screenshots/README.md) — App Store gallery

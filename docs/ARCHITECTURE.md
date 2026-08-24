@@ -2,14 +2,15 @@
 
 ## Stack
 
-| Layer      | Technology                                    |
-| ---------- | --------------------------------------------- |
-| Framework  | Remix v2 (full-stack, SSR)                    |
-| Runtime    | Node.js 20+                                   |
-| UI         | Shopify Polaris v12 + App Bridge React v4     |
-| Database   | PostgreSQL + Prisma v6                        |
-| Deployment | Vercel (serverless)                           |
-| Extension  | Shopify Theme App Block (Liquid + Vanilla JS) |
+| Layer      | Technology                                                        |
+| ---------- | ----------------------------------------------------------------- |
+| Framework  | Remix v2 (full-stack, SSR)                                        |
+| Runtime    | Node >=22                                                         |
+| UI         | Shopify Polaris v12 + App Bridge React v4                         |
+| Shopify    | @shopify/shopify-app-remix v5 (SDK v5) · Admin API 2026-07        |
+| Database   | PostgreSQL + Prisma v6                                            |
+| Deployment | Vercel (serverless)                                               |
+| Extension  | Theme App Extension (Liquid + Vanilla JS): 1 embed + 2 app blocks |
 
 ## System Diagram
 
@@ -18,7 +19,7 @@
 │                   Shopify Admin                         │
 │  ┌──────────────────────────────────────────────────┐  │
 │  │   Embedded App (Remix + Polaris)                 │  │
-│  │   /app → Settings, Analytics, Campaigns          │  │
+│  │   /app → Dashboard, Campaigns, Analytics, Billing│  │
 │  └────────────┬─────────────────────────────────────┘  │
 └───────────────│────────────────────────────────────────┘
                 │ Shopify OAuth / session
@@ -42,33 +43,35 @@
 └────────────────────────────────────────────────────────┘
 
 Merchant Storefront:
-┌─────────────────────────────────────────────────────────┐
-│   Theme (Dawn, Debut, etc.)                             │
-│   ┌─────────────────────────────────────────────────┐  │
-│   │   countdown-bar.liquid (App Block)              │  │
-│   │   ↓ loads countdown-bar.js + countdown-bar.css  │  │
-│   │   ↓ fetches /apps/countdown/settings?shop=...   │  │
-│   │   ↓ starts UTC countdown (requestAnimationFrame) │  │
-│   │   ↓ POSTs /apps/countdown/track on events       │  │
-│   └─────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│   Theme (Dawn, Debut, etc.)                                    │
+│   Theme App Extension — 3 storefront surfaces:                 │
+│     • Announcement bar     → app EMBED (countdown-bar.js)      │
+│     • Product-page timer    → app BLOCK (countdown-product.js) │
+│     • Cart reservation timer → app BLOCK (countdown-cart.js)   │
+│                                                                │
+│   Each surface:                                                │
+│     ↓ fetches /apps/countdown/settings?shop=...               │
+│     ↓ starts UTC countdown (requestAnimationFrame)            │
+│     ↓ POSTs /apps/countdown/track on events                  │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ## Data Flow
 
-### Settings Save
+### Campaign Save
 
-1. Merchant fills form → `POST /app` (Remix action)
+1. Merchant creates or edits a campaign → `POST /app/campaigns/new` (create) or `POST /app/campaigns/:id` (edit) — Remix action
 2. Action validates + upserts `Campaign` in PostgreSQL
 3. `apps.countdown.settings` edge cache invalidated (60s TTL)
 
 ### Storefront Render
 
 1. Browser requests store page
-2. `countdown-bar.liquid` block renders static HTML (bar hidden)
-3. `countdown-bar.js` fetches `/apps/countdown/settings?shop=...`
+2. The Theme App Extension surface (announcement-bar embed, product-timer block, or cart-timer block) renders static HTML (timer hidden)
+3. Its widget JS (`countdown-bar.js` / `countdown-product.js` / `countdown-cart.js`) fetches `/apps/countdown/settings?shop=...`
 4. Shopify App Proxy forwards to Vercel → reads `Campaign` from DB
-5. JS applies settings, shows bar, starts rAF countdown from UTC `endDate`
+5. JS applies settings, shows the timer, starts rAF countdown from UTC `endDate`
 6. On impression/click/close: fires `POST /apps/countdown/track`
 
 ## Database Models
@@ -110,7 +113,7 @@ Public (App Proxy). Returns active campaign settings for storefront.
     "barMessage": "Flash Sale Ends In...",
     "buttonText": "Shop Now",
     "buttonUrl": "/collections/all",
-    "endDate": "2024-11-29T23:59:00.000Z",
+    "endDate": "2026-11-27T23:59:00.000Z",
     "barColor": "#288d40",
     "barPosition": "top",
     "endAction": "hide",
@@ -131,11 +134,12 @@ Public (App Proxy). Records analytics events from storefront.
 
 ## Environment Variables
 
-| Variable             | Required | Description                                   |
-| -------------------- | -------- | --------------------------------------------- |
-| `SHOPIFY_API_KEY`    | ✓        | Partner Dashboard app API key                 |
-| `SHOPIFY_API_SECRET` | ✓        | Partner Dashboard app secret                  |
-| `SHOPIFY_APP_URL`    | ✓        | Public HTTPS URL of the app                   |
-| `DATABASE_URL`       | ✓        | PostgreSQL connection string (pooled)         |
-| `DIRECT_URL`         | ✓        | PostgreSQL direct connection (for migrations) |
-| `NODE_ENV`           | ✓        | `production` or `development`                 |
+| Variable             | Required | Description                                                               |
+| -------------------- | -------- | ------------------------------------------------------------------------- |
+| `SHOPIFY_API_KEY`    | ✓        | Partner Dashboard app API key                                             |
+| `SHOPIFY_API_SECRET` | ✓        | Partner Dashboard app secret                                              |
+| `SHOPIFY_APP_URL`    | ✓        | Public HTTPS URL of the app                                               |
+| `DATABASE_URL`       | ✓        | PostgreSQL connection string (pooled)                                     |
+| `DIRECT_URL`         | ✓        | PostgreSQL direct connection (for migrations)                             |
+| `REDIS_URL`          |          | Redis (ioredis) URL for rate limiting; falls back to in-memory when unset |
+| `NODE_ENV`           | ✓        | `production` or `development`                                             |

@@ -67,6 +67,17 @@ A screen reader user will hear:
 - [x] Close button: 44×44px (increased from original 32×32px)
 - [x] CTA button: `min-height: 44px` (meets WCAG target size)
 
+## Product-Page Timer & Cart Reservation Timer
+
+The product-page timer (app block) and cart reservation timer (app block) follow
+the same accessibility patterns as the countdown bar:
+
+- ARIA live regions for the countdown (a polite screen-reader announcement rather
+  than announcing every digit change)
+- Touch targets sized to at least 44×44px
+- `prefers-reduced-motion: reduce` support (decorative animation disabled while the
+  countdown timing keeps running)
+
 ## Testing Tools
 
 - `axe-playwright`: automated accessibility scan in E2E tests

@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Countdown Timer — every major sale, one app</title>
+<!--
+  Marketing collage for the App Store listing: a tilted masonry of the SAME
+  widget the app actually renders, themed for the biggest shopping moments of
+  the year (Black Friday, Cyber Monday, Christmas, New Year, Valentine's,
+  Halloween, Summer, Back to School, free-shipping).
+
+  Every tile is faithful to the real extension anatomy — see
+  extensions/countdown-bar/assets/countdown-bar.css & countdown-product.css:
+    bar     = [icon + message] · [4 units DD:HH:MM:SS w/ labels + ":" seps]
+              · [dashed code chip + Copy] · [CTA button] · [✕ close circle]
+    product = border-left banner with "label + inline d/h/m/s"
+  No invented layouts, no fake digit styles. Capture 1600x900 @2x.
+-->
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1600px; height: 900px; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, system-ui, sans-serif;
+    background:
+      radial-gradient(85% 120% at 4% -8%, #2c1011 0%, transparent 50%),
+      radial-gradient(85% 120% at 100% 108%, #241809 0%, transparent 50%),
+      radial-gradient(70% 90% at 52% 42%, #16131f 0%, transparent 60%),
+      linear-gradient(150deg, #14100b 0%, #0e0b12 50%, #08080b 100%);
+    position: relative;
+  }
+  body::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(52% 52% at 50% 46%, rgba(245,197,24,0.09), transparent 70%),
+      radial-gradient(125% 125% at 50% 50%, transparent 56%, rgba(0,0,0,0.62) 100%);
+  }
+
+  .plane {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -52%) rotate(-3.5deg);
+    display: flex; flex-direction: column; gap: 30px;
+    align-items: center;
+  }
+  .row { display: flex; gap: 26px; align-items: center; }
+
+  /* ── Faithful widget shell ─────────────────────────────────────────── */
+  .tile {
+    border-radius: 14px; flex-shrink: 0; position: relative;
+    box-shadow: 0 34px 70px -30px rgba(0,0,0,0.72), 0 0 0 1px rgba(255,255,255,0.05);
+  }
+
+  /* Announcement bar (.cdb) — the primary surface */
+  .bar {
+    background: var(--bg); color: var(--fg);
+    padding: 17px 20px 17px 26px;
+    display: flex; align-items: center; gap: 18px; width: fit-content;
+  }
+  .bar .content { display: flex; align-items: center; gap: 18px; }
+  .msg { font-size: 16px; font-weight: 600; letter-spacing: 0.2px; white-space: nowrap; display: inline-flex; align-items: center; }
+  .msg .ic { font-size: 1.3em; line-height: 1; margin-right: 8px; }
+
+  .timer { display: flex; align-items: flex-start; gap: 6px; }
+  .u { display: flex; flex-direction: column; align-items: center; min-width: 44px; }
+  .u b { font-size: 24px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: var(--acc, var(--fg)); }
+  .u small { font-size: 9.5px; text-transform: uppercase; margin-top: 3px; opacity: 0.85; font-weight: 500; letter-spacing: 0.5px; }
+  .sep { font-size: 18px; font-weight: 700; opacity: 0.6; margin-top: 2px; }
+
+  .code { display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.15); border: 1px dashed rgba(255,255,255,0.5);
+    border-radius: 6px; padding: 5px 6px 5px 11px; font-size: 13px; }
+  .code .t { font-weight: 700; letter-spacing: 1px; font-family: Consolas, monospace; }
+  .code .c { background: rgba(255,255,255,0.25); border-radius: 4px; padding: 4px 9px; font-size: 11px; font-weight: 600; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
+    padding: 11px 22px; border-radius: 6px; font-weight: 600; font-size: 14px;
+    background: var(--btn-bg, #fff); color: var(--btn-fg, #111); }
+
+  .close { width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; color: var(--fg); }
+  .bar.light .code { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.28); }
+  .bar.light .close { background: rgba(0,0,0,0.12); }
+
+  /* Product-page inline timer (.cdp--banner) */
+  .prod { background: var(--bg); color: var(--fg); border-left: 4px solid var(--acc);
+    border-radius: 10px; padding: 15px 20px; display: flex; flex-direction: column; gap: 6px; width: fit-content; }
+  .prod .plabel { font-size: 13px; font-weight: 600; opacity: 0.82; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .prod .plabel .ic { font-size: 1.25em; }
+  .prod .pdig { display: inline-flex; align-items: baseline; gap: 5px; font-variant-numeric: tabular-nums; }
+  .prod .pdig .pv { font-size: 28px; font-weight: 800; color: var(--acc); line-height: 1; }
+  .prod .pdig .pu { font-size: 15px; font-weight: 700; color: var(--acc); opacity: 0.85; margin-right: 5px; }
+
+  .tag { position: absolute; top: -11px; left: 20px; z-index: 3;
+    font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 999px; background: #0c0c0f; color: #cbd5c8;
+    border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 6px 16px -8px rgba(0,0,0,0.85); }
+</style>
+</head>
+<body>
+  <div class="plane">
+
+    <!-- Row 1 — hero bar + a product-page surface -->
+    <div class="row" style="margin-left:-30px">
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#0b0b0d,#1c1c22); --fg:#fff; --acc:#f5c518; --btn-bg:#f5c518; --btn-fg:#1a1200;">
+        <span class="tag">Black Friday</span>
+        <div class="content">
+          <span class="msg"><span class="ic">🔥</span>Black Friday — 40% off sitewide</span>
+          <div class="timer">
+            <span class="u"><b>02</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>11</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>19</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>30</b><small>Secs</small></span>
+          </div>
+          <span class="code"><span class="t">BF40</span><span class="c">Copy</span></span>
+          <a class="btn">Shop the Sale</a>
+        </div>
+        <button class="close"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      </div>
+
+      <div class="tile prod" style="--bg:linear-gradient(150deg,#1d1109,#120b06); --fg:#ffedd5; --acc:#fb923c;">
+        <span class="tag">Halloween · product page</span>
+        <span class="plabel"><span class="ic">🎃</span>Halloween deal ends in</span>
+        <span class="pdig">
+          <span class="pv">02</span><span class="pu">d</span>
+          <span class="pv">08</span><span class="pu">h</span>
+          <span class="pv">16</span><span class="pu">m</span>
+          <span class="pv">24</span><span class="pu">s</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="row" style="margin-left:70px">
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#1b1350,#0e6f8c); --fg:#fff; --acc:#5eead4;">
+        <span class="tag">Cyber Monday</span>
+        <div class="content">
+          <span class="msg"><span class="ic">💻</span>Cyber Monday · today only</span>
+          <div class="timer">
+            <span class="u"><b>00</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>23</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>42</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>08</b><small>Secs</small></span>
+          </div>
+          <span class="code"><span class="t">CYBER30</span><span class="c">Copy</span></span>
+        </div>
+      </div>
+
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#0b1030,#1a2260); --fg:#fff; --acc:#f5c518;">
+        <span class="tag">New Year</span>
+        <div class="content">
+          <span class="msg"><span class="ic">🎉</span>New Year — save 25%</span>
+          <div class="timer">
+            <span class="u"><b>02</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>23</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>59</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>38</b><small>Secs</small></span>
+          </div>
+          <span class="code"><span class="t">NY25</span><span class="c">Copy</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3 -->
+    <div class="row" style="margin-left:-60px">
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#7d0f18,#5b0a10); --fg:#fff; --acc:#ffd79a; --btn-bg:#f6ecd8; --btn-fg:#5b0a10;">
+        <span class="tag">Christmas</span>
+        <div class="content">
+          <span class="msg"><span class="ic">🎄</span>Holiday Sale — free gift wrap</span>
+          <div class="timer">
+            <span class="u"><b>05</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>23</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>54</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>28</b><small>Secs</small></span>
+          </div>
+          <a class="btn">Shop gifts</a>
+        </div>
+        <button class="close"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      </div>
+
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#be123c,#9d174d); --fg:#fff; --acc:#fecdd3;">
+        <span class="tag">Valentine's Day</span>
+        <div class="content">
+          <span class="msg"><span class="ic">💝</span>Valentine's — 15% off gifts</span>
+          <div class="timer">
+            <span class="u"><b>01</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>08</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>12</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>45</b><small>Secs</small></span>
+          </div>
+          <span class="code"><span class="t">LOVE15</span><span class="c">Copy</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4 -->
+    <div class="row" style="margin-left:40px">
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#ea580c,#f59e0b); --fg:#fff; --acc:#fff7ed; --btn-bg:#fff; --btn-fg:#9a3412;">
+        <span class="tag">Summer Sale</span>
+        <div class="content">
+          <span class="msg"><span class="ic">☀️</span>Summer Flash Sale — ends today</span>
+          <div class="timer">
+            <span class="u"><b>00</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>06</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>39</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>36</b><small>Secs</small></span>
+          </div>
+          <a class="btn">Shop now</a>
+        </div>
+      </div>
+
+      <div class="tile bar" style="--bg:linear-gradient(90deg,#1e3a8a,#1d4ed8); --fg:#fff; --acc:#bfdbfe;">
+        <span class="tag">Back to School</span>
+        <div class="content">
+          <span class="msg"><span class="ic">🎒</span>Back to School — save 10%</span>
+          <div class="timer">
+            <span class="u"><b>03</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>12</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>45</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>10</b><small>Secs</small></span>
+          </div>
+          <span class="code"><span class="t">SCHOOL10</span><span class="c">Copy</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 5 — light bar (dark text), free-shipping use case -->
+    <div class="row" style="margin-left:-20px">
+      <div class="tile bar light" style="--bg:linear-gradient(90deg,#f5c518,#eab308); --fg:#1a1200; --acc:#1a1200;">
+        <span class="tag">Free shipping</span>
+        <div class="content">
+          <span class="msg"><span class="ic">🚚</span>Free shipping over $75 — ends tonight</span>
+          <div class="timer">
+            <span class="u"><b>00</b><small>Days</small></span><span class="sep">:</span>
+            <span class="u"><b>05</b><small>Hours</small></span><span class="sep">:</span>
+            <span class="u"><b>12</b><small>Mins</small></span><span class="sep">:</span>
+            <span class="u"><b>40</b><small>Secs</small></span>
+          </div>
+        </div>
+        <button class="close"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

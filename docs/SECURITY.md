@@ -2,15 +2,15 @@
 
 ## Threat Model
 
-| Threat                       | Risk   | Mitigation                                                       |
-| ---------------------------- | ------ | ---------------------------------------------------------------- |
-| Malicious `?shop=` injection | Medium | Regex validation: `/^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/` |
-| XSS via button URL           | Medium | Server-side validation: only allow `/` or `https://` prefixes    |
-| DoS via settings API         | Medium | In-memory rate limiter: 60 req/min per IP                        |
-| Database enumeration         | Low    | Parameterized queries via Prisma (no raw SQL)                    |
-| Session hijacking            | Low    | Shopify OAuth + Prisma session storage (standard pattern)        |
-| Secret exposure              | Low    | Secrets in env vars, never in client bundle                      |
-| CORS abuse                   | Low    | `*` allowed (needed for storefront) + rate limiting              |
+| Threat                       | Risk   | Mitigation                                                        |
+| ---------------------------- | ------ | ----------------------------------------------------------------- |
+| Malicious `?shop=` injection | Medium | Regex validation: `/^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/`  |
+| XSS via button URL           | Medium | Server-side validation: only allow `/` or `https://` prefixes     |
+| DoS via settings API         | Medium | Redis-backed rate limiter (per-IP + per-shop), in-memory fallback |
+| Database enumeration         | Low    | Parameterized queries via Prisma (no raw SQL)                     |
+| Session hijacking            | Low    | Shopify OAuth + Prisma session storage (standard pattern)         |
+| Secret exposure              | Low    | Secrets in env vars, never in client bundle                       |
+| CORS abuse                   | Low    | `*` allowed (needed for storefront) + rate limiting               |
 
 ## Input Validation
 
@@ -68,12 +68,12 @@ Verify Vite doesn't expose secrets to client bundle:
 
 ## Rate Limiting
 
-Current implementation: in-memory rate limiter (resets on server restart).
+Current implementation: Redis-backed rate limiter via `ioredis` (`app/redis.server.js`),
+shared across serverless invocations. Requests are throttled both per-IP and per-shop.
 
-Upgrade path for production:
-
-- Use Vercel KV (Redis) for distributed rate limiting across serverless invocations
-- Rate limit by shop + IP combined for more accurate throttling
+- Distributed counters live in Redis, so limits hold across serverless invocations
+- Throttles by IP and by shop for more accurate control
+- Falls back to an in-memory limiter automatically when Redis is unavailable
 
 ## Content Security Policy
 
@@ -96,6 +96,6 @@ Note: Shopify embedded apps must allow `frame-ancestors` for Shopify domains.
 - [x] Server-side form validation
 - [x] Parameterized database queries (Prisma)
 - [x] Webhook HMAC verification
-- [x] `write_products` scope removed (only `write_themes` used)
+- [x] No admin API scopes requested (`scopes = ""`)
 - [ ] Lighthouse + burp suite scan before launch
 - [ ] Verify `SHOPIFY_API_SECRET` not in Vite client bundle

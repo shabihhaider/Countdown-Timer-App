@@ -6,14 +6,17 @@
 
 ### Unit Tests (Vitest)
 
-Test pure logic isolated from Shopify and database:
+Test pure logic isolated from Shopify and database. The suite is
+**231 unit tests across 9 files** (`tests/unit/**/*.test.js`), for example:
 
 ```
-app/utils/
-  colorUtils.test.ts    — hexToHsb, hsbToHex conversion
-  validation.test.ts    — validateCampaignForm, isValidShop
-  countdown.test.ts     — time remaining calculation, edge cases
+tests/unit/
+  utils/color.test.js       — hexToHsb, hsbToHex conversion
+  utils/validation.test.js  — validateCampaignForm, isValidShop
+  utils/countdown.test.js   — time remaining calculation, edge cases
 ```
+
+See [docs/QA-TESTING-GUIDE.md](QA-TESTING-GUIDE.md) for the full per-file breakdown.
 
 Priority test cases:
 
@@ -38,56 +41,31 @@ Test API endpoints with mocked database responses:
 
 ### E2E Tests (Playwright)
 
-Critical user flows tested in a Shopify development store:
+**26 E2E tests across 5 files** (`tests/e2e/*.spec.js`):
 
 ```
-tests/
-  onboarding.spec.ts     — full 3-step wizard flow
-  settings.spec.ts       — save/load settings, validation errors
-  countdown-bar.spec.ts  — bar renders on storefront, counts down, end actions
-  analytics.spec.ts      — impression/click tracking visible in dashboard
-  mobile.spec.ts         — bar renders correctly on mobile viewports
-  a11y.spec.ts           — axe-core accessibility scan (zero violations)
+tests/e2e/
+  accessibility.spec.js  — axe-core accessibility scan (zero violations)
+  health.spec.js         — health endpoint smoke checks
+  public-api.spec.js     — storefront settings + track endpoints
+  rate-limiting.spec.js  — rate limiter (429) behavior
+  screenshots.spec.js    — UI screenshots across viewports
 ```
 
 Key Playwright flows:
 
-1. Install app → onboarding wizard → configure → install in theme → verify bar live
-2. Save settings → open storefront → verify bar message/color/position matches
-3. Set end date 10 seconds ago → open storefront → verify end action fires
-4. Click CTA button → check analytics dashboard shows 1 click
-5. Close bar → refresh → verify bar stays closed in same session
+1. `/health` returns healthy status (smoke)
+2. `GET /apps/countdown/settings` returns campaign settings; bad/missing shop → 4xx
+3. `POST /apps/countdown/track` records analytics events
+4. Rate limiter returns `429` once the request budget is exceeded
+5. `axe-core` accessibility scan reports zero violations; UI screenshots captured
 
-### Accessibility Tests
+### Accessibility, Theme & Device Coverage
 
-Run `axe-playwright` in E2E suite:
-
-- Admin app: zero accessibility violations
-- Countdown bar: `aria-live`, button labels, keyboard navigation, color contrast
-
-### Theme Compatibility
-
-Manual test matrix (run before each release):
-
-| Theme   | Version | Status |
-| ------- | ------- | ------ |
-| Dawn    | Latest  | ⬜     |
-| Debut   | Latest  | ⬜     |
-| Refresh | Latest  | ⬜     |
-| Sense   | Latest  | ⬜     |
-| Craft   | Latest  | ⬜     |
-
-### Browser/Device Matrix
-
-| Device      | Browser        | Status |
-| ----------- | -------------- | ------ |
-| Desktop     | Chrome latest  | ⬜     |
-| Desktop     | Firefox latest | ⬜     |
-| Desktop     | Safari 17      | ⬜     |
-| Desktop     | Edge latest    | ⬜     |
-| iPhone 15   | Safari         | ⬜     |
-| Samsung S23 | Chrome         | ⬜     |
-| iPad        | Safari         | ⬜     |
+Automated accessibility (`axe-core`) runs in the E2E suite. For the manual
+accessibility checks, theme-compatibility matrix, and browser/device matrix,
+see the runbook in [docs/QA-TESTING-GUIDE.md](QA-TESTING-GUIDE.md) rather than
+duplicating it here.
 
 ## Running Tests
 

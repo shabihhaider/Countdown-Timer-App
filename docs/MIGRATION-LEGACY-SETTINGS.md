@@ -31,13 +31,17 @@ reads from `Campaign` first and falls back to `Setting` for backward compatibili
 
 ### Step 2: Run migration on production
 
+The migration is a Node script (it parses JSON and writes `Campaign` rows via
+Prisma Client), so run it with Node — not `prisma db execute`, which only
+executes `.sql` files:
+
 ```bash
-npx prisma db execute --file scripts/migrate-legacy-settings.js
+node scripts/migrate-legacy-settings.js
 ```
 
 ### Step 3: Remove fallback code
 
-Remove the `Setting` fallback in `apps.countdown.settings.jsx` (lines 57-62).
+Remove the legacy `Setting` fallback branch in `app/routes/apps.countdown.settings.jsx`.
 
 ### Step 4: Drop the Setting table
 
