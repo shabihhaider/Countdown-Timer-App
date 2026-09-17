@@ -20,6 +20,10 @@ api_version = "2026-07"
   uri = "/webhooks/app/uninstalled"
   topics = [ "app/uninstalled" ]
 
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/subscriptions_update"
+  topics = [ "app_subscriptions/update" ]
+
   # Mandatory privacy-law compliance webhooks (required for public App Store apps)
   [[webhooks.subscriptions]]
   compliance_topics = [ "customers/data_request" ]

@@ -22,15 +22,19 @@ const PRO_LIMITS = {
 /**
  * Check if the current shop has an active Pro subscription.
  *
+ * `source` reports how the answer was produced so callers can decide whether it
+ * may be persisted (plan caching): only "billing_check" reflects real Shopify
+ * state — "dev_override" and "check_failed" must never be written to the DB.
+ *
  * @param {object} billing - The billing object from authenticate.admin()
- * @returns {Promise<{ isPro: boolean, limits: typeof FREE_LIMITS }>}
+ * @returns {Promise<{ isPro: boolean, plan: string, limits: typeof FREE_LIMITS, source: "billing_check" | "dev_override" | "check_failed" }>}
  */
 export async function getPlanInfo(billing) {
   // ── Dev override: set FORCE_PRO_PLAN=true in .env to test Pro features while
   // the app is unpublished (unpublished apps can't use the Billing API at all).
   // Hard-gated to non-production so it can never grant free Pro to real merchants.
   if (process.env.NODE_ENV !== "production" && process.env.FORCE_PRO_PLAN === "true") {
-    return { isPro: true, plan: "Pro", limits: PRO_LIMITS };
+    return { isPro: true, plan: "Pro", limits: PRO_LIMITS, source: "dev_override" };
   }
 
   try {
@@ -46,6 +50,7 @@ export async function getPlanInfo(billing) {
       isPro: hasActivePayment,
       plan: hasActivePayment ? "Pro" : "Free",
       limits: hasActivePayment ? PRO_LIMITS : FREE_LIMITS,
+      source: "billing_check",
     };
   } catch {
     // If billing check fails, default to free plan
@@ -53,6 +58,7 @@ export async function getPlanInfo(billing) {
       isPro: false,
       plan: "Free",
       limits: FREE_LIMITS,
+      source: "check_failed",
     };
   }
 }

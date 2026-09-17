@@ -27,6 +27,8 @@ model Session {
   // Added by @shopify/shopify-app-session-storage-prisma v10 (SDK v5)
   refreshToken        String?
   refreshTokenExpires DateTime?
+
+  @@index([shop])
 }
 
 // Legacy table — kept for backwards compatibility during migration.
@@ -119,6 +121,80 @@ model CampaignAnalytics {
 
   @@unique([campaignId, date])
   @@index([campaignId])
+}
+
+// Persistent shop lifecycle record. Survives uninstall (soft-close);
+// anonymized — never deleted — on GDPR shop/redact so aggregate history stays intact.
+model Shop {
+  id               Int       @id @default(autoincrement())
+  domain           String    @unique // "*.myshopify.com"; replaced with "redacted-<token>" on shop/redact
+  name             String?
+  email            String? // PII — scrubbed on redact
+  status           String    @default("active") // "active" | "uninstalled" | "redacted"
+  plan             String    @default("Free") // cached; source of truth = Subscription rows + webhook
+  planSource       String? // "webhook" | "billing_check" | "backfill"
+  planUpdatedAt    DateTime?
+  installedAt      DateTime  @default(now()) // most recent install
+  firstInstalledAt DateTime  @default(now()) // never overwritten on reinstall
+  uninstalledAt    DateTime?
+  redactedAt       DateTime?
+  installCount     Int       @default(1)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  subscriptions Subscription[]
+  events        AppEvent[]
+
+  @@index([status])
+  @@index([plan, status])
+  @@index([installedAt])
+  @@index([uninstalledAt])
+}
+
+// One row per Shopify AppSubscription gid. Upserted by the app_subscriptions/update webhook.
+model Subscription {
+  id                    Int       @id @default(autoincrement())
+  shopId                Int
+  shopifySubscriptionId String    @unique // "gid://shopify/AppSubscription/..."
+  planName              String
+  status                String // "ACTIVE" | "CANCELLED" | "EXPIRED" | "FROZEN" | "DECLINED" | "PENDING"
+  price                 Decimal   @db.Decimal(10, 2)
+  currencyCode          String    @default("USD")
+  interval              String    @default("EVERY_30_DAYS")
+  trialDays             Int       @default(0)
+  trialEndsAt           DateTime?
+  currentPeriodEnd      DateTime?
+  isTest                Boolean   @default(false)
+  activatedAt           DateTime?
+  cancelledAt           DateTime?
+  shopifyUpdatedAt      DateTime? // updated_at from the webhook payload — guards out-of-order delivery
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+  @@index([status])
+  @@index([trialEndsAt])
+}
+
+// Append-only lifecycle timeline (installs, uninstalls, plan changes) read by internal tooling.
+model AppEvent {
+  id         Int      @id @default(autoincrement())
+  shopId     Int?
+  shopDomain String // denormalized; scrubbed to the redacted token on shop/redact
+  type       String // "app_installed" | "app_reinstalled" | "app_uninstalled" |
+  // "subscription_updated" | "plan_changed" | "shop_redacted"
+  payload    Json?
+  webhookId  String?  @unique // X-Shopify-Webhook-Id — makes webhook retries idempotent
+  occurredAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  shop Shop? @relation(fields: [shopId], references: [id], onDelete: SetNull)
+
+  @@index([shopId, occurredAt])
+  @@index([type, occurredAt])
+  @@index([occurredAt])
 }
 
 // Tracks onboarding wizard progress per shop.
