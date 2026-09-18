@@ -44,6 +44,36 @@ describe("getPlanInfo", () => {
     expect(result.limits.maxActiveCampaigns).toBe(Infinity);
     expect(result.source).toBe("billing_check");
   });
+
+  it("exposes the active subscription id and test flag for in-app cancellation", async () => {
+    const mockBilling = {
+      check: vi.fn().mockResolvedValue({
+        hasActivePayment: true,
+        appSubscriptions: [{ id: "gid://shopify/AppSubscription/123", name: "Pro", test: true }],
+      }),
+    };
+    const result = await getPlanInfo(mockBilling);
+    expect(result.subscription).toEqual({
+      id: "gid://shopify/AppSubscription/123",
+      isTest: true,
+    });
+  });
+
+  it("returns null subscription when there is no active payment", async () => {
+    const mockBilling = {
+      check: vi.fn().mockResolvedValue({ hasActivePayment: false, appSubscriptions: [] }),
+    };
+    const result = await getPlanInfo(mockBilling);
+    expect(result.subscription).toBeNull();
+  });
+
+  it("returns null subscription when the billing check fails", async () => {
+    const mockBilling = {
+      check: vi.fn().mockRejectedValue(new Error("billing unavailable")),
+    };
+    const result = await getPlanInfo(mockBilling);
+    expect(result.subscription).toBeNull();
+  });
 });
 
 describe("FORCE_PRO_PLAN dev override", () => {

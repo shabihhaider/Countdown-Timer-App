@@ -31,7 +31,7 @@ export default function Terms() {
   return (
     <div style={styles.body}>
       <h1 style={styles.h1}>Terms of Service</h1>
-      <span style={styles.date}>Last updated: August 1, 2026</span>
+      <span style={styles.date}>Last updated: September 18, 2026</span>
 
       <h2 style={styles.h2}>1. Acceptance of Terms</h2>
       <p style={styles.p}>
@@ -77,8 +77,9 @@ export default function Terms() {
       <h2 style={styles.h2}>6. Billing</h2>
       <p style={styles.p}>
         Paid plans are billed through Shopify&rsquo;s billing system. Subscriptions auto-renew
-        monthly unless cancelled. Cancellations take effect at the end of the current billing
-        period. We do not offer refunds for partial billing periods.
+        monthly unless cancelled. You can cancel anytime from the App&rsquo;s Plan &amp; Billing
+        page; cancellation takes effect immediately and any unused portion of the current billing
+        period is credited back on a prorated basis through Shopify billing.
       </p>
 
       <h2 style={styles.h2}>7. Disclaimers and Limitation of Liability</h2>

@@ -19,6 +19,7 @@ import { TitleBar } from "@shopify/app-bridge-react";
 import db from "../db.server";
 import { getCampaignStatus, formatNumber } from "../utils/campaign";
 import { getPlanInfo } from "../utils/billing.server";
+import { LockedMetricCard } from "../components/LockedMetricCard";
 
 export const loader = async ({ request }) => {
   const { session, billing } = await authenticate.admin(request);
@@ -77,14 +78,19 @@ export const loader = async ({ request }) => {
   const totalCampaigns = await db.campaign.count({ where: { shop } });
   const activeCampaigns = await db.campaign.count({ where: { shop, isActive: true } });
 
+  // Clicks/CTR are Pro features — withhold values server-side for Free plans
+  // so the loader payload matches what the UI is allowed to show.
+  const isPro = planInfo.isPro;
+
   return json({
     onboardingComplete,
     planInfo,
-    campaigns: campaignSummaries,
+    campaigns: campaignSummaries.map((summary) => (isPro ? summary : { ...summary, clicks: null })),
     totals: {
       impressions: totalImpressions,
-      clicks: totalClicks,
-      ctr: totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(1) : null,
+      clicks: isPro ? totalClicks : null,
+      ctr:
+        isPro && totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(1) : null,
       totalCampaigns,
       activeCampaigns,
     },
@@ -194,14 +200,26 @@ export default function DashboardPage() {
             />
           </Layout.Section>
           <Layout.Section variant="oneThird">
-            <MetricCard title="Clicks" value={formatNumber(totals.clicks)} subtitle="Last 7 days" />
+            {planInfo.isPro ? (
+              <MetricCard
+                title="Clicks"
+                value={formatNumber(totals.clicks)}
+                subtitle="Last 7 days"
+              />
+            ) : (
+              <LockedMetricCard title="Clicks" />
+            )}
           </Layout.Section>
           <Layout.Section variant="oneThird">
-            <MetricCard
-              title="Click-Through Rate"
-              value={totals.ctr !== null ? `${totals.ctr}%` : "\u2014"}
-              subtitle="Last 7 days"
-            />
+            {planInfo.isPro ? (
+              <MetricCard
+                title="Click-Through Rate"
+                value={totals.ctr !== null ? `${totals.ctr}%` : "\u2014"}
+                subtitle="Last 7 days"
+              />
+            ) : (
+              <LockedMetricCard title="Click-Through Rate" />
+            )}
           </Layout.Section>
         </Layout>
 
@@ -259,9 +277,11 @@ export default function DashboardPage() {
                             <Text variant="bodySm" as="span">
                               {formatNumber(campaign.impressions)} views
                             </Text>
-                            <Text variant="bodySm" tone="subdued" as="span">
-                              {formatNumber(campaign.clicks)} clicks
-                            </Text>
+                            {planInfo.isPro && (
+                              <Text variant="bodySm" tone="subdued" as="span">
+                                {formatNumber(campaign.clicks)} clicks
+                              </Text>
+                            )}
                           </BlockStack>
                         </InlineStack>
                       </ResourceItem>

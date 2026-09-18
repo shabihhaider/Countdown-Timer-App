@@ -1,29 +1,7 @@
 {
   "settings": {
-    "bg_color": {
-      "label": "Background color"
-    },
-    "text_color": {
-      "label": "Text color"
-    },
-    "accent_color": {
-      "label": "Button / accent color"
-    },
-    "position": {
-      "label": "Bar position",
-      "options": {
-        "top": "Top of page",
-        "bottom": "Bottom of page"
-      }
-    },
-    "font_size": {
-      "label": "Font size"
-    },
-    "show_close": {
-      "label": "Show close button"
-    },
-    "bar_padding": {
-      "label": "Bar padding"
-    }
+    "font_size": { "label": "Font size" },
+    "show_close": { "label": "Show close button" },
+    "bar_padding": { "label": "Bar padding" }
   }
 }

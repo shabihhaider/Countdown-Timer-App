@@ -34,23 +34,36 @@ export async function getPlanInfo(billing) {
   // the app is unpublished (unpublished apps can't use the Billing API at all).
   // Hard-gated to non-production so it can never grant free Pro to real merchants.
   if (process.env.NODE_ENV !== "production" && process.env.FORCE_PRO_PLAN === "true") {
-    return { isPro: true, plan: "Pro", limits: PRO_LIMITS, source: "dev_override" };
+    return {
+      isPro: true,
+      plan: "Pro",
+      limits: PRO_LIMITS,
+      source: "dev_override",
+      subscription: null,
+    };
   }
 
   try {
     // isTest: true means test subscriptions COUNT as valid (real ones always do).
     // Required so dev stores — including Shopify app reviewers — get Pro access
     // after approving a test charge.
-    const { hasActivePayment } = await billing.check({
+    const { hasActivePayment, appSubscriptions } = await billing.check({
       plans: [PLAN_PRO],
       isTest: true,
     });
+
+    // Expose the active subscription so the billing page can offer in-app
+    // cancellation (App Store requirement: downgrade without reinstalling).
+    const activeSubscription = appSubscriptions?.[0] ?? null;
 
     return {
       isPro: hasActivePayment,
       plan: hasActivePayment ? "Pro" : "Free",
       limits: hasActivePayment ? PRO_LIMITS : FREE_LIMITS,
       source: "billing_check",
+      subscription: activeSubscription
+        ? { id: activeSubscription.id, isTest: Boolean(activeSubscription.test) }
+        : null,
     };
   } catch {
     // If billing check fails, default to free plan
@@ -59,6 +72,7 @@ export async function getPlanInfo(billing) {
       plan: "Free",
       limits: FREE_LIMITS,
       source: "check_failed",
+      subscription: null,
     };
   }
 }
