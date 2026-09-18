@@ -7,6 +7,7 @@ name: countdown-timer-app
 # Required environment variables (must be set in shell or .env.prod):
 #   SHOPIFY_API_KEY, SHOPIFY_API_SECRET, SHOPIFY_APP_URL
 #   POSTGRES_PASSWORD, REDIS_PASSWORD
+#   PORTAL_AUTH_SECRET, PORTAL_URL   (internal admin portal — ../admin-portal)
 
 # ─── Networks ─────────────────────────────────────────────────────────────────
 networks:
@@ -74,6 +75,38 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+
+  # ── Internal admin portal (Next.js, ../admin-portal) ─────────────────────────
+  portal:
+    build:
+      context: ../admin-portal
+    environment:
+      NODE_ENV: production
+      PORTAL_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-countdown_timer}?schema=portal&connection_limit=5
+      PORTAL_DIRECT_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-countdown_timer}?schema=portal
+      APP_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-countdown_timer}?connection_limit=5
+      AUTH_SECRET: ${PORTAL_AUTH_SECRET:?PORTAL_AUTH_SECRET is required}
+      AUTH_URL: ${PORTAL_URL:?PORTAL_URL is required, e.g. https://ops.example.com}
+      APP_HEALTH_URL: http://app:3000/health
+      SENTRY_ORG: ${SENTRY_ORG:-}
+      SENTRY_PROJECT: ${SENTRY_PROJECT:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-net
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ── PostgreSQL 16 ─────────────────────────────────────────────────────────────
   db:

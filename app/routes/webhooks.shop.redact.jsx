@@ -1,6 +1,7 @@
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
 import { logger } from "../utils/logger.server";
+import { redactShop } from "../utils/shop-lifecycle.server";
 
 /**
  * Shopify mandatory GDPR webhook: shop/redact
@@ -8,6 +9,10 @@ import { logger } from "../utils/logger.server";
  * Fired 48 hours after a merchant uninstalls the app. Requires
  * deletion of ALL shop data. The app/uninstalled webhook already
  * handles immediate cleanup, but this is the final guarantee.
+ *
+ * The Shop lifecycle record is ANONYMIZED rather than deleted: the domain is
+ * replaced with an unlinkable random token and all PII is scrubbed, leaving
+ * only anonymous aggregates (counts, plan names, dates) — no personal data.
  *
  * See: https://shopify.dev/docs/apps/webhooks/configuration/mandatory-webhooks
  */
@@ -27,6 +32,10 @@ export const action = async ({ request }) => {
     await db.onboardingState.deleteMany({ where: { shop: shopDomain } });
     await db.session.deleteMany({ where: { shop: shopDomain } });
     await db.setting.deleteMany({ where: { shop: shopDomain } });
+
+    // Anonymize the lifecycle record (idempotent — no-op if already redacted,
+    // since the domain lookup no longer matches after the first pass).
+    await redactShop(db, shopDomain);
 
     logger.info({ topic, shopDomain }, "webhook.gdpr.shop_redact — data deleted");
   } catch (error) {

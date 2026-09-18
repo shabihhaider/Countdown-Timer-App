@@ -13,7 +13,7 @@ vi.mock("../../../app/shopify.server", () => ({
 }));
 
 describe("getPlanInfo", () => {
-  it("returns free plan when billing check fails", async () => {
+  it("returns free plan with source check_failed when billing check fails", async () => {
     const mockBilling = {
       check: vi.fn().mockRejectedValue(new Error("billing unavailable")),
     };
@@ -21,6 +21,7 @@ describe("getPlanInfo", () => {
     expect(result.isPro).toBe(false);
     expect(result.plan).toBe("Free");
     expect(result.limits.maxActiveCampaigns).toBe(1);
+    expect(result.source).toBe("check_failed");
   });
 
   it("returns free plan when no active payment", async () => {
@@ -30,6 +31,7 @@ describe("getPlanInfo", () => {
     const result = await getPlanInfo(mockBilling);
     expect(result.isPro).toBe(false);
     expect(result.plan).toBe("Free");
+    expect(result.source).toBe("billing_check");
   });
 
   it("returns pro plan when active payment exists", async () => {
@@ -40,6 +42,7 @@ describe("getPlanInfo", () => {
     expect(result.isPro).toBe(true);
     expect(result.plan).toBe("Pro");
     expect(result.limits.maxActiveCampaigns).toBe(Infinity);
+    expect(result.source).toBe("billing_check");
   });
 });
 
@@ -56,6 +59,7 @@ describe("FORCE_PRO_PLAN dev override", () => {
     const result = await getPlanInfo(mockBilling);
     expect(result.isPro).toBe(true);
     expect(result.plan).toBe("Pro");
+    expect(result.source).toBe("dev_override");
     expect(mockBilling.check).not.toHaveBeenCalled();
   });
 
