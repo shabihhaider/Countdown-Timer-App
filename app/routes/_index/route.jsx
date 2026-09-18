@@ -1,6 +1,7 @@
 import { json, redirect } from "@remix-run/node";
-import { Form, Link } from "@remix-run/react";
-import { login } from "../../shopify.server";
+import { Link } from "@remix-run/react";
+
+const APP_STORE_URL = "https://apps.shopify.com/countdown-timer-app-20";
 
 export const meta = () => [
   { title: "Countdown Timer Bar — Honest Urgency for Shopify" },
@@ -20,7 +21,7 @@ export const loader = async ({ request }) => {
   }
 
   // For direct browser access (non-embedded), show the landing page
-  return json({ showLogin: Boolean(login) });
+  return json({});
 };
 
 export default function LandingPage() {
@@ -78,48 +79,25 @@ export default function LandingPage() {
             analytics show you exactly what works.
           </p>
 
-          <Form
-            method="post"
-            action="/auth/login"
+          {/* App Store review requires installs to start on a Shopify-owned
+              surface — never a manual shop-domain form. */}
+          <a
+            href={APP_STORE_URL}
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 12,
-              flexWrap: "wrap",
+              display: "inline-block",
+              padding: "14px 32px",
+              fontSize: "1rem",
+              fontWeight: 600,
+              borderRadius: 8,
+              border: "none",
+              background: "#ffffff",
+              color: "#0f3d2e",
+              cursor: "pointer",
+              textDecoration: "none",
             }}
           >
-            <input
-              type="text"
-              name="shop"
-              placeholder="your-store.myshopify.com"
-              style={{
-                padding: "14px 20px",
-                fontSize: "1rem",
-                borderRadius: 8,
-                border: "2px solid rgba(255,255,255,0.3)",
-                background: "rgba(255,255,255,0.15)",
-                color: "#fff",
-                minWidth: 280,
-                outline: "none",
-              }}
-            />
-            <button
-              type="submit"
-              style={{
-                padding: "14px 32px",
-                fontSize: "1rem",
-                fontWeight: 600,
-                borderRadius: 8,
-                border: "none",
-                background: "#ffffff",
-                color: "#0f3d2e",
-                cursor: "pointer",
-              }}
-            >
-              Install Free
-            </button>
-          </Form>
+            Install free on the Shopify App Store
+          </a>
         </div>
       </header>
 

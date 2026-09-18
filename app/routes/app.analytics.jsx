@@ -20,6 +20,7 @@ import { authenticate } from "../shopify.server";
 import { getCampaignStatus } from "../utils/campaign";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { getPlanInfo } from "../utils/billing.server";
+import { LockedMetricCard } from "../components/LockedMetricCard";
 import db from "../db.server";
 
 const BILLING_PATH = "/app/billing";
@@ -132,22 +133,37 @@ export async function loader({ request }) {
   const clickChange =
     prevClicks > 0 ? Math.round(((totalClicks - prevClicks) / prevClicks) * 100) : null;
 
+  // Clicks/CTR are Pro features — withhold the VALUES server-side for Free
+  // plans (UI-only gating would still ship the data in the loader payload).
+  // dailyData clicks become 0 (not null) so chart/hasData math stays safe.
+  const gateCampaign = (summary) =>
+    isPro
+      ? summary
+      : {
+          ...summary,
+          clicks: null,
+          ctr: null,
+          dailyData: summary.dailyData.map((d) => ({ ...d, clicks: 0 })),
+        };
+  const gateDaily = (d) => (isPro ? d : { ...d, clicks: 0 });
+
   return json({
-    campaigns: campaignSummaries,
-    dailyData: Array.from(dailyMap.values()),
+    campaigns: campaignSummaries.map(gateCampaign),
+    dailyData: Array.from(dailyMap.values()).map(gateDaily),
     rangeDays,
     isPro,
     totals: {
       impressions: totalImpressions,
-      clicks: totalClicks,
+      clicks: isPro ? totalClicks : null,
       closes: campaigns.reduce(
         (s, c) =>
           s + c.analytics.filter((a) => a.date >= startDate).reduce((ss, a) => ss + a.closes, 0),
         0
       ),
-      ctr: totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(1) : null,
+      ctr:
+        isPro && totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(1) : null,
       impressionChange,
-      clickChange,
+      clickChange: isPro ? clickChange : null,
     },
   });
 }
@@ -347,28 +363,6 @@ function MetricCard({ title, value, subtitle, change }) {
 }
 
 // --- Locked metric card (Free plan) ---
-
-function LockedMetricCard({ title }) {
-  const navigate = useNavigate();
-  return (
-    <Card>
-      <BlockStack gap="200">
-        <Text as="p" variant="bodySm" tone="subdued">
-          {title}
-        </Text>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 0" }}>
-          <span style={{ fontSize: "20px" }}>🔒</span>
-          <Text as="p" variant="bodyLg" fontWeight="semibold" tone="subdued">
-            Pro feature
-          </Text>
-        </div>
-        <Button size="slim" onClick={() => navigate(BILLING_PATH)}>
-          Upgrade to Pro
-        </Button>
-      </BlockStack>
-    </Card>
-  );
-}
 
 // --- Campaign Row ---
 

@@ -40,3 +40,5 @@ database.sqlite
 .lighthouseci/screenshots/
 test-report.html
 storefront-harness-tmp.html
+.vercel
+.env*

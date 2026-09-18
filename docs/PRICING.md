@@ -49,17 +49,21 @@
 
 Add a **Scale — $19.99/mo** tier once A/B testing and geo-targeting ship (target: October, pre-BFCM):
 
-| Feature                   | Free | Pro | Scale (future) |
-| ------------------------- | ---- | --- | -------------- |
-| Active campaigns          | 1    | ∞   | ∞              |
-| All 3 timer surfaces      | ✓    | ✓   | ✓              |
-| Honest server-side timers | ✓    | ✓   | ✓              |
-| Analytics: impressions    | ✓    | ✓   | ✓              |
-| Analytics: clicks + CTR   | ✗    | ✓   | ✓              |
-| Analytics retention       | 7d   | 90d | 365d + CSV     |
-| A/B testing               | ✗    | ✗   | ✓              |
-| Geo targeting             | ✗    | ✗   | ✓              |
-| Support                   | —    | 24h | Same-day       |
+| Feature                         | Free | Pro | Scale (future) |
+| ------------------------------- | ---- | --- | -------------- |
+| Active campaigns                | 1    | ∞   | ∞              |
+| All 3 timer surfaces            | ✓    | ✓   | ✓              |
+| Honest server-side timers       | ✓    | ✓   | ✓              |
+| Analytics: impressions          | ✓    | ✓   | ✓              |
+| Analytics: clicks + CTR         | ✗    | ✓   | ✓              |
+| Analytics retention _(planned)_ | —    | —   | 365d + CSV     |
+| A/B testing                     | ✗    | ✗   | ✓              |
+| Geo targeting                   | ✗    | ✗   | ✓              |
+| Support                         | —    | 24h | Same-day       |
+
+> **Not yet implemented:** plan-based analytics retention. Today every plan gets the same
+> 7/30/90-day range selector — do not claim a retention split in the App Store listing
+> until the enforcement ships.
 
 Scale exists as an anchor: it makes Pro feel cheap and captures BFCM whales. It sits
 deliberately between Essential's $9.99 and $29.99 tiers.
