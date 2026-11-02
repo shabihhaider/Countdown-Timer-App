@@ -16,6 +16,8 @@ import { loginErrorMessage } from "./error.server";
 
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
+export const meta = () => [{ title: "Log in — Countdown Timer Bar" }];
+
 export const loader = async ({ request }) => {
   const errors = loginErrorMessage(await login(request));
 
@@ -42,7 +44,7 @@ export default function Auth() {
         <Card>
           <Form method="post">
             <FormLayout>
-              <Text variant="headingMd" as="h2">
+              <Text variant="headingMd" as="h1">
                 Log in
               </Text>
               <TextField

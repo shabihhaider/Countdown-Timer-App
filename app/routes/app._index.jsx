@@ -18,13 +18,19 @@ import { authenticate } from "../shopify.server";
 import { TitleBar } from "@shopify/app-bridge-react";
 import db from "../db.server";
 import { getCampaignStatus, formatNumber } from "../utils/campaign";
-import { getPlanInfo } from "../utils/billing.server";
+import { enforceFreeCampaignLimit, getPlanInfo } from "../utils/billing.server";
 import { LockedMetricCard } from "../components/LockedMetricCard";
 
 export const loader = async ({ request }) => {
   const { session, billing } = await authenticate.admin(request);
   const shop = session.shop;
   const planInfo = await getPlanInfo(billing);
+
+  // Downgrades that happen outside the app (trial end, failed payment) land here.
+  const pausedCampaigns =
+    planInfo.source === "billing_check" && !planInfo.isPro
+      ? await enforceFreeCampaignLimit(db, shop)
+      : 0;
 
   // Check onboarding status (no redirect — server-side redirects lose
   // session context with embedded auth, causing login loops)
@@ -84,6 +90,7 @@ export const loader = async ({ request }) => {
 
   return json({
     onboardingComplete,
+    pausedCampaigns,
     planInfo,
     campaigns: campaignSummaries.map((summary) => (isPro ? summary : { ...summary, clicks: null })),
     totals: {
@@ -152,7 +159,7 @@ export function ErrorBoundary() {
 }
 
 export default function DashboardPage() {
-  const { onboardingComplete, planInfo, campaigns, totals } = useLoaderData();
+  const { onboardingComplete, pausedCampaigns, planInfo, campaigns, totals } = useLoaderData();
   const navigate = useNavigate();
 
   return (
@@ -164,6 +171,12 @@ export default function DashboardPage() {
       </TitleBar>
 
       <BlockStack gap="500">
+        {pausedCampaigns > 0 && (
+          <Banner tone="warning" title="Some campaigns were paused">
+            Your plan allows 1 active campaign, so we paused {pausedCampaigns}. Upgrade to Pro or
+            choose which campaign stays active on the Campaigns page.
+          </Banner>
+        )}
         {!onboardingComplete && (
           <Banner
             title="Complete your setup"

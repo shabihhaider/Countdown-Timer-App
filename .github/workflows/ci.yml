@@ -57,8 +57,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: npm audit (production only)
-        run: npm audit --audit-level=high --omit=dev || echo "::warning::npm audit found vulnerabilities — review before release"
+      # Critical advisories fail the build. High stays a warning until a current
+      # audit has been reviewed; raise this to high once that baseline is clean.
+      - name: npm audit (production only, blocking)
+        run: npm audit --audit-level=critical --omit=dev
+
+      - name: npm audit (production only, high)
+        run: npm audit --audit-level=high --omit=dev || echo "::warning::npm audit found high vulnerabilities — review before release"
 
   # ── 3. Unit + Integration Tests (Vitest) ──────────────────────────────────────
   test:

@@ -28,7 +28,7 @@ import {
 import { authenticate } from "../shopify.server";
 import { TitleBar } from "@shopify/app-bridge-react";
 import db from "../db.server";
-import { canCreateCampaign } from "../utils/billing.server";
+import { canCreateCampaign, writeWithinCampaignLimit } from "../utils/billing.server";
 import { getCampaignStatus, CAMPAIGN_TYPE_LABELS, CAMPAIGN_TYPES } from "../utils/campaign";
 
 function formatEndDate(date, timezone) {
@@ -103,16 +103,24 @@ export async function action({ request }) {
     // If activating (currently inactive → active), check free plan limit
     if (!campaign.isActive) {
       const activeCampaigns = await db.campaign.count({ where: { shop, isActive: true } });
-      const { allowed, reason } = await canCreateCampaign(billing, activeCampaigns);
+      const { allowed, reason, limits } = await canCreateCampaign(billing, activeCampaigns);
 
       if (!allowed) {
         return json({ success: false, error: reason, action: "toggle" }, { status: 403 });
       }
+
+      const outcome = await writeWithinCampaignLimit(db, shop, limits, (tx) =>
+        tx.campaign.update({ where: { id: campaignId }, data: { isActive: true } })
+      );
+      if (!outcome.allowed) {
+        return json({ success: false, error: outcome.reason, action: "toggle" }, { status: 403 });
+      }
+      return json({ success: true, action: "toggle" });
     }
 
     await db.campaign.update({
       where: { id: campaignId },
-      data: { isActive: !campaign.isActive },
+      data: { isActive: false },
     });
     return json({ success: true, action: "toggle" });
   }

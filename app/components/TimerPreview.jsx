@@ -74,7 +74,7 @@ function pad(n) {
 }
 
 export function TimerPreview({ formState }) {
-  const bgColor = formState.barColor || "#288d40";
+  const bgColor = formState.barColor || "#237f37";
   const txtColor = formState.textColor || "#ffffff";
   const btnTxtColor = formState.buttonTextColor || "#111111";
   const btnBgColor = formState.buttonBgColor || "#ffffff";

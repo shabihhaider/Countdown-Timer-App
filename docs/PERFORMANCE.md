@@ -29,9 +29,11 @@
 
 ### Settings API Caching
 
-- `Cache-Control: public, max-age=60, stale-while-revalidate=30`
-- Stale-while-revalidate means Vercel Edge can serve stale content instantly while
-  revalidating in background
+- `Cache-Control: public, max-age=10, s-maxage=30, stale-while-revalidate=60, stale-if-error=600`
+- `s-maxage` lets the CDN absorb storefront traffic, so visitor spikes do not reach the limiter
+- A saved campaign can take about 100 seconds to reach shoppers: 10s server cache, 30s CDN, 60s stale-while-revalidate, 10s browser
+- The server re-reads a shop's active campaigns at most every 10 seconds, whatever the request volume
+- There is no per-shop limit on settings: it would let anyone switch off a shop's timer
 - Campaign queries use indexed lookups: `shop + isActive` composite index
 
 ### Database

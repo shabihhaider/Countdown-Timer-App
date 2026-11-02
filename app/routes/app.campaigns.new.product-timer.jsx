@@ -5,7 +5,7 @@ import { useLoaderData, Form, useActionData, useNavigation, useRouteError } from
 import { authenticate } from "../shopify.server";
 import { TitleBar } from "@shopify/app-bridge-react";
 import db from "../db.server";
-import { canCreateCampaign } from "../utils/billing.server";
+import { canCreateCampaign, writeWithinCampaignLimit } from "../utils/billing.server";
 import {
   PRODUCT_TIMER_DEFAULTS,
   DEFAULT_CAMPAIGN_FORM,
@@ -32,7 +32,7 @@ export const action = async ({ request }) => {
   const shop = session.shop;
 
   const activeCampaigns = await db.campaign.count({ where: { shop, isActive: true } });
-  const { allowed, reason } = await canCreateCampaign(billing, activeCampaigns);
+  const { allowed, reason, limits } = await canCreateCampaign(billing, activeCampaigns);
 
   if (!allowed) {
     return json({ success: false, errors: { _form: reason }, values: null }, { status: 403 });
@@ -89,9 +89,15 @@ export const action = async ({ request }) => {
   const campaignData = formValuesToCampaignData(raw);
   campaignData.type = CAMPAIGN_TYPES.PRODUCT_TIMER;
 
-  const campaign = await db.campaign.create({
-    data: { ...campaignData, shop, isActive: true },
-  });
+  const outcome = await writeWithinCampaignLimit(db, shop, limits, (tx) =>
+    tx.campaign.create({ data: { ...campaignData, shop, isActive: true } })
+  );
+  if (!outcome.allowed) {
+    return json(
+      { success: false, errors: { _form: outcome.reason }, values: null },
+      { status: 403 }
+    );
+  }
 
   await db.onboardingState.upsert({
     where: { shop },
@@ -99,7 +105,7 @@ export const action = async ({ request }) => {
     update: { step1Complete: true, step2Complete: true },
   });
 
-  return redirect(`/app/campaigns/${campaign.id}`);
+  return redirect(`/app/campaigns/${outcome.result.id}`);
 };
 
 export function ErrorBoundary() {

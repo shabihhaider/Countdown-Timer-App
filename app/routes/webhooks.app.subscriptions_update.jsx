@@ -1,21 +1,24 @@
-import { authenticate } from "../shopify.server";
+import { authenticateWebhook } from "../utils/webhook-auth.server";
 import { PLAN_PRO_CONFIG } from "../utils/plan-config";
 import db from "../db.server";
 import { logger } from "../utils/logger.server";
-import { applySubscriptionUpdate } from "../utils/shop-lifecycle.server";
+import {
+  applySubscriptionUpdate,
+  isApplicableSubscriptionPayload,
+} from "../utils/shop-lifecycle.server";
 
 export const action = async ({ request }) => {
   const webhookId = request.headers.get("x-shopify-webhook-id");
-  const { shop, topic, payload } = await authenticate.webhook(request);
+  const { shop, topic, payload } = await authenticateWebhook(request);
 
   logger.info({ topic, shop, webhookId }, "webhook.received");
 
   const appSubscription = payload?.app_subscription;
-  if (!appSubscription) {
+  if (!isApplicableSubscriptionPayload(appSubscription)) {
     // Malformed payload — acknowledge so Shopify doesn't retry something we can never process.
     logger.warn(
       { topic, shop, webhookId },
-      "webhook.subscriptions_update — missing app_subscription"
+      "webhook.subscriptions_update — malformed app_subscription"
     );
     return new Response();
   }

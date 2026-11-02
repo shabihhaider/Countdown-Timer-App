@@ -39,17 +39,11 @@ test.describe("Rate limiting", () => {
       }
     }
 
-    if (rateLimitedResponse) {
-      const retryAfter = rateLimitedResponse.headers()["retry-after"];
-      expect(retryAfter).toBeDefined();
-      expect(parseInt(retryAfter)).toBeGreaterThan(0);
-    } else {
-      // If rate limiting never triggered (e.g. in-memory fallback, window reset),
-      // the test passes — we verified the endpoint handles high load without crashing.
-      test.info().annotations.push({
-        type: "info",
-        description: "Rate limit not triggered in 120 requests — endpoint handled load gracefully",
-      });
-    }
+    // The per-IP limit is 60 a minute, so 120 requests must reach it.
+    expect(rateLimitedResponse, "no 429 in 120 requests").not.toBeNull();
+    const retryAfter = rateLimitedResponse.headers()["retry-after"];
+    expect(retryAfter).toBeDefined();
+    expect(parseInt(retryAfter)).toBeGreaterThan(0);
+    expect(rateLimitedResponse.headers()["cache-control"]).toBe("no-store");
   });
 });

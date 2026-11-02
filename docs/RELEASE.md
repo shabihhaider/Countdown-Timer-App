@@ -34,6 +34,13 @@ Semantic versioning: `MAJOR.MINOR.PATCH`
 
 Deployments are automatic on `git push` to `main` branch via Vercel CI.
 
+Vercel does not run migrations, and the app shares its production database with
+admin-portal, so migration order matters. Same rule as `admin-portal/README.md`:
+
+- **Additive migration:** run `npx prisma migrate deploy` against production first, then push.
+- **Destructive migration:** push and verify first, then run `npx prisma migrate deploy`.
+  Never roll code back past a destructive migration without restoring the column.
+
 Before pushing to main:
 
 ```bash
@@ -45,8 +52,7 @@ git push origin main
 After deployment:
 
 1. Verify Vercel deployment succeeded
-2. Run `npx prisma migrate deploy` against production DB if new migration
-3. Test critical flows on production:
+2. Test critical flows on production:
    - Admin settings save → storefront update
    - Analytics tracking
 

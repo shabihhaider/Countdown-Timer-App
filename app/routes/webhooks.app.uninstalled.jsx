@@ -1,10 +1,15 @@
-import { authenticate } from "../shopify.server";
+import { authenticateWebhook } from "../utils/webhook-auth.server";
 import db from "../db.server";
 import { logger } from "../utils/logger.server";
-import { collectUninstallAggregates, recordUninstall } from "../utils/shop-lifecycle.server";
+import {
+  collectUninstallAggregates,
+  findLastAuthorizedAt,
+  isStaleUninstallDelivery,
+  recordUninstall,
+} from "../utils/shop-lifecycle.server";
 
 export const action = async ({ request }) => {
-  const { shop, topic } = await authenticate.webhook(request);
+  const { shop, topic } = await authenticateWebhook(request);
 
   logger.info({ topic, shop }, "webhook.received");
 
@@ -12,6 +17,14 @@ export const action = async ({ request }) => {
   // shop.redact fires 48h later as a GDPR guarantee, but cleaning up now
   // prevents stale-data collisions on reinstall.
   try {
+    const currentShop = await db.shop.findUnique({ where: { domain: shop } });
+    const lastAuthorizedAt = currentShop ? await findLastAuthorizedAt(db, currentShop.id) : null;
+    const triggeredAt = request.headers.get("x-shopify-triggered-at");
+    if (isStaleUninstallDelivery(currentShop, triggeredAt, lastAuthorizedAt)) {
+      logger.info({ topic, shop }, "webhook.uninstalled — predates reinstall, ignored");
+      return new Response();
+    }
+
     // Snapshot anonymous lifetime aggregates BEFORE deletion — they become the
     // app_uninstalled event payload (Shop/Subscription/AppEvent rows survive
     // as a soft-closed lifecycle record; shop/redact anonymizes them later).

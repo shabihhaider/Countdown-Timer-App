@@ -40,7 +40,7 @@ Custom requirements:
 ### Color Contrast
 
 - All text on countdown bar must meet 4.5:1 contrast ratio against background color
-- White text (#ffffff) on #288d40 (default green): 4.54:1 — passes
+- White text (#ffffff) on #237f37 (default green): 5.05:1 — passes
 - CTA button: dark text (#111111) on white (#ffffff): 19.1:1 — passes
 - **Warning:** Merchants can choose any bar color. Very light colors with white text
   may fail contrast. Future: add contrast warning in admin when merchant chooses a color

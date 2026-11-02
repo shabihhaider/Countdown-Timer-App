@@ -67,7 +67,7 @@ export const TIMER_TEMPLATES = [
     id: "classic",
     name: "Classic Green",
     description: "Clean and professional",
-    barColor: "#288d40",
+    barColor: "#237f37",
     textColor: "#ffffff",
     buttonBgColor: "#ffffff",
     buttonTextColor: "#1a1a1a",

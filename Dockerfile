@@ -1,4 +1,4 @@
-ARG NODE_VERSION=20
+ARG NODE_VERSION=22
 
 # ─────────────────────────────────────────────────────────────────────────────
 # base: shared Alpine foundation with OpenSSL (required by Prisma)

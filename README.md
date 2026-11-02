@@ -59,7 +59,7 @@ Or manually:
 ```shell
 npm install
 npm run dev:services   # Postgres + Redis via docker compose
-npm run dev            # builds extensions, then shopify app dev
+npm run dev            # needs shopify.app.dev.toml (see the .example); builds extensions, then shopify app dev --config dev
 ```
 
 ## Quality gates

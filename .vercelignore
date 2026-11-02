@@ -1,0 +1,5 @@
+# Local secrets must never reach a `vercel` CLI upload.
+.env
+.env.*
+!.env.example
+!.env.staging.example
