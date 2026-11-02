@@ -70,9 +70,10 @@ export async function action({ request }) {
   }
 
   if (intent === "complete_step3") {
-    const updated = await db.onboardingState.update({
+    const updated = await db.onboardingState.upsert({
       where: { shop },
-      data: { step3Complete: true },
+      create: { shop, step3Complete: true },
+      update: { step3Complete: true },
     });
 
     const allDone = updated.step1Complete && updated.step2Complete && updated.step3Complete;

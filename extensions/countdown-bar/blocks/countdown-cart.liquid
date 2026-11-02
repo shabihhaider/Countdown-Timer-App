@@ -11,7 +11,7 @@
      data-accent-color="{{ block.settings.accent_color }}"
      style="display: none;"
      role="timer"
-     aria-label="Cart reservation countdown">
+     aria-label="Cart countdown">
 
   <div class="cdc__content">
     <span class="cdc__icon" aria-hidden="true">🔥</span>
@@ -36,7 +36,7 @@
     {
       "type": "range",
       "id": "reservation_minutes",
-      "label": "Reservation time (minutes)",
+      "label": "Timer length (minutes)",
       "min": 1,
       "max": 60,
       "step": 1,
@@ -46,7 +46,7 @@
       "type": "text",
       "id": "message",
       "label": "Timer message",
-      "default": "Your cart is reserved for"
+      "default": "Complete your order within"
     },
     {
       "type": "select",
@@ -80,7 +80,7 @@
       "type": "color",
       "id": "accent_color",
       "label": "Timer digit color",
-      "default": "#dc2626"
+      "default": "#b91c1c"
     }
   ]
 }

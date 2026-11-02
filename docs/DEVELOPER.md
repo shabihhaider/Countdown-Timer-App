@@ -28,6 +28,8 @@ npx prisma generate
 
 # 5. Start development server
 npm run dev
+# Needs shopify.app.dev.toml (copy shopify.app.dev.toml.example, use a separate dev app).
+# shopify.app.toml is production: never run a bare `shopify app dev` here.
 # Opens Shopify CLI tunnel + Remix dev server
 ```
 
@@ -99,14 +101,14 @@ Countdown-Timer-App/
 ## Available Scripts
 
 ```bash
-npm run dev              # Start Shopify CLI dev server (with tunnel)
+npm run dev              # Shopify CLI dev server on the DEV app; refuses without shopify.app.dev.toml
 npm run build            # Production build (also runs build:extensions)
 npm run build:extensions # Build widget JS from src/ into extensions/countdown-bar/assets
 npm run start            # Start production server
 npm run lint             # ESLint
 npm run typecheck        # Type-check (tsc --noEmit)
 npm run setup            # Run Prisma migrations
-npm test                 # Run Vitest unit tests (231 tests)
+npm test                 # Run Vitest unit tests (280 tests)
 npm run test:e2e         # Run Playwright E2E tests (26 tests)
 ```
 

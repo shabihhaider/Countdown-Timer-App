@@ -23,7 +23,8 @@ import {
 } from "@remix-run/react";
 import { authenticate, PLAN_PRO } from "../shopify.server";
 import { TitleBar } from "@shopify/app-bridge-react";
-import { getPlanInfo } from "../utils/billing.server";
+import db from "../db.server";
+import { enforceFreeCampaignLimit, getPlanInfo, isTestCharge } from "../utils/billing.server";
 import { logger } from "../utils/logger.server";
 
 export const loader = async ({ request }) => {
@@ -31,26 +32,6 @@ export const loader = async ({ request }) => {
   const planInfo = await getPlanInfo(billing);
   return json({ planInfo });
 };
-
-/**
- * Development stores can only approve test charges. Shopify reviewers test on
- * dev stores, so a real-charge request there would block app review.
- */
-async function isTestCharge(admin) {
-  if (process.env.NODE_ENV !== "production") return true;
-  try {
-    const response = await admin.graphql(
-      `#graphql
-      query shopPlan {
-        shop { plan { partnerDevelopment } }
-      }`
-    );
-    const data = await response.json();
-    return Boolean(data?.data?.shop?.plan?.partnerDevelopment);
-  } catch {
-    return false;
-  }
-}
 
 function logBillingError(shop, error, event) {
   logger.error(
@@ -130,7 +111,8 @@ async function handleCancel({ billing, session }) {
 
     logger.info({ shop: session.shop, subscriptionId: subscription.id }, "billing.cancelled");
 
-    return json({ success: true, cancelled: true });
+    const pausedCampaigns = await enforceFreeCampaignLimit(db, session.shop);
+    return json({ success: true, cancelled: true, pausedCampaigns });
   } catch (error) {
     if (error instanceof Response) {
       throw error;
@@ -269,6 +251,8 @@ export default function BillingPage() {
             <p>
               You're back on the Free plan. Unused time on your billing period has been credited on
               a prorated basis. You can re-upgrade anytime.
+              {actionData.pausedCampaigns > 0 &&
+                ` The Free plan allows 1 active campaign, so we paused ${actionData.pausedCampaigns}.`}
             </p>
           </Banner>
         )}

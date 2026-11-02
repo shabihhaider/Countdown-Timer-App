@@ -1,4 +1,4 @@
-import { authenticate } from "../shopify.server";
+import { authenticateWebhook } from "../utils/webhook-auth.server";
 import { logger } from "../utils/logger.server";
 
 /**
@@ -12,7 +12,7 @@ import { logger } from "../utils/logger.server";
  * See: https://shopify.dev/docs/apps/webhooks/configuration/mandatory-webhooks
  */
 export const action = async ({ request }) => {
-  const { topic, shop } = await authenticate.webhook(request);
+  const { topic, shop } = await authenticateWebhook(request);
   logger.info({ topic, shop }, "webhook.gdpr.data_request");
 
   return new Response(null, { status: 200 });

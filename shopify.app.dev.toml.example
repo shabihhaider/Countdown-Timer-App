@@ -1,0 +1,60 @@
+# Development app config. Copy to shopify.app.dev.toml (gitignored) and fill in.
+#
+# shopify.app.toml is the PRODUCTION app and must never be used for `shopify app dev`.
+# 1. Create a separate app in the Partner Dashboard, for example "Countdown Timer (dev)".
+# 2. Replace client_id below with that app's client ID.
+# 3. Run `npm run dev`: scripts/dev-guard.mjs refuses to start until this is done,
+#    then the CLI runs with `--config dev`.
+#
+# Never run a bare `shopify app dev` in this repo. Only `npm run dev` is guarded.
+
+client_id = "REPLACE_WITH_DEV_APP_CLIENT_ID"
+name = "Countdown-Timer-App-dev"
+# Rewritten by the CLI to the tunnel URL because automatically_update_urls_on_dev = true.
+application_url = "https://example.com"
+embedded = true
+
+[build]
+# Safe here: this only ever changes the dev app.
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2026-07"
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/scopes_update"
+  topics = [ "app/scopes_update" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = [ "app/uninstalled" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/subscriptions_update"
+  topics = [ "app_subscriptions/update" ]
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request" ]
+  uri = "/webhooks/customers/data_request"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/redact" ]
+  uri = "/webhooks/customers/redact"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "shop/redact" ]
+  uri = "/webhooks/shop/redact"
+
+[access_scopes]
+scopes = ""
+
+[auth]
+redirect_urls = [ "https://example.com/auth/callback" ]
+
+[app_proxy]
+url = "https://example.com"
+subpath = "countdown"
+prefix = "apps"
+
+[pos]
+embedded = false

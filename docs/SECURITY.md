@@ -2,15 +2,15 @@
 
 ## Threat Model
 
-| Threat                       | Risk   | Mitigation                                                        |
-| ---------------------------- | ------ | ----------------------------------------------------------------- |
-| Malicious `?shop=` injection | Medium | Regex validation: `/^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/`  |
-| XSS via button URL           | Medium | Server-side validation: only allow `/` or `https://` prefixes     |
-| DoS via settings API         | Medium | Redis-backed rate limiter (per-IP + per-shop), in-memory fallback |
-| Database enumeration         | Low    | Parameterized queries via Prisma (no raw SQL)                     |
-| Session hijacking            | Low    | Shopify OAuth + Prisma session storage (standard pattern)         |
-| Secret exposure              | Low    | Secrets in env vars, never in client bundle                       |
-| CORS abuse                   | Low    | `*` allowed (needed for storefront) + rate limiting               |
+| Threat                       | Risk   | Mitigation                                                       |
+| ---------------------------- | ------ | ---------------------------------------------------------------- |
+| Malicious `?shop=` injection | Medium | Regex validation: `/^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/` |
+| XSS via button URL           | Medium | Server-side validation: only allow `/` or `https://` prefixes    |
+| DoS via settings API         | Medium | Per-IP limiter, CDN caching, 10s server cache; no per-shop limit |
+| Database enumeration         | Low    | Parameterized queries via Prisma (no raw SQL)                    |
+| Session hijacking            | Low    | Shopify OAuth + Prisma session storage (standard pattern)        |
+| Secret exposure              | Low    | Secrets in env vars, never in client bundle                      |
+| CORS abuse                   | Low    | `*` allowed (needed for storefront) + rate limiting              |
 
 ## Input Validation
 

@@ -24,6 +24,13 @@ describe("getPlanInfo", () => {
     expect(result.source).toBe("check_failed");
   });
 
+  it("rethrows the SDK's reauth Response instead of reporting Free", async () => {
+    const reauth = new Response(null, { status: 401 });
+    const mockBilling = { check: vi.fn().mockRejectedValue(reauth) };
+
+    await expect(getPlanInfo(mockBilling)).rejects.toBe(reauth);
+  });
+
   it("returns free plan when no active payment", async () => {
     const mockBilling = {
       check: vi.fn().mockResolvedValue({ hasActivePayment: false }),

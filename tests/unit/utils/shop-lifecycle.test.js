@@ -8,6 +8,8 @@ import {
   ensureShopRecord,
   syncPlanCache,
   applySubscriptionUpdate,
+  isApplicableSubscriptionPayload,
+  isStaleUninstallDelivery,
   collectUninstallAggregates,
   recordUninstall,
   redactShop,
@@ -27,14 +29,19 @@ const PLAN_CONFIG = {
 const SHOP_DOMAIN = "test-store.myshopify.com";
 
 function createMockDb() {
-  return {
+  const db = {
+    $transaction: vi.fn((work) => work(db)),
     shop: {
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
     subscription: {
       findUnique: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
+      update: vi.fn(),
       upsert: vi.fn(),
       updateMany: vi.fn(),
     },
@@ -46,6 +53,7 @@ function createMockDb() {
     campaignAnalytics: { aggregate: vi.fn() },
     onboardingState: { findUnique: vi.fn() },
   };
+  return db;
 }
 
 function activeShop(overrides = {}) {
@@ -259,6 +267,171 @@ describe("applySubscriptionUpdate", () => {
       expect.objectContaining({ data: expect.objectContaining({ plan: "Free" }) })
     );
   });
+
+  describe("shop lifecycle guards", () => {
+    it("does not reinstall an uninstalled shop, but records the cancellation", async () => {
+      const db = createMockDb();
+      db.shop.findUnique.mockResolvedValue(activeShop({ status: SHOP_STATUS.UNINSTALLED }));
+      db.subscription.findUnique.mockResolvedValue({
+        status: "CANCELLED",
+        shopifyUpdatedAt: null,
+      });
+
+      await applySubscriptionUpdate(
+        db,
+        SHOP_DOMAIN,
+        subscriptionPayload({ status: "cancelled" }),
+        PLAN_CONFIG,
+        "wh-late"
+      );
+
+      expect(db.subscription.upsert).toHaveBeenCalled();
+      expect(db.shop.update).not.toHaveBeenCalled();
+      expect(db.appEvent.create).toHaveBeenCalledTimes(1);
+      expect(db.appEvent.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ type: APP_EVENT.SUBSCRIPTION_UPDATED }),
+      });
+    });
+
+    it("drops a stale ACTIVE for an uninstalled shop", async () => {
+      const db = createMockDb();
+      db.shop.findUnique.mockResolvedValue(activeShop({ status: SHOP_STATUS.UNINSTALLED }));
+
+      await applySubscriptionUpdate(db, SHOP_DOMAIN, subscriptionPayload(), PLAN_CONFIG, "wh-a");
+
+      expect(db.subscription.upsert).not.toHaveBeenCalled();
+      expect(db.shop.update).not.toHaveBeenCalled();
+    });
+
+    it("never recreates a shop row for an unknown or redacted domain", async () => {
+      const db = createMockDb();
+      db.shop.findUnique.mockResolvedValue(null);
+
+      await applySubscriptionUpdate(db, SHOP_DOMAIN, subscriptionPayload(), PLAN_CONFIG, "wh-r");
+
+      expect(db.shop.create).not.toHaveBeenCalled();
+      expect(db.subscription.upsert).not.toHaveBeenCalled();
+      expect(db.appEvent.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("plan cache with several subscriptions", () => {
+    it("keeps the plan when another subscription is still ACTIVE", async () => {
+      const db = createMockDb();
+      db.shop.findUnique.mockResolvedValue(activeShop({ plan: "Pro" }));
+      db.subscription.findUnique.mockResolvedValue({
+        status: "ACTIVE",
+        shopifyUpdatedAt: new Date("2026-09-01T00:00:00Z"),
+      });
+      db.subscription.findFirst.mockResolvedValue({ planName: "Pro" });
+
+      await applySubscriptionUpdate(
+        db,
+        SHOP_DOMAIN,
+        subscriptionPayload({ status: "cancelled", updated_at: "2026-09-05T00:00:00Z" }),
+        PLAN_CONFIG,
+        "wh-4"
+      );
+
+      expect(db.subscription.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { shopId: 1, status: "ACTIVE" } })
+      );
+      expect(db.shop.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("cancelledAt", () => {
+    function upsertArgs(db) {
+      return db.subscription.upsert.mock.calls[0][0];
+    }
+
+    it("is not set on a new PENDING subscription", async () => {
+      const db = createMockDb();
+      db.shop.findUnique.mockResolvedValue(activeShop());
+      db.subscription.findUnique.mockResolvedValue(null);
+
+      await applySubscriptionUpdate(
+        db,
+        SHOP_DOMAIN,
+        subscriptionPayload({ status: "pending" }),
+        PLAN_CONFIG,
+        "wh-5"
+      );
+
+      expect(upsertArgs(db).create).not.toHaveProperty("cancelledAt");
+    });
+
+    it("is set when a subscription is first seen already cancelled", async () => {
+      const db = createMockDb();
+      db.shop.findUnique.mockResolvedValue(activeShop());
+      db.subscription.findUnique.mockResolvedValue(null);
+
+      await applySubscriptionUpdate(
+        db,
+        SHOP_DOMAIN,
+        subscriptionPayload({ status: "cancelled" }),
+        PLAN_CONFIG,
+        "wh-6"
+      );
+
+      expect(upsertArgs(db).create.cancelledAt).toEqual(expect.any(Date));
+    });
+
+    it("is cleared when a subscription becomes ACTIVE", async () => {
+      const db = createMockDb();
+      db.shop.findUnique.mockResolvedValue(activeShop());
+      db.subscription.findUnique.mockResolvedValue({
+        status: "PENDING",
+        shopifyUpdatedAt: new Date("2026-08-01T00:00:00Z"),
+      });
+
+      await applySubscriptionUpdate(db, SHOP_DOMAIN, subscriptionPayload(), PLAN_CONFIG, "wh-7");
+
+      expect(upsertArgs(db).update.cancelledAt).toBeNull();
+    });
+  });
+});
+
+describe("isApplicableSubscriptionPayload", () => {
+  const valid = {
+    admin_graphql_api_id: "gid://shopify/AppSubscription/1",
+    status: "active",
+    updated_at: "2026-09-01T10:00:00Z",
+  };
+
+  it("accepts a complete payload, with or without updated_at", () => {
+    expect(isApplicableSubscriptionPayload(valid)).toBe(true);
+    expect(isApplicableSubscriptionPayload({ ...valid, updated_at: undefined })).toBe(true);
+  });
+
+  it("rejects payloads that can never be applied", () => {
+    expect(isApplicableSubscriptionPayload(undefined)).toBe(false);
+    expect(isApplicableSubscriptionPayload({})).toBe(false);
+    expect(isApplicableSubscriptionPayload({ ...valid, status: "" })).toBe(false);
+    expect(isApplicableSubscriptionPayload({ ...valid, updated_at: "nope" })).toBe(false);
+  });
+});
+
+describe("isStaleUninstallDelivery", () => {
+  const installedAt = new Date("2026-10-31T12:00:00Z");
+
+  it("is stale only for an active shop reinstalled after the trigger", () => {
+    const shop = activeShop({ installedAt });
+    expect(isStaleUninstallDelivery(shop, "2026-10-31T11:59:59Z")).toBe(true);
+    expect(isStaleUninstallDelivery(shop, "2026-10-31T12:00:01Z")).toBe(false);
+  });
+
+  it("is never stale without a usable timestamp or an active shop", () => {
+    expect(isStaleUninstallDelivery(activeShop({ installedAt }), null)).toBe(false);
+    expect(isStaleUninstallDelivery(activeShop({ installedAt }), "bad")).toBe(false);
+    expect(isStaleUninstallDelivery(null, "2026-10-31T11:00:00Z")).toBe(false);
+    expect(
+      isStaleUninstallDelivery(
+        activeShop({ installedAt, status: SHOP_STATUS.UNINSTALLED }),
+        "2026-10-31T11:00:00Z"
+      )
+    ).toBe(false);
+  });
 });
 
 describe("collectUninstallAggregates", () => {
@@ -291,8 +464,8 @@ describe("recordUninstall", () => {
 
     await recordUninstall(db, SHOP_DOMAIN, AGGREGATES);
 
-    expect(db.shop.update).toHaveBeenCalledWith({
-      where: { id: 1 },
+    expect(db.shop.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, status: { not: SHOP_STATUS.UNINSTALLED } },
       data: expect.objectContaining({
         status: SHOP_STATUS.UNINSTALLED,
         uninstalledAt: expect.any(Date),
@@ -314,7 +487,18 @@ describe("recordUninstall", () => {
 
     await recordUninstall(db, SHOP_DOMAIN, AGGREGATES);
 
-    expect(db.shop.update).not.toHaveBeenCalled();
+    expect(db.shop.updateMany).not.toHaveBeenCalled();
+    expect(db.appEvent.create).not.toHaveBeenCalled();
+  });
+
+  it("records one event when parallel deliveries race (only the winner proceeds)", async () => {
+    const db = createMockDb();
+    db.shop.findUnique.mockResolvedValue(activeShop());
+    db.shop.updateMany.mockResolvedValue({ count: 0 });
+
+    await recordUninstall(db, SHOP_DOMAIN, AGGREGATES);
+
+    expect(db.subscription.updateMany).not.toHaveBeenCalled();
     expect(db.appEvent.create).not.toHaveBeenCalled();
   });
 });
@@ -334,11 +518,24 @@ describe("redactShop", () => {
 
     expect(db.appEvent.updateMany).toHaveBeenCalledWith({
       where: { shopId: 1 },
-      data: { shopDomain: updateArgs.data.domain },
+      data: { shopDomain: updateArgs.data.domain, webhookId: null },
     });
     expect(db.appEvent.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ type: APP_EVENT.SHOP_REDACTED }),
     });
+  });
+
+  it("replaces billing ids and writes everything in one transaction", async () => {
+    const db = createMockDb();
+    db.shop.findUnique.mockResolvedValue(activeShop());
+    db.subscription.findMany.mockResolvedValue([{ id: 7 }]);
+
+    await redactShop(db, SHOP_DOMAIN);
+
+    const updateArgs = db.subscription.update.mock.calls[0][0];
+    expect(updateArgs.where).toEqual({ id: 7 });
+    expect(updateArgs.data.shopifySubscriptionId).toMatch(/^redacted-[0-9a-f-]{36}$/);
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
   });
 
   it("is a no-op when the shop is unknown (already redacted)", async () => {

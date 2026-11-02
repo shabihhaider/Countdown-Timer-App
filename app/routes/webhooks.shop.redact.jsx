@@ -2,6 +2,7 @@ import { authenticate } from "../shopify.server";
 import db from "../db.server";
 import { logger } from "../utils/logger.server";
 import { redactShop } from "../utils/shop-lifecycle.server";
+import { purgeCampaignCache } from "../utils/storefront-settings.server";
 
 /**
  * Shopify mandatory GDPR webhook: shop/redact
@@ -32,6 +33,10 @@ export const action = async ({ request }) => {
     await db.onboardingState.deleteMany({ where: { shop: shopDomain } });
     await db.session.deleteMany({ where: { shop: shopDomain } });
     await db.setting.deleteMany({ where: { shop: shopDomain } });
+
+    // After the rows are gone, so the next storefront read cannot refill it with
+    // deleted text. A failure here returns 500 and Shopify redelivers.
+    await purgeCampaignCache(shopDomain);
 
     // Anonymize the lifecycle record (idempotent — no-op if already redacted,
     // since the domain lookup no longer matches after the first pass).

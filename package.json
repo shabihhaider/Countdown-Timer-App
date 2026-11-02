@@ -4,7 +4,7 @@
   "scripts": {
     "build": "npm run build:extensions && prisma generate && remix vite:build",
     "build:extensions": "node scripts/build-extensions.mjs",
-    "dev": "npm run build:extensions && shopify app dev",
+    "dev": "node scripts/dev-guard.mjs && npm run build:extensions && shopify app dev --config dev",
     "dev:services": "docker compose up db redis -d && echo 'DB + Redis started on localhost'",
     "dev:services:stop": "docker compose down",
     "config:link": "shopify app config link",
@@ -27,6 +27,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:widget": "playwright test -c tests/widget/playwright.config.js",
     "test:ci": "vitest run --coverage && playwright test",
     "audit:deps": "npm audit --audit-level=high",
     "prepare": "husky || true",
@@ -50,6 +51,7 @@
     "@sentry/remix": "^10.69.0",
     "@shopify/app-bridge-react": "^4.1.6",
     "@shopify/polaris": "^12.0.0",
+    "@shopify/polaris-icons": "^8.11.1",
     "@shopify/shopify-app-remix": "^5.0.0",
     "@shopify/shopify-app-session-storage-prisma": "^10.0.0",
     "ioredis": "^5.4.1",
@@ -113,7 +115,10 @@
     "@graphql-codegen/client-preset": "4.7.0",
     "@graphql-codegen/typescript-operations": "4.5.0",
     "minimatch": "9.0.5",
-    "vite": "^6.2.2"
+    "vite": "^6.2.2",
+    "cacache": {
+      "tar": "^7.5.22"
+    }
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

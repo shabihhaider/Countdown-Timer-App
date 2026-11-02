@@ -550,6 +550,55 @@ describe("validateCampaignForm type-aware", () => {
     labelText: "Sale ends in",
   };
 
+  describe("bounds on stored values", () => {
+    it("rejects a priority outside the supported range", () => {
+      expect(
+        validateCampaignForm({ ...validBarForm, priority: "99999999999" }).priority
+      ).toBeDefined();
+      expect(validateCampaignForm({ ...validBarForm, priority: "-99999" }).priority).toBeDefined();
+      expect(validateCampaignForm({ ...validBarForm, priority: "abc" }).priority).toBeDefined();
+      expect(validateCampaignForm({ ...validBarForm, priority: "10" }).priority).toBeUndefined();
+    });
+
+    it("rejects an unknown timezone", () => {
+      expect(
+        validateCampaignForm({ ...validBarForm, timezone: "Mars/Base" }).timezone
+      ).toBeDefined();
+      expect(
+        validateCampaignForm({ ...validBarForm, timezone: "America/New_York" }).timezone
+      ).toBeUndefined();
+    });
+
+    it("rejects an impossible daily reset time", () => {
+      expect(
+        validateCampaignForm({ ...validBarForm, dailyResetTime: "99:99" }).dailyResetTime
+      ).toBeDefined();
+      expect(
+        validateCampaignForm({ ...validBarForm, dailyResetTime: "23:59" }).dailyResetTime
+      ).toBeUndefined();
+    });
+
+    it("rejects malformed page targeting", () => {
+      const errorFor = (pageTargeting) =>
+        validateCampaignForm({ ...validBarForm, pageTargeting }).pageTargeting;
+
+      expect(errorFor("{not json")).toBeDefined();
+      expect(errorFor('{"mode":"sideways"}')).toBeDefined();
+      expect(errorFor('{"mode":"include","patterns":"/cart"}')).toBeDefined();
+      expect(errorFor('{"mode":"all"}')).toBeUndefined();
+      expect(errorFor('{"mode":"exclude","patterns":["/cart"]}')).toBeUndefined();
+    });
+
+    it("rejects oversized free-text fields", () => {
+      const long = "x".repeat(100000);
+
+      expect(validateCampaignForm({ ...validBarForm, name: long }).name).toBeDefined();
+      expect(
+        validateCampaignForm({ ...validBarForm, customEndMessage: long }).customEndMessage
+      ).toBeDefined();
+    });
+  });
+
   it("requires barMessage for bar campaigns", () => {
     const errors = validateCampaignForm({ ...validBarForm, barMessage: "" });
     expect(errors.barMessage).toBeDefined();

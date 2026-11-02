@@ -5,11 +5,12 @@ import {
   BillingInterval,
   shopifyApp,
 } from "@shopify/shopify-app-remix/server";
-import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma from "./db.server";
 import { env } from "./env.server";
 
 import { PLAN_PRO_CONFIG } from "./utils/plan-config";
+import { createSessionStorage } from "./utils/session-storage.server";
+import { syncApiUrlMetafield } from "./utils/sync-api-url.server";
 
 // Billing plan definitions
 export const PLAN_FREE = "Free";
@@ -22,14 +23,18 @@ const shopify = shopifyApp({
   scopes: env.SCOPES?.split(","),
   appUrl: env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
-  sessionStorage: new PrismaSessionStorage(prisma),
+  sessionStorage: createSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
   hooks: {
-    afterAuth: async ({ session }) => {
+    afterAuth: async ({ session, admin }) => {
+      // Runs at install, so the widget gets its API URL before the embedded admin
+      // is ever opened. Never throws; failures are logged inside.
+      await syncApiUrlMetafield(admin, session.shop);
+
       // Lifecycle tracking must never break auth — log and continue on failure.
       try {
-        const { ensureShopRecord } = await import("./utils/shop-lifecycle.server");
-        await ensureShopRecord(prisma, session.shop);
+        const { recordAuthorization } = await import("./utils/shop-lifecycle.server");
+        await recordAuthorization(prisma, session.shop);
       } catch (error) {
         const { logger } = await import("./utils/logger.server");
         logger.error({ shop: session.shop, error: error.message }, "lifecycle.afterAuth_failed");

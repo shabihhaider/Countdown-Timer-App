@@ -7,7 +7,7 @@
 ### Unit Tests (Vitest)
 
 Test pure logic isolated from Shopify and database. The suite is
-**231 unit tests across 9 files** (`tests/unit/**/*.test.js`), for example:
+**280 unit tests across 12 files** (`tests/unit/**/*.test.js`), for example:
 
 ```
 tests/unit/

@@ -9,17 +9,44 @@
     barPadding: bar.dataset.barPadding || null,
   };
 
+  // Storage access throws when a visitor blocks site data; the storefront must
+  // keep working, so every read and write goes through these.
+  const sessionArea = function () {
+    return sessionStorage;
+  };
+  const localArea = function () {
+    return localStorage;
+  };
+
+  function readStore(area, key) {
+    try {
+      return area().getItem(key);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeStore(area, key, value) {
+    try {
+      area().setItem(key, value);
+    } catch (e) {
+      /* best-effort */
+    }
+  }
+
+  const SPACER_ID = "cdb-spacer";
+
   const CK = "cdb_closed_" + shop;
-  if (sessionStorage.getItem(CK) === "1") return;
+  if (readStore(sessionArea, CK) === "1") return;
 
   // Reserve the last-known bar height BEFORE fetching settings so repeat page
   // views don't shift content when the bar arrives (keeps CLS near zero).
   const HK = "cdb_h_" + shop;
   try {
-    const cached = JSON.parse(sessionStorage.getItem(HK) || "null");
+    const cached = JSON.parse(readStore(sessionArea, HK) || "null");
     if (cached && cached.h > 0) {
       const early = document.createElement("div");
-      early.id = "cdb-spacer";
+      early.id = SPACER_ID;
       early.style.flexShrink = "0";
       early.style.height = cached.h + "px";
       if (cached.pos === "bottom") document.body.appendChild(early);
@@ -41,56 +68,136 @@
         cancelAnimationFrame(activeRaf);
         activeRaf = null;
       }
-      sessionStorage.setItem(CK, "1");
+      writeStore(sessionArea, CK, "1");
       track("close");
     });
   }
 
   const apiBase = bar.dataset.apiUrl || "";
+  // Shopify adds a signed shop to the relative path, so it must not carry one too.
   const settingsUrl = apiBase
     ? apiBase + "/apps/countdown/settings?shop=" + encodeURIComponent(shop) + "&type=bar"
-    : "/apps/countdown/settings?shop=" + encodeURIComponent(shop) + "&type=bar";
+    : "/apps/countdown/settings?type=bar";
 
-  fetch(settingsUrl, {
-    headers: { Accept: "application/json" },
-  })
-    .then(function (r) {
-      if (!r.ok) throw new Error(r.status);
-      return r.json();
+  // All attempts share this budget: a hung API must not drop the bar onto a page
+  // already in use.
+  const SETTINGS_BUDGET_MS = 5000;
+  const RETRY_BASE_MS = 800;
+  const RETRY_JITTER_MS = 300;
+  const MAX_RETRIES = 2;
+  const startedAt = Date.now();
+
+  // Last good settings keep the timer up when the API is rate limited or down.
+  // Bounded so a campaign the merchant switched off cannot outlive an outage for long.
+  const SK = "cdb_s_" + shop;
+  const LAST_KNOWN_MAX_AGE_MS = 86400000;
+  let rendered = false;
+
+  function readLastKnown() {
+    try {
+      const saved = JSON.parse(readStore(localArea, SK) || "null");
+      return saved && saved.s && Date.now() - saved.t < LAST_KNOWN_MAX_AGE_MS ? saved.s : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function render(s) {
+    if (rendered) return;
+    rendered = true;
+    apply(s);
+  }
+
+  function onSettingsFailure(err, attempt) {
+    const timedOut = !!err && err.name === "AbortError";
+    const lastKnown = readLastKnown();
+    // After a timeout the page is in use: only fill space that is already reserved.
+    if (lastKnown && (!timedOut || document.getElementById(SPACER_ID))) render(lastKnown);
+    else if (!rendered) removeSpacer();
+
+    const status = err && err.status;
+    if (timedOut || attempt >= MAX_RETRIES || (status && status < 500 && status !== 429)) return;
+    const delay =
+      err.retryAfter > 0
+        ? err.retryAfter * 1000
+        : RETRY_BASE_MS * Math.pow(2, attempt) + Math.random() * RETRY_JITTER_MS;
+    if (Date.now() - startedAt + delay >= SETTINGS_BUDGET_MS) return;
+    setTimeout(function () {
+      loadSettings(attempt + 1);
+    }, delay);
+  }
+
+  function loadSettings(attempt) {
+    const abort = typeof AbortController === "function" ? new AbortController() : null;
+    const timer =
+      abort &&
+      setTimeout(
+        function () {
+          abort.abort();
+        },
+        SETTINGS_BUDGET_MS - (Date.now() - startedAt)
+      );
+
+    fetch(settingsUrl, {
+      headers: { Accept: "application/json" },
+      signal: abort ? abort.signal : undefined,
     })
-    .then(function (d) {
-      if (d.success && d.settings) apply(d.settings);
-      else removeSpacer();
-    })
-    .catch(function () {
-      removeSpacer();
+      .then(function (r) {
+        if (!r.ok) {
+          const err = new Error(r.status);
+          err.status = r.status;
+          err.retryAfter = parseInt(r.headers.get("Retry-After"), 10);
+          throw err;
+        }
+        return r.json();
+      })
+      .then(function (d) {
+        clearTimeout(timer);
+        if (d.success && d.settings) {
+          writeStore(localArea, SK, JSON.stringify({ t: Date.now(), s: d.settings }));
+          render(d.settings);
+        } else {
+          writeStore(localArea, SK, "");
+          if (!rendered) removeSpacer();
+        }
+      })
+      .catch(function (err) {
+        clearTimeout(timer);
+        onSettingsFailure(err, attempt);
+      });
+  }
+
+  loadSettings(0);
+
+  function tzOffsetMs(utcMs, timezone) {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(new Date(utcMs));
+
+    const map = {};
+    parts.forEach(function (p) {
+      if (p.type !== "literal") map[p.type] = parseInt(p.value, 10);
     });
+
+    return (
+      Date.UTC(map.year, map.month - 1, map.day, map.hour, map.minute, map.second || 0) - utcMs
+    );
+  }
 
   function localToUtcMs(localStr, timezone) {
     try {
-      const parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: timezone,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      }).formatToParts(new Date(localStr + "Z"));
-
-      const map = {};
-      parts.forEach(function (p) {
-        if (p.type !== "literal") map[p.type] = parseInt(p.value, 10);
-      });
-
-      const utcTemp = new Date(localStr + "Z");
-      const tzRendered = new Date(
-        Date.UTC(map.year, map.month - 1, map.day, map.hour, map.minute, map.second || 0)
-      );
-      const offsetMs = tzRendered.getTime() - utcTemp.getTime();
-
-      return utcTemp.getTime() - offsetMs;
+      // The offset must be read at the target instant, not at the wall clock
+      // treated as UTC: the two can fall on opposite sides of a DST change.
+      const wallMs = new Date(localStr + "Z").getTime();
+      const approxMs = wallMs - tzOffsetMs(wallMs, timezone);
+      return wallMs - tzOffsetMs(approxMs, timezone);
     } catch (e) {
       return new Date(localStr).getTime();
     }
@@ -120,17 +227,16 @@
     if (tt === "evergreen") {
       const ek = "cdb_eg_" + (s.id || "") + "_" + shop;
       const mins = parseInt(s.evergreenMinutes, 10) || 30;
-      const stored = localStorage.getItem(ek);
+      const stored = readStore(localArea, ek);
       if (stored) {
+        // Once per visitor: an expired deadline stays expired, never restarts.
         const sv = parseInt(stored, 10);
-        if (sv > Date.now()) return sv;
-        const fresh = Date.now() + mins * 60000;
-        localStorage.setItem(ek, String(fresh));
-        return fresh;
+        return sv > Date.now() ? sv : null;
       }
-      const ev = Date.now() + mins * 60000;
-      localStorage.setItem(ek, String(ev));
-      return ev;
+      const ev = String(Date.now() + mins * 60000);
+      writeStore(localArea, ek, ev);
+      // Without storage the deadline would restart on every page view.
+      return readStore(localArea, ek) === ev ? parseInt(ev, 10) : null;
     }
 
     const ed = s.endDate ? new Date(s.endDate) : null;
@@ -310,10 +416,11 @@
 
     const pos = s.barPosition || "top";
 
-    applyBackground(s, s.barColor || "#288d40");
+    applyBackground(s, s.barColor || "#237f37");
     bar.style.color = s.textColor || "#ffffff";
     applyTypography(s);
     bar.className = "cdb cdb--" + pos;
+    if (pos === "top" && hasStickyHeader()) bar.classList.add("cdb--unpinned");
     applyMessage(s);
     loadGoogleFont(s);
     buildDiscountCode(s);
@@ -332,17 +439,34 @@
     countdown(end, s.endAction, s.customEndMessage, pos);
   }
 
-  function handleEnd(ea, cm) {
-    const tEl = document.getElementById("cdb-timer");
+  // A pinned bar would permanently cover a sticky theme header, including its
+  // cart and menu links, so on those themes the bar scrolls away with the page.
+  function hasStickyHeader() {
+    const headers = document.querySelectorAll(
+      'header, [role="banner"], sticky-header, .shopify-section-header-sticky'
+    );
+    return Array.prototype.some.call(headers, function (h) {
+      const p = window.getComputedStyle(h).position;
+      return p === "sticky" || p === "fixed";
+    });
+  }
+
+  function showEndedMessage(text) {
     const mMsg = bar.querySelector(".cdb__message");
+    bar.style.display = "block";
+    if (mMsg) mMsg.textContent = text;
+    // The sale is over: nothing that sells it may stay on screen.
+    ["#cdb-timer", ".cdb__code", "#cdb-btn"].forEach(function (sel) {
+      const el = bar.querySelector(sel);
+      if (el) el.style.display = "none";
+    });
+  }
+
+  function handleEnd(ea, cm) {
     if (ea === "show_ended") {
-      bar.style.display = "block";
-      if (tEl) tEl.style.display = "none";
-      if (mMsg) mMsg.textContent = "Sale Ended";
+      showEndedMessage("Sale Ended");
     } else if (ea === "show_custom" && cm) {
-      bar.style.display = "block";
-      if (tEl) tEl.style.display = "none";
-      if (mMsg) mMsg.textContent = cm;
+      showEndedMessage(cm);
     } else {
       bar.style.display = "none";
       removeSpacer();
@@ -350,10 +474,10 @@
   }
 
   function addSpacer(pos) {
-    let spacer = document.getElementById("cdb-spacer");
+    let spacer = document.getElementById(SPACER_ID);
     if (!spacer) {
       spacer = document.createElement("div");
-      spacer.id = "cdb-spacer";
+      spacer.id = SPACER_ID;
       spacer.style.flexShrink = "0";
     }
     spacer.style.height = bar.offsetHeight + "px";
@@ -372,7 +496,7 @@
   }
 
   function removeSpacer() {
-    const spacer = document.getElementById("cdb-spacer");
+    const spacer = document.getElementById(SPACER_ID);
     if (spacer) spacer.remove();
     try {
       sessionStorage.removeItem(HK);

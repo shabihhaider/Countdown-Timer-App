@@ -46,7 +46,7 @@ export const BAR_DEFAULTS = {
   gradientDirection: "to right",
   gradientColor1: "#667eea",
   gradientColor2: "#764ba2",
-  barColor: "#288d40",
+  barColor: "#237f37",
   textColor: "#ffffff",
   buttonTextColor: "#111111",
   buttonBgColor: "#ffffff",
@@ -453,6 +453,62 @@ const VALID_END_ACTIONS = new Set(["hide", "show_ended", "show_custom"]);
 const VALID_BG_TYPES = new Set(["solid", "gradient"]);
 const VALID_PRODUCT_STYLES = new Set(["minimal", "card", "badge", "banner", "floating"]);
 const VALID_FONT_FAMILIES = new Set(FONT_OPTIONS.filter((f) => !f.disabled).map((f) => f.value));
+const VALID_TARGETING_MODES = new Set(["all", "include", "exclude"]);
+const HTML_TAG_PATTERN = /<\/?[a-z][^>]*>|<!--/i;
+const HTML_NOT_ALLOWED = "HTML isn't supported here. Use plain text.";
+
+/** True for text that contains an HTML tag; a bare "<" as in "under < $50" is fine. */
+export function hasHtmlTag(text) {
+  return HTML_TAG_PATTERN.test(text);
+}
+
+const MAX_NAME_LENGTH = 100;
+const MAX_END_MESSAGE_LENGTH = 200;
+const MAX_PRIORITY = 9999;
+
+function isValidTimezone(timezone) {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function isValidPageTargeting(value) {
+  try {
+    const targeting = JSON.parse(value);
+    if (!targeting || typeof targeting !== "object") return false;
+    // The widget treats a missing mode as "all"; older rows may hold "{}".
+    if (targeting.mode !== undefined && !VALID_TARGETING_MODES.has(targeting.mode)) return false;
+    return targeting.patterns === undefined || Array.isArray(targeting.patterns);
+  } catch {
+    return false;
+  }
+}
+
+/** Values stored as-is, then read by the storefront widget or the database. */
+function validateStoredValues(raw, errors) {
+  if (raw.name && raw.name.length > MAX_NAME_LENGTH) {
+    errors.name = `Campaign name must be ${MAX_NAME_LENGTH} characters or fewer.`;
+  }
+  if (raw.priority !== undefined && raw.priority !== "") {
+    const isInRange =
+      /^-?\d+$/.test(raw.priority) && Math.abs(parseInt(raw.priority, 10)) <= MAX_PRIORITY;
+    if (!isInRange) errors.priority = `Priority must be a whole number up to ${MAX_PRIORITY}.`;
+  }
+  if (raw.timezone && !isValidTimezone(raw.timezone)) {
+    errors.timezone = "Select a valid timezone.";
+  }
+  if (raw.pageTargeting && !isValidPageTargeting(raw.pageTargeting)) {
+    errors.pageTargeting = "Page targeting is invalid.";
+  }
+  if (raw.customEndMessage && raw.customEndMessage.length > MAX_END_MESSAGE_LENGTH) {
+    errors.customEndMessage = `End message must be ${MAX_END_MESSAGE_LENGTH} characters or fewer.`;
+  } else if (raw.customEndMessage && hasHtmlTag(raw.customEndMessage)) {
+    errors.customEndMessage = HTML_NOT_ALLOWED;
+  }
+}
 
 /** Enum-like fields validated against their allowed value sets. */
 function validateEnumFields(raw, errors) {
@@ -482,6 +538,8 @@ function validateBarFields(raw, errors) {
     errors.barMessage = "Bar message is required.";
   } else if (raw.barMessage.length > 200) {
     errors.barMessage = "Bar message must be 200 characters or fewer.";
+  } else if (hasHtmlTag(raw.barMessage)) {
+    errors.barMessage = HTML_NOT_ALLOWED;
   }
   if (raw.buttonText && raw.buttonText.length > 60) {
     errors.buttonText = "Button text must be 60 characters or fewer.";
@@ -566,7 +624,7 @@ function validateScheduleFields(raw, errors, { isEditing }) {
     }
   }
 
-  if (raw.dailyResetTime && !/^\d{2}:\d{2}$/.test(raw.dailyResetTime)) {
+  if (raw.dailyResetTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(raw.dailyResetTime)) {
     errors.dailyResetTime = "Daily reset time must be in HH:MM format.";
   }
 
@@ -603,6 +661,7 @@ export function validateCampaignForm(raw, { isEditing = false } = {}) {
   validateColorFields(raw, errors);
   validateScheduleFields(raw, errors, { isEditing });
   validateEndBehaviorFields(raw, errors);
+  validateStoredValues(raw, errors);
 
   return errors;
 }

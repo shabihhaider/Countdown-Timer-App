@@ -55,7 +55,7 @@ make health-check      # Verify everything is healthy
 ```bash
 npm install
 npx prisma migrate dev
-shopify app dev        # Interactive — follow prompts to select your dev store
+npm run dev            # Needs shopify.app.dev.toml; never run a bare `shopify app dev` here
 ```
 
 The CLI creates a Cloudflare tunnel and opens the app in your store's admin.
@@ -260,7 +260,7 @@ The CLI creates a Cloudflare tunnel and opens the app in your store's admin.
 | Button Text        | "Shop Now"                              |
 | Button Link        | "/collections/all"                      |
 | Discount Code      | Empty                                   |
-| Bar Background     | Green (#288d40)                         |
+| Bar Background     | Green (#237f37)                         |
 | Text Color         | White (#ffffff)                         |
 | Button Background  | White (#ffffff)                         |
 | Button Text Color  | Dark (#111111)                          |
@@ -658,7 +658,7 @@ These settings are available in the theme editor when the embed is selected:
 
 | Setting          | Type     | Default | Test                                           |
 | ---------------- | -------- | ------- | ---------------------------------------------- |
-| Background color | Color    | #288d40 | Change to red → bar background turns red       |
+| Background color | Color    | #237f37 | Change to red → bar background turns red       |
 | Text color       | Color    | #ffffff | Change to black → bar text turns black         |
 | Accent color     | Color    | #ffffff | Change to gold → button accent turns gold      |
 | Bar position     | Select   | Top     | Change to Bottom → bar moves to bottom of page |
@@ -749,25 +749,25 @@ This is a cart reservation timer that appears on the cart page when items are in
 
 ### Theme Editor Settings
 
-| Setting            | Type   | Default                     | Test                                      |
-| ------------------ | ------ | --------------------------- | ----------------------------------------- |
-| Reservation time   | Range  | 10 minutes                  | Change to 5 → timer starts at 05:00       |
-| Timer message      | Text   | "Your cart is reserved for" | Change → message updates                  |
-| When timer expires | Select | "Hide the timer"            | "Clear the cart" → cart empties on expiry |
-|                    |        |                             | "Redirect to page" → redirects on expiry  |
-| Redirect URL       | URL    | (empty)                     | Set a URL → redirect goes there on expiry |
-| Text color         | Color  | #991b1b                     | Change → text color updates               |
-| Background color   | Color  | #fef2f2 (light red)         | Change → background updates               |
-| Timer digit color  | Color  | #dc2626 (red)               | Change → digit color updates              |
+| Setting            | Type   | Default                      | Test                                      |
+| ------------------ | ------ | ---------------------------- | ----------------------------------------- |
+| Reservation time   | Range  | 10 minutes                   | Change to 5 → timer starts at 05:00       |
+| Timer message      | Text   | "Complete your order within" | Change → message updates                  |
+| When timer expires | Select | "Hide the timer"             | "Clear the cart" → cart empties on expiry |
+|                    |        |                              | "Redirect to page" → redirects on expiry  |
+| Redirect URL       | URL    | (empty)                      | Set a URL → redirect goes there on expiry |
+| Text color         | Color  | #991b1b                      | Change → text color updates               |
+| Background color   | Color  | #fef2f2 (light red)          | Change → background updates               |
+| Timer digit color  | Color  | #dc2626 (red)                | Change → digit color updates              |
 
 ### TEST 16.1: Cart Timer Behavior
 
-| Step | Action                                    | Expected Result                                        |
-| ---- | ----------------------------------------- | ------------------------------------------------------ |
-| 1    | Add items to cart, go to cart page        | Cart timer appears with 🔥 icon                        |
-| 2    | Timer shows MM:SS format                  | Counting down from the configured minutes              |
-| 3    | Message shows "Your cart is reserved for" | Message matches the configured text                    |
-| 4    | Empty cart, go to cart page               | Timer does NOT appear (requires `cart.item_count > 0`) |
+| Step | Action                                     | Expected Result                                        |
+| ---- | ------------------------------------------ | ------------------------------------------------------ |
+| 1    | Add items to cart, go to cart page         | Cart timer appears with 🔥 icon                        |
+| 2    | Timer shows MM:SS format                   | Counting down from the configured minutes              |
+| 3    | Message shows "Complete your order within" | Message matches the configured text                    |
+| 4    | Empty cart, go to cart page                | Timer does NOT appear (requires `cart.item_count > 0`) |
 
 ### TEST 16.2: Expiry Actions
 
@@ -962,7 +962,7 @@ curl "http://localhost:3000/apps/countdown/settings?shop=your-store.myshopify.co
 | Status   | 200                                                                                             |
 | Body     | `{"success":true,"settings":{...}}` or `{"success":false,"message":"No active campaign found"}` |
 | Header   | `Access-Control-Allow-Origin: *`                                                                |
-| Header   | `Cache-Control: public, max-age=60, stale-while-revalidate=30`                                  |
+| Header   | `Cache-Control: public, max-age=10, s-maxage=30, stale-while-revalidate=60, stale-if-error=600` |
 
 **Settings response fields (verify all present when campaign is active):**
 
@@ -1071,7 +1071,7 @@ When rate-limited (429):
 | Cache-Control | `no-store`                                      |
 | Body          | `{"success":false,"error":"Too many requests"}` |
 
-### TEST 23.4: Per-Shop Rate Limit (120 requests/minute)
+### TEST 23.4: No Per-Shop Limit on Settings
 
 ```bash
 for i in $(seq 1 130); do
@@ -1082,7 +1082,7 @@ for i in $(seq 1 130); do
 done
 ```
 
-| Expected | Requests 1–120 return `200` (different IPs), requests 121+ return `429` (same shop) |
+| Expected | All 130 return `200`: a shop's timer cannot be switched off by request volume |
 
 ---
 
@@ -1371,7 +1371,7 @@ Custom End Msg:    "Sale has ended — follow us for the next one!"
 - [ ] Settings API rejects invalid/missing shop params
 - [ ] Track API accepts valid events, rejects invalid
 - [ ] Rate limiter blocks after 60 req/min per IP
-- [ ] Rate limiter blocks after 120 req/min per shop
+- [ ] Settings has no per-shop limit: 200 req/min from distinct IPs all answer 200
 - [ ] All API responses include CORS headers
 
 ### Accessibility

@@ -1,6 +1,8 @@
 (function () {
   "use strict";
 
+  const EXPIRED = "expired";
+
   const timers = document.querySelectorAll(".cdc");
   if (!timers.length) return;
 
@@ -8,14 +10,17 @@
     initCartTimer(el);
   });
 
+  function storageKey(el) {
+    return "cdc_cart_" + (el.dataset.shop || "");
+  }
+
   function initCartTimer(el) {
-    const shop = el.dataset.shop || "";
     const minutes = parseInt(el.dataset.minutes, 10) || 10;
     const expiryAction = el.dataset.expiryAction || "hide";
     const redirectUrl = el.dataset.redirectUrl || "/";
     const textColor = el.dataset.textColor || "#991b1b";
     const bgColor = el.dataset.bgColor || "#fef2f2";
-    const accentColor = el.dataset.accentColor || "#dc2626";
+    const accentColor = el.dataset.accentColor || "#b91c1c";
 
     // Apply styles
     el.style.color = textColor;
@@ -24,11 +29,21 @@
     const timeEl = el.querySelector(".cdc__time");
     if (timeEl) timeEl.style.color = accentColor;
 
-    // Session-based timer — resets when browser closes
-    const storageKey = "cdc_cart_" + shop;
+    // Session-based timer — one per browser session, and it never restarts.
+    // With storage blocked it would restart on every view, so it stays hidden.
     let endMs;
+    let stored;
+    try {
+      stored = sessionStorage.getItem(storageKey(el));
+      if (stored === EXPIRED) return;
+      if (!stored) {
+        endMs = Date.now() + minutes * 60 * 1000;
+        sessionStorage.setItem(storageKey(el), String(endMs));
+      }
+    } catch (e) {
+      return;
+    }
 
-    const stored = sessionStorage.getItem(storageKey);
     if (stored) {
       endMs = parseInt(stored, 10);
       if (endMs <= Date.now()) {
@@ -36,9 +51,6 @@
         handleExpiry(el, expiryAction, redirectUrl);
         return;
       }
-    } else {
-      endMs = Date.now() + minutes * 60 * 1000;
-      sessionStorage.setItem(storageKey, String(endMs));
     }
 
     // Show timer
@@ -79,7 +91,12 @@
 
   function handleExpiry(el, action, redirectUrl) {
     el.style.display = "none";
-    sessionStorage.removeItem("cdc_cart_" + (el.dataset.shop || ""));
+    // Keep the marker: removing it would start a fresh timer on the next page view.
+    try {
+      sessionStorage.setItem(storageKey(el), EXPIRED);
+    } catch (e) {
+      /* best-effort */
+    }
 
     if (action === "clear_cart") {
       fetch("/cart/clear.js", {

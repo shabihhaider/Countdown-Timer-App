@@ -42,3 +42,6 @@ test-report.html
 storefront-harness-tmp.html
 .vercel
 .env*
+
+# Local dev app config; copy from shopify.app.dev.toml.example
+shopify.app.dev.toml

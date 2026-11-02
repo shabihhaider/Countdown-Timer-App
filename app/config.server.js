@@ -6,7 +6,7 @@ export const RATE_LIMIT = {
 };
 
 export const DEFAULTS = {
-  BAR_COLOR: "#288d40",
+  BAR_COLOR: "#237f37",
   BAR_MESSAGE: "Flash Sale Ends In...",
   BUTTON_TEXT: "Shop Now",
   BUTTON_URL: "/collections/all",

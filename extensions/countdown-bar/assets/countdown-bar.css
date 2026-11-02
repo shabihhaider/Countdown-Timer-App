@@ -17,6 +17,10 @@
   animation: cdb-slide-down 0.4s ease-out both;
 }
 
+.cdb--unpinned {
+  position: absolute;
+}
+
 .cdb--bottom {
   bottom: 0;
   animation: cdb-slide-up 0.4s ease-out both;
@@ -234,7 +238,6 @@
   font-size: 10px;
   text-transform: uppercase;
   margin-top: 2px;
-  opacity: 0.85;
   font-weight: 500;
   letter-spacing: 0.5px;
 }
@@ -254,10 +257,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px dashed rgba(255, 255, 255, 0.5);
+  border: 1px dashed currentColor;
   border-radius: 6px;
-  padding: 4px 10px;
+  padding: 0 0 0 10px;
   font-size: 13px;
 }
 
@@ -268,30 +270,32 @@
 }
 
 .cdb__code-copy {
-  background: rgba(255, 255, 255, 0.25);
+  background: #ffffff;
   border: none;
-  color: inherit;
+  color: #111111;
   padding: 2px 8px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 11px;
   font-weight: 600;
   transition: background-color 0.15s ease;
-  min-height: 28px;
+  min-width: 48px;
+  min-height: 48px;
 }
 
 .cdb__code-copy:hover,
 .cdb__code-copy:focus-visible {
-  background: rgba(255, 255, 255, 0.4);
+  background: #e5e7eb;
 }
 
-/* ---- CTA Button — minimum 44px touch target (WCAG 2.5.5) ---- */
+/* ---- CTA Button — minimum 48px touch target ---- */
 
 .cdb__btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
+  box-sizing: border-box;
+  min-height: 48px;
   padding: 10px 24px;
   background-color: rgba(255, 255, 255, 0.95);
   color: #111111;
@@ -328,14 +332,14 @@
   }
 }
 
-/* ---- Close button — 44×44 touch target ---- */
+/* ---- Close button — 48×48 touch target ---- */
 
 .cdb__close {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: #ffffff;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -385,8 +389,13 @@
     padding: 8px 14px;
   }
 
+  .cdb__container {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
   .cdb__content {
-    gap: 12px;
+    gap: 6px 8px;
   }
 
   .cdb__message {
@@ -407,8 +416,7 @@
   }
 
   .cdb__btn {
-    padding: 10px 18px;
+    padding: 8px 14px;
     font-size: 13px;
-    min-height: 44px;
   }
 }

@@ -33,7 +33,7 @@ export default function Privacy() {
   return (
     <div style={styles.body}>
       <h1 style={styles.h1}>Privacy Policy</h1>
-      <span style={styles.date}>Last updated: August 1, 2026</span>
+      <span style={styles.date}>Last updated: November 2, 2026</span>
 
       <h2 style={styles.h2}>1. Introduction</h2>
       <p style={styles.p}>
@@ -87,9 +87,15 @@ export default function Privacy() {
 
       <h2 style={styles.h2}>5. Data Deletion</h2>
       <p style={styles.p}>
-        When you uninstall the app, all your data (settings and session records) is automatically
-        and permanently deleted from our systems via Shopify&rsquo;s app/uninstalled webhook. You
-        may also request deletion by contacting us at{" "}
+        When you uninstall the app, your sessions are removed straight away. Shopify then sends a
+        data erasure request, normally about 48 hours later, and we delete your campaigns, settings
+        and support records from the app and our internal tools. Temporary copies in server caches
+        expire within about an hour of that.
+      </p>
+      <p style={styles.p}>
+        We keep anonymous counts with no link to your store name or address. If an address has
+        unsubscribed from our emails, we keep a one-way scrambled form of it so that it is not
+        emailed again. You may also request deletion by contacting us at{" "}
         <a href={`mailto:${SUPPORT_EMAIL}`} style={styles.a}>
           {SUPPORT_EMAIL}
         </a>
