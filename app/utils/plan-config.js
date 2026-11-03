@@ -12,3 +12,15 @@ export const PLAN_PRO_CONFIG = {
   interval: "EVERY_30_DAYS",
   trialDays: 14,
 };
+
+/** shopify-api v14 refuses a subscription plan without lineItems at request time. */
+export const PRO_BILLING_PLAN = {
+  trialDays: PLAN_PRO_CONFIG.trialDays,
+  lineItems: [
+    {
+      amount: PLAN_PRO_CONFIG.amount,
+      currencyCode: PLAN_PRO_CONFIG.currencyCode,
+      interval: PLAN_PRO_CONFIG.interval,
+    },
+  ],
+};

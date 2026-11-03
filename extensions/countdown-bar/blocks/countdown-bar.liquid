@@ -1,7 +1,7 @@
 <div id="cdb-bar"
      class="cdb cdb--top"
      data-shop="{{ shop.permanent_domain }}"
-     data-api-url="{{ shop.metafields.countdown_timer.api_url.value }}"
+     data-api-url="{{ app.metafields.countdown_timer.api_url.value | escape }}"
      data-font-size="{{ block.settings.font_size }}"
      data-bar-padding="{{ block.settings.bar_padding }}"
      style="display: none;"

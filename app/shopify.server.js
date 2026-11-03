@@ -1,14 +1,9 @@
 import "@shopify/shopify-app-remix/adapters/node";
-import {
-  ApiVersion,
-  AppDistribution,
-  BillingInterval,
-  shopifyApp,
-} from "@shopify/shopify-app-remix/server";
+import { ApiVersion, AppDistribution, shopifyApp } from "@shopify/shopify-app-remix/server";
 import prisma from "./db.server";
 import { env } from "./env.server";
 
-import { PLAN_PRO_CONFIG } from "./utils/plan-config";
+import { PLAN_PRO_CONFIG, PRO_BILLING_PLAN } from "./utils/plan-config";
 import { createSessionStorage } from "./utils/session-storage.server";
 import { syncApiUrlMetafield } from "./utils/sync-api-url.server";
 
@@ -42,13 +37,7 @@ const shopify = shopifyApp({
     },
   },
   billing: {
-    [PLAN_PRO]: {
-      amount: PLAN_PRO_CONFIG.amount,
-      currencyCode: PLAN_PRO_CONFIG.currencyCode,
-      // Same string value as PLAN_PRO_CONFIG.interval — the SDK enum keeps type semantics
-      interval: BillingInterval.Every30Days,
-      trialDays: PLAN_PRO_CONFIG.trialDays,
-    },
+    [PLAN_PRO]: PRO_BILLING_PLAN,
   },
   ...(env.SHOP_CUSTOM_DOMAIN ? { customShopDomains: [env.SHOP_CUSTOM_DOMAIN] } : {}),
 });

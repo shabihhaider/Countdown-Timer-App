@@ -82,7 +82,19 @@ export const loader = async ({ request }) => {
   });
 
   const totalCampaigns = await db.campaign.count({ where: { shop } });
-  const activeCampaigns = await db.campaign.count({ where: { shop, isActive: true } });
+  // Running right now, by the getCampaignStatus rule. Deliberately not the plan
+  // limit's count, which includes scheduled and ended campaigns still switched on.
+  const now = new Date();
+  const liveCampaigns = await db.campaign.count({
+    where: {
+      shop,
+      isActive: true,
+      AND: [
+        { OR: [{ startDate: null }, { startDate: { lte: now } }] },
+        { OR: [{ endDate: null }, { endDate: { gt: now } }] },
+      ],
+    },
+  });
 
   // Clicks/CTR are Pro features — withhold values server-side for Free plans
   // so the loader payload matches what the UI is allowed to show.
@@ -99,7 +111,7 @@ export const loader = async ({ request }) => {
       ctr:
         isPro && totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(1) : null,
       totalCampaigns,
-      activeCampaigns,
+      liveCampaigns,
     },
   });
 };
@@ -246,7 +258,7 @@ export default function DashboardPage() {
                     Campaigns
                   </Text>
                   <Text variant="bodySm" tone="subdued" as="span">
-                    {totals.activeCampaigns} active of {totals.totalCampaigns} total
+                    {totals.liveCampaigns} live of {totals.totalCampaigns} total
                   </Text>
                 </InlineStack>
 
