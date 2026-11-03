@@ -1,0 +1,2 @@
+# A CRLF after the shebang stops Vitest loading these files on Windows.
+scripts/*.mjs text eol=lf

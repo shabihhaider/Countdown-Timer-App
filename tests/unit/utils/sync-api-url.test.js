@@ -16,7 +16,9 @@ const { syncApiUrlMetafield, SYNC_TIMEOUT_MS } = await import(
 );
 
 const reply = (body) => ({ json: async () => body });
-const shopReply = reply({ data: { shop: { id: "gid://shopify/Shop/1" } } });
+const installReply = reply({
+  data: { currentAppInstallation: { id: "gid://shopify/AppInstallation/1" } },
+});
 const okReply = reply({ data: { metafieldsSet: { metafields: [{ id: "1" }], userErrors: [] } } });
 
 let shopCounter = 0;
@@ -29,15 +31,22 @@ describe("syncApiUrlMetafield", () => {
   });
 
   test("writes the app URL and reports success", async () => {
-    const graphql = vi.fn().mockResolvedValueOnce(shopReply).mockResolvedValueOnce(okReply);
+    const graphql = vi.fn().mockResolvedValueOnce(installReply).mockResolvedValueOnce(okReply);
     await expect(syncApiUrlMetafield({ graphql }, nextShop())).resolves.toEqual({ ok: true });
     const { variables } = graphql.mock.calls[1][1];
     expect(variables.metafields[0].value).toBe("https://app.example.com");
   });
 
+  test("writes to the app installation, which no other app can overwrite", async () => {
+    const graphql = vi.fn().mockResolvedValueOnce(installReply).mockResolvedValueOnce(okReply);
+    await syncApiUrlMetafield({ graphql }, nextShop());
+    const { variables } = graphql.mock.calls[1][1];
+    expect(variables.metafields[0].ownerId).toBe("gid://shopify/AppInstallation/1");
+  });
+
   test("skips the Admin API inside the cache window", async () => {
     const shop = nextShop();
-    const graphql = vi.fn().mockResolvedValueOnce(shopReply).mockResolvedValueOnce(okReply);
+    const graphql = vi.fn().mockResolvedValueOnce(installReply).mockResolvedValueOnce(okReply);
     await syncApiUrlMetafield({ graphql }, shop);
     await expect(syncApiUrlMetafield({ graphql }, shop)).resolves.toEqual({ ok: true });
     expect(graphql).toHaveBeenCalledTimes(2);
@@ -48,14 +57,14 @@ describe("syncApiUrlMetafield", () => {
     const rejected = reply({
       data: { metafieldsSet: { userErrors: [{ field: ["x"], message: "denied" }] } },
     });
-    const graphql = vi.fn().mockResolvedValueOnce(shopReply).mockResolvedValueOnce(rejected);
+    const graphql = vi.fn().mockResolvedValueOnce(installReply).mockResolvedValueOnce(rejected);
     await expect(syncApiUrlMetafield({ graphql }, shop)).resolves.toEqual({
       ok: false,
       reason: "user_errors",
     });
     expect(mocks.error).toHaveBeenCalledTimes(1);
 
-    graphql.mockResolvedValueOnce(shopReply).mockResolvedValueOnce(okReply);
+    graphql.mockResolvedValueOnce(installReply).mockResolvedValueOnce(okReply);
     await expect(syncApiUrlMetafield({ graphql }, shop)).resolves.toEqual({ ok: true });
   });
 
@@ -63,7 +72,7 @@ describe("syncApiUrlMetafield", () => {
     const graphql = vi.fn().mockResolvedValue(reply({ errors: [{ message: "denied" }] }));
     await expect(syncApiUrlMetafield({ graphql }, nextShop())).resolves.toEqual({
       ok: false,
-      reason: "shop_id_missing",
+      reason: "installation_id_missing",
     });
     expect(mocks.error).toHaveBeenCalledTimes(1);
   });

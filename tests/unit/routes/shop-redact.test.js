@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => {
   const deleteMany = () => ({ deleteMany: vi.fn().mockResolvedValue({ count: 0 }) });
   return {
     webhook: vi.fn(),
+    isAppInstalled: vi.fn(),
     redactShop: vi.fn(),
     deleteCache: vi.fn(),
     db: {
@@ -18,7 +19,13 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("../../../app/shopify.server", () => ({ authenticate: { webhook: mocks.webhook } }));
+vi.mock("../../../app/shopify.server", () => ({
+  authenticate: { webhook: mocks.webhook },
+  unauthenticated: { admin: vi.fn() },
+}));
+vi.mock("../../../app/utils/install-check.server", () => ({
+  isAppInstalled: mocks.isAppInstalled,
+}));
 vi.mock("../../../app/db.server", () => ({ default: mocks.db }));
 vi.mock("../../../app/redis.server", () => ({
   deleteCache: mocks.deleteCache,
@@ -36,6 +43,7 @@ beforeEach(() => {
   mocks.webhook.mockResolvedValue({ shop: SHOP, topic: "SHOP_REDACT" });
   mocks.deleteCache.mockResolvedValue(undefined);
   mocks.redactShop.mockResolvedValue(undefined);
+  mocks.isAppInstalled.mockResolvedValue(false);
 });
 
 describe("shop/redact", () => {
@@ -56,6 +64,27 @@ describe("shop/redact", () => {
     const response = await action({ request: request() });
 
     expect(response.status).toBe(500);
+    expect(mocks.redactShop).not.toHaveBeenCalled();
+  });
+
+  it("leaves a shop alone when the app is installed on it again", async () => {
+    mocks.isAppInstalled.mockResolvedValue(true);
+
+    const response = await action({ request: request() });
+
+    expect(response.status).toBe(200);
+    expect(mocks.db.campaign.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.db.session.deleteMany).not.toHaveBeenCalled();
+    expect(mocks.redactShop).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 without deleting when the install check cannot answer", async () => {
+    mocks.isAppInstalled.mockRejectedValue(new Error("network"));
+
+    const response = await action({ request: request() });
+
+    expect(response.status).toBe(500);
+    expect(mocks.db.campaign.deleteMany).not.toHaveBeenCalled();
     expect(mocks.redactShop).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,6 @@
-import { authenticate } from "../shopify.server";
+import { authenticate, unauthenticated } from "../shopify.server";
 import db from "../db.server";
+import { isAppInstalled } from "../utils/install-check.server";
 import { logger } from "../utils/logger.server";
 import { redactShop } from "../utils/shop-lifecycle.server";
 import { purgeCampaignCache } from "../utils/storefront-settings.server";
@@ -15,16 +16,25 @@ import { purgeCampaignCache } from "../utils/storefront-settings.server";
  * replaced with an unlinkable random token and all PII is scrubbed, leaving
  * only anonymous aggregates (counts, plan names, dates) — no personal data.
  *
+ * A merchant who reinstalls within those 48 hours still receives it, so a shop
+ * the app is installed on again is left alone: the request belongs to the
+ * earlier install, whose data app/uninstalled already deleted.
+ *
  * See: https://shopify.dev/docs/apps/webhooks/configuration/mandatory-webhooks
  */
 export const action = async ({ request }) => {
   const { topic, shop } = await authenticate.webhook(request);
-  logger.info({ topic, shop }, "webhook.gdpr.shop_redact — deleting all shop data");
 
   // Use only the HMAC-verified shop from authenticate.webhook — never trust payload
   const shopDomain = shop;
 
   try {
+    if (await isAppInstalled(unauthenticated.admin, shopDomain)) {
+      logger.info({ topic, shopDomain }, "webhook.gdpr.shop_redact — app reinstalled, ignored");
+      return new Response(null, { status: 200 });
+    }
+    logger.info({ topic, shopDomain }, "webhook.gdpr.shop_redact — deleting all shop data");
+
     // Delete in order: analytics → campaigns → onboarding → sessions → settings
     await db.campaignAnalytics.deleteMany({
       where: { campaign: { shop: shopDomain } },

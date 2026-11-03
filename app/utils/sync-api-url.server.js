@@ -10,20 +10,26 @@ const CACHE_TTL_MS = 5 * 60 * 1000;
 /** Callers await this on an admin page load, so a slow Admin API must not hold it up. */
 export const SYNC_TIMEOUT_MS = 4000;
 
+/**
+ * Owned by the app installation, not the Shop: only this app can write an
+ * app-data metafield, and the theme extension reads it as `app.metafields`.
+ * A Shop metafield in a plain namespace could be overwritten by any other app,
+ * repointing the widget (WID-1). Admin API 2026-07, no access scope needed.
+ */
 async function writeApiUrl(admin, shop, appUrl) {
   const response = await admin.graphql(
     `#graphql
-    query shopId {
-      shop { id }
+    query AppInstallationId {
+      currentAppInstallation { id }
     }`
   );
-  const shopData = await response.json();
-  const shopGid = shopData?.data?.shop?.id;
-  if (!shopGid) return { ok: false, reason: "shop_id_missing" };
+  const installData = await response.json();
+  const installationGid = installData?.data?.currentAppInstallation?.id;
+  if (!installationGid) return { ok: false, reason: "installation_id_missing" };
 
   const mutResponse = await admin.graphql(
     `#graphql
-    mutation setApiUrl($metafields: [MetafieldsSetInput!]!) {
+    mutation SetApiUrl($metafields: [MetafieldsSetInput!]!) {
       metafieldsSet(metafields: $metafields) {
         metafields { id }
         userErrors { field message }
@@ -37,7 +43,7 @@ async function writeApiUrl(admin, shop, appUrl) {
             key: KEY,
             type: "single_line_text_field",
             value: appUrl,
-            ownerId: shopGid,
+            ownerId: installationGid,
           },
         ],
       },

@@ -1,6 +1,6 @@
 <div class="cdp"
      data-shop="{{ shop.permanent_domain }}"
-     data-api-url="{{ shop.metafields.countdown_timer.api_url.value }}"
+     data-api-url="{{ app.metafields.countdown_timer.api_url.value | escape }}"
      data-font-size="{{ block.settings.font_size }}"
      data-border-radius="{{ block.settings.border_radius }}"
      data-padding="{{ block.settings.padding }}"

@@ -39,8 +39,8 @@ api_version = "2026-07"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-# No admin scopes needed: theme app extension + shop metafield writes (metafieldsSet
-# on Shop requires no scope) + app proxy cover all functionality.
+# No admin scopes needed: theme app extension + app-data metafield writes (metafieldsSet
+# on the AppInstallation requires no scope) + app proxy cover all functionality.
 scopes = ""
 
 [auth]

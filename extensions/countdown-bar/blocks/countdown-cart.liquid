@@ -1,7 +1,7 @@
 {% if cart.item_count > 0 %}
 <div class="cdc"
      data-shop="{{ shop.permanent_domain }}"
-     data-api-url="{{ shop.metafields.countdown_timer.api_url.value }}"
+     data-api-url="{{ app.metafields.countdown_timer.api_url.value | escape }}"
      data-message="{{ block.settings.message | escape }}"
      data-minutes="{{ block.settings.reservation_minutes }}"
      data-expiry-action="{{ block.settings.expiry_action }}"
